@@ -7,7 +7,7 @@ export interface BreadcrumbProps {
     onNavigate: (index: number) => void;
 }
 
-/** The drilldown trail in the chart's top-left corner. Hidden at the top level. */
+/** The drilldown trail in the chart's top-right corner, clear of the title. Hidden at the top level. */
 export function Breadcrumb({ items, onNavigate }: BreadcrumbProps): ReactElement | null {
     if (items.length < 2) {
         return null;
