@@ -1,0 +1,22 @@
+version: 2
+updates:
+    - package-ecosystem: npm
+      directory: /
+      schedule:
+          interval: monthly
+      open-pull-requests-limit: 5
+      groups:
+          # Studio Pro and the widget tooling move together; review these on their own.
+          mendix:
+              patterns: ["@mendix/*", "mendix"]
+          dev-tools:
+              patterns: ["*"]
+              exclude-patterns: ["@mendix/*", "mendix"]
+              update-types: ["minor", "patch"]
+    - package-ecosystem: github-actions
+      directory: /
+      schedule:
+          interval: monthly
+      groups:
+          actions:
+              patterns: ["*"]

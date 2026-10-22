@@ -1,0 +1,33 @@
+{
+    "name": "@kendallchristy/template-widget",
+    "widgetName": "TemplateWidget",
+    "version": "0.1.0",
+    "private": true,
+    "description": "Starting point for new widgets. Copy it with `pnpm new-widget`.",
+    "license": "Apache-2.0",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/kendallchristy/mendix-web-widgets.git"
+    },
+    "packagePath": "com.kendallchristy.widget.web",
+    "config": {},
+    "scripts": {
+        "build": "pluggable-widgets-tools build:web",
+        "dev": "pluggable-widgets-tools start:web",
+        "lint": "eslint src",
+        "release": "pluggable-widgets-tools release:web",
+        "test": "pluggable-widgets-tools test:unit:web",
+        "typecheck": "tsc --noEmit"
+    },
+    "dependencies": {
+        "classnames": "catalog:"
+    },
+    "devDependencies": {
+        "@mendix/pluggable-widgets-tools": "catalog:",
+        "@testing-library/jest-dom": "catalog:",
+        "@testing-library/react": "catalog:",
+        "@testing-library/user-event": "catalog:",
+        "mendix": "catalog:",
+        "typescript": "catalog:"
+    }
+}

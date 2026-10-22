@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<widget id="com.kendallchristy.widget.web.templatewidget.TemplateWidget" pluginWidget="true" offlineCapable="true" supportedPlatform="Web" xmlns="http://www.mendix.com/widget/1.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mendix.com/widget/1.0/ ../node_modules/mendix/custom_widget.xsd">
+    <name>Template Widget</name>
+    <description>Starting point for new widgets.</description>
+    <studioProCategory>Display</studioProCategory>
+    <studioCategory>Display</studioCategory>
+    <helpUrl />
+    <properties>
+        <propertyGroup caption="General">
+            <propertyGroup caption="General">
+                <property key="caption" type="textTemplate" required="false">
+                    <caption>Caption</caption>
+                    <description>Text shown inside the widget.</description>
+                </property>
+            </propertyGroup>
+        </propertyGroup>
+    </properties>
+</widget>
