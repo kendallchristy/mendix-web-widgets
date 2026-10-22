@@ -1,0 +1,19 @@
+// The ECharts chart types, components and renderers the widgets register, as empty stand-ins for unit tests.
+const stub = {};
+export const AriaComponent = stub;
+export const DataZoomComponent = stub;
+export const GridComponent = stub;
+export const LegendComponent = stub;
+export const MarkAreaComponent = stub;
+export const MarkLineComponent = stub;
+export const MarkPointComponent = stub;
+export const TitleComponent = stub;
+export const TooltipComponent = stub;
+export const VisualMapComponent = stub;
+export const LabelLayout = stub;
+export const CanvasRenderer = stub;
+export const SVGRenderer = stub;
+export const BarChart = stub;
+export const LineChart = stub;
+export const PictorialBarChart = stub;
+export const ScatterChart = stub;

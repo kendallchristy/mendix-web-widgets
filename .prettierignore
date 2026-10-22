@@ -4,3 +4,5 @@ coverage/
 typings/
 .turbo/
 LICENSE
+# Written by packages/shared/chart-core/src/__tests__/themeFiles.spec.ts
+docs/charts/themes/
