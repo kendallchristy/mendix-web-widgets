@@ -1,0 +1,41 @@
+name: CI
+
+on:
+    pull_request:
+    push:
+        branches: [main]
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+permissions:
+    contents: read
+
+env:
+    TURBO_TELEMETRY_DISABLED: 1
+
+jobs:
+    check:
+        name: Lint, test and build
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+            - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4.2.0
+            - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+              with:
+                  node-version-file: .nvmrc
+                  cache: pnpm
+            - run: pnpm install --frozen-lockfile
+            - run: pnpm format:check
+            - run: pnpm verify
+            - run: pnpm lint
+            - run: pnpm typecheck
+            - run: pnpm test
+            - run: pnpm release
+            - name: Upload widget packages
+              uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+              with:
+                  name: mpk
+                  path: packages/*/*/dist/*/*.mpk
+                  if-no-files-found: ignore

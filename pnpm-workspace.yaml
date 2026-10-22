@@ -1,0 +1,17 @@
+packages:
+    - "packages/widgets/*"
+    - "packages/shared/*"
+    - "packages/templates/*"
+
+# One version of each shared dependency for every widget. Reference these
+# from a package.json with "catalog:" instead of a version number.
+catalog:
+    "@mendix/pluggable-widgets-tools": "11.15.0"
+    "@testing-library/jest-dom": "^6.9.1"
+    "@testing-library/react": "^16.3.2"
+    "@testing-library/user-event": "^14.6.1"
+    classnames: "^2.5.1"
+    # Widget API types. Keep in step with the tools version.
+    mendix: "11.15.0"
+    # The Mendix widget tooling targets TypeScript 5.x
+    typescript: "~5.9.3"

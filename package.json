@@ -1,0 +1,51 @@
+{
+    "name": "mendix-web-widgets",
+    "private": true,
+    "description": "Custom Mendix pluggable widgets",
+    "license": "Apache-2.0",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/kendallchristy/mendix-web-widgets.git"
+    },
+    "scripts": {
+        "build": "turbo run build",
+        "changeset": "changeset",
+        "dev": "turbo run dev --filter",
+        "format": "prettier --write .",
+        "format:check": "prettier --check .",
+        "github-release": "node scripts/github-release.mjs",
+        "lint": "turbo run lint",
+        "new-widget": "node scripts/new-widget.mjs",
+        "release": "turbo run release",
+        "test": "turbo run test",
+        "typecheck": "turbo run typecheck",
+        "verify": "node scripts/verify-widgets.mjs",
+        "version-packages": "changeset version && node scripts/sync-package-xml.mjs"
+    },
+    "devDependencies": {
+        "@changesets/changelog-github": "^1.0.1",
+        "@changesets/cli": "^3.0.3",
+        "@eslint-react/eslint-plugin": "^5.28.6",
+        "@eslint/js": "^10.0.1",
+        "@mendix/pluggable-widgets-tools": "catalog:",
+        "@prettier/plugin-xml": "^3.4.2",
+        "eslint": "^10.13.0",
+        "eslint-config-prettier": "^10.1.8",
+        "eslint-plugin-react-hooks": "^7.1.1",
+        "globals": "^17.13.0",
+        "prettier": "^3.9.10",
+        "turbo": "^2.11.10",
+        "typescript": "catalog:",
+        "typescript-eslint": "^8.72.0"
+    },
+    "packageManager": "pnpm@10.33.4",
+    "engines": {
+        "node": "^22.18.0",
+        "pnpm": ">=10 <11"
+    },
+    "pnpm": {
+        "onlyBuiltDependencies": [
+            "@swc/core"
+        ]
+    }
+}

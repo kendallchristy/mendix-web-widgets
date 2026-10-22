@@ -1,0 +1,11 @@
+{
+    "extends": "@mendix/pluggable-widgets-tools/configs/tsconfig.base.json",
+    "compilerOptions": {
+        "target": "ES2022",
+        "lib": ["ES2022", "DOM", "DOM.Iterable"],
+        "noImplicitReturns": true,
+        "noImplicitOverride": true,
+        "isolatedModules": true,
+        "types": ["jest", "node", "@testing-library/jest-dom"]
+    }
+}

@@ -1,0 +1,9 @@
+{
+    "$schema": "https://unpkg.com/@changesets/config@4.0.1/schema.json",
+    "baseBranch": "main",
+    "changelog": ["@changesets/changelog-github", { "repo": "kendallchristy/mendix-web-widgets" }],
+    "commit": false,
+    "ignore": ["@kendallchristy/template-widget"],
+    "privatePackages": { "version": true, "tag": false },
+    "updateInternalDependencies": "patch"
+}
