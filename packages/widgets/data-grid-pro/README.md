@@ -54,9 +54,10 @@ Clicks on buttons, links and inputs inside a row, and anywhere inside the open d
 
 Measured with the demo app in `packages/demos/data-grid-pro-demo`, which runs the widget against a mocked Mendix API with 120 ms of latency, in headless Chromium with software rendering. Real browsers with a GPU are faster.
 
-| Rows   | First rows | Wheel scroll, average frame | Fling, average frame | Rows in the page |
-| ------ | ---------- | --------------------------- | -------------------- | ---------------- |
-| 20,000 | 0.38 s     | 17 ms                       | 22 ms                | 31               |
+| Rows    | First rows | Wheel scroll, average frame | Fling, average frame | Rows in the page |
+| ------- | ---------- | --------------------------- | -------------------- | ---------------- |
+| 20,000  | 0.38 s     | 17 ms                       | 22 ms                | 31               |
+| 100,000 | 0.76 s     | 30 ms                       | 37 ms                | 31               |
 
 Run it with `pnpm --filter @kendallchristy/data-grid-pro-demo bench -- --rows 20000`.
 
