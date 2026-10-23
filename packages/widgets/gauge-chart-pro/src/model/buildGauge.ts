@@ -19,6 +19,49 @@ const ANGLES: Record<GaugeSettings["shape"], { start: number; sweep: number }> =
     ring: { start: 90, sweep: 360 }
 };
 
+// End labels: 10 px figures, about this wide per character.
+const RANGE_CHAR = 6.2;
+
+interface Block {
+    /** Half the width of the value and caption, in pixels. */
+    half: number;
+    /** How far their bottom is below the centre, in pixels. */
+    bottom: number;
+}
+
+/**
+ * Where the minimum and maximum labels go, from the centre in pixels. On an arc or half circle they sit under the
+ * ends, so a wide arc never covers them, and drop below the value if they would run into it. On a ring, where both
+ * ends meet at the top, they sit either side of the seam, above the ring.
+ */
+function rangeLabels(
+    shape: GaugeSettings["shape"],
+    radius: number,
+    width: number,
+    roundCaps: boolean,
+    texts: [string, string],
+    avoid: Block
+): Array<{ text: string; x: number; y: number }> {
+    const half = texts.map(text => (text.length * RANGE_CHAR) / 2);
+    if (shape === "ring") {
+        const y = -radius - 9;
+        return [
+            { text: texts[0], x: half[0] + 4, y },
+            { text: texts[1], x: -half[1] - 4, y }
+        ];
+    }
+    // The middle of each end, kept from running past the side of the gauge.
+    const across = (shape === "arc" ? Math.cos(Math.PI / 6) : 1) * (radius - width / 2);
+    // An arc's ends dip below the centre; round caps bulge past the ends.
+    const bottom = shape === "arc" ? radius * 0.5 + (roundCaps ? width / 4 : 0) : roundCaps ? width / 2 : 0;
+    return texts.map((text, i) => {
+        const x = Math.min(across, radius - half[i]);
+        const clear = x - half[i] >= avoid.half + 6;
+        const y = clear ? bottom + 11 : Math.max(bottom + 11, avoid.bottom + 9);
+        return { text, x: i === 0 ? -x : x, y };
+    });
+}
+
 /** The band a value falls in: each band runs from the previous band's end, the first from the minimum. */
 export function bandOf(value: number, bands: GaugeBand[]): GaugeBand | undefined {
     return [...bands].sort((a, b) => a.to - b.to).find(band => value <= band.to);
@@ -51,25 +94,53 @@ export function buildGauge(
     const width = Math.max(1, settings.arcWidth);
     const top = 8;
     const caption = settings.caption && settings.showValue ? 18 : 0;
+    const needle = settings.indicator !== "progress";
+    const ring = settings.shape === "ring";
     // A half circle's value sits on its flat edge, so it needs room below the centre.
     const below = settings.shape === "half" && settings.showValue ? settings.valueSize * 0.5 + caption : 0;
-    const needle = settings.indicator !== "progress";
-    // Under a needle the value sits below the pivot, which can reach past the bottom of an arc.
-    const needleText = (r: number): number =>
-        needle && settings.shape !== "half" && settings.showValue
-            ? Math.round(r * 0.38) + settings.valueSize * 0.6 + caption
-            : 0;
+    // The value sits in the middle, below the needle's pivot, or just above a half circle's flat edge.
+    const valueOffsetAt = (r: number): number =>
+        settings.shape === "half" ? -settings.valueSize * 0.2 : needle ? Math.round(r * 0.38) : 0;
+    const valueText = settings.showValue && value !== undefined ? format(value) : "";
+    const blockAt = (r: number): Block =>
+        settings.showValue
+            ? {
+                  half: Math.max(
+                      valueText.length * settings.valueSize * 0.31,
+                      caption ? (settings.caption ?? "").length * 3.3 : 0
+                  ),
+                  bottom: valueOffsetAt(r) + (caption ? settings.valueSize * 0.75 + 9 : settings.valueSize * 0.6)
+              }
+            : { half: 0, bottom: -Infinity };
+    const range: [string, string] = [format(min), format(max)];
+    const endsAt = (r: number): ReturnType<typeof rangeLabels> =>
+        settings.showRange ? rangeLabels(settings.shape, r, width, settings.roundCaps, range, blockAt(r)) : [];
+    // How far below the centre anything reaches: the value under a needle, or the end labels.
+    const extentBelow = (r: number): number =>
+        Math.max(
+            needle && !ring && settings.shape !== "half" && settings.showValue ? blockAt(r).bottom : 0,
+            ...endsAt(r)
+                .filter(() => !ring)
+                .map(end => end.y + 7)
+        );
+    // A ring's end labels sit above it.
+    const above = settings.showRange && ring ? 16 : 0;
     let layout: Record<string, unknown>;
     let radius = 0;
     if (size.width > 0) {
-        const height = size.height - top - 8;
-        let fit = fitArc(start, sweep, 0, size.width - 16, height - below, 0);
-        const overflow = fit.y + needleText(fit.radius) - height;
-        if (overflow > 0) {
-            fit = fitArc(start, sweep, 0, size.width - 16, height - overflow, 0);
+        const height = size.height - top - 8 - above;
+        let room = height - below;
+        let fit = fitArc(start, sweep, 0, size.width - 16, room, 0);
+        for (let i = 0; i < 3; i++) {
+            const overflow = fit.y + extentBelow(fit.radius) - height;
+            if (overflow <= 0.5) {
+                break;
+            }
+            room -= overflow;
+            fit = fitArc(start, sweep, 0, size.width - 16, room, 0);
         }
         radius = fit.radius;
-        layout = { center: [8 + fit.x, top + fit.y], radius: Math.round(radius) };
+        layout = { center: [8 + fit.x, top + above + fit.y], radius: Math.round(radius) };
     } else {
         layout = { center: ["50%", settings.shape === "half" ? "75%" : "55%"], radius: "75%" };
     }
@@ -88,9 +159,7 @@ export function buildGauge(
               ]
             : [[1, track]];
 
-    // The value sits in the middle, below the needle's pivot, or just above a half circle's flat edge.
-    const valueOffset =
-        settings.shape === "half" ? -settings.valueSize * 0.2 : needle ? Math.round((radius || 80) * 0.38) : 0;
+    const valueOffset = valueOffsetAt(radius || 80);
     const shared = { type: "gauge", ...layout, startAngle: start, endAngle: start - sweep, min, max };
     const series: Array<Record<string, unknown>> = [
         {
@@ -130,15 +199,8 @@ export function buildGauge(
                 length: 8,
                 lineStyle: { color: tokens.label, width: 1.5 }
             },
-            axisLabel: {
-                show: settings.showRange,
-                distance: width + (settings.roundCaps ? 14 : 8),
-                color: tokens.label,
-                fontFamily: figures,
-                fontSize: 10,
-                // Only the ends get a label.
-                formatter: (tick: number) => (tick === min || tick === max ? format(tick) : "")
-            },
+            // The minimum and maximum are drawn by their own series, where they can't collide.
+            axisLabel: { show: false },
             title: {
                 show: Boolean(settings.caption) && settings.showValue,
                 offsetCenter: [0, valueOffset + settings.valueSize * (settings.shape === "half" ? 0.7 : 0.75)],
@@ -184,6 +246,31 @@ export function buildGauge(
                 itemStyle: { color: tokens.text }
             },
             data: [{ value: Math.min(max, Math.max(min, settings.target)) }]
+        });
+    }
+
+    if (settings.showRange) {
+        // Two invisible pointers whose titles are the minimum and maximum, placed clear of the arc.
+        const ends = endsAt(radius || 80);
+        series.push({
+            ...shared,
+            name: "range",
+            silent: true,
+            tooltip: { show: false },
+            axisLine: { show: false },
+            axisTick: { show: false },
+            splitLine: { show: false },
+            axisLabel: { show: false },
+            progress: { show: false },
+            pointer: { show: false },
+            anchor: { show: false },
+            detail: { show: false },
+            title: { show: true, color: tokens.label, fontFamily: figures, fontSize: 10 },
+            data: ends.map(end => ({
+                value: min,
+                name: end.text,
+                title: { offsetCenter: [Math.round(end.x), Math.round(end.y)] }
+            }))
         });
     }
 
