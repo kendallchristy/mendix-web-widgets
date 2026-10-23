@@ -36,17 +36,26 @@ describe("presetFits", () => {
 
 describe("findActivePreset", () => {
     const presets = [
-        { id: "thisMonth", label: "This month", value: builtInPresetValue("thisMonth", today, 1) },
+        {
+            id: "thisMonth",
+            label: "This month",
+            value: builtInPresetValue("thisMonth", today, 1)
+        },
         { id: "allTime", label: "All time", value: {} }
     ];
     it("matches by day, ignoring time", () => {
-        const value = { start: day(2026, 1, 1), end: new Date(2026, 0, 31, 23, 59, 59) };
+        const value = {
+            start: day(2026, 1, 1),
+            end: new Date(2026, 0, 31, 23, 59, 59)
+        };
         expect(findActivePreset(presets, value, "range", "day")?.id).toBe("thisMonth");
     });
     it("matches All time on an empty value", () => {
         expect(findActivePreset(presets, {}, "range", "day")?.id).toBe("allTime");
     });
     it("is custom otherwise", () => {
-        expect(findActivePreset(presets, { start: day(2026, 1, 2), end: day(2026, 1, 31) }, "range", "day")).toBeUndefined();
+        expect(
+            findActivePreset(presets, { start: day(2026, 1, 2), end: day(2026, 1, 31) }, "range", "day")
+        ).toBeUndefined();
     });
 });

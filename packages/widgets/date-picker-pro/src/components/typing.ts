@@ -14,7 +14,11 @@ export interface TypedTextContext {
 /** Relative shortcuts first, then the field's own format, then ISO dates ("2026-01-10"). */
 export function resolveTypedText(text: string, context: TypedTextContext): RelativeResult | undefined {
     if (context.relativeTyping) {
-        const relative = parseRelative(text, { now: new Date(), weekStartsOn: context.weekStartsOn, locale: context.locale });
+        const relative = parseRelative(text, {
+            now: new Date(),
+            weekStartsOn: context.weekStartsOn,
+            locale: context.locale
+        });
         if (relative) {
             return relative;
         }

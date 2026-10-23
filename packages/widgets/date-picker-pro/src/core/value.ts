@@ -36,7 +36,13 @@ export function shapeValue(value: PickerValue, shape: ValueShape): PickerValue {
 }
 
 /** Puts a newly picked day on an edge, keeping that edge's time of day when the picker shows times. */
-export function withDay(day: Date, previous: Date | undefined, hasTime: boolean, edge: Edge, rangeEndAt: RangeEndAt): Date {
+export function withDay(
+    day: Date,
+    previous: Date | undefined,
+    hasTime: boolean,
+    edge: Edge,
+    rangeEndAt: RangeEndAt
+): Date {
     if (!hasTime) {
         return startOfDay(day);
     }
@@ -64,7 +70,13 @@ export function sameValue(a: PickerValue, b: PickerValue): boolean {
 /** Keeps a range in order after one edge was typed: an edge that crosses the other clears it. */
 export function setEdge(value: PickerValue, edge: Edge, date: Date | undefined): PickerValue {
     if (edge === "start") {
-        return { start: date, end: date && value.end && value.end < date ? undefined : value.end };
+        return {
+            start: date,
+            end: date && value.end && value.end < date ? undefined : value.end
+        };
     }
-    return { start: date && value.start && value.start > date ? undefined : value.start, end: date };
+    return {
+        start: date && value.start && value.start > date ? undefined : value.start,
+        end: date
+    };
 }

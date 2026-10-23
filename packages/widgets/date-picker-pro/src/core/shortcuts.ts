@@ -39,7 +39,10 @@ export function shortcutSections(options: ShortcutOptions): ShortcutSection[] {
     }
     if (segmented) {
         typing.push(
-            { keys: ["←", "→"], description: "Move between day, month and year" },
+            {
+                keys: ["←", "→"],
+                description: "Move between day, month and year"
+            },
             { keys: ["↑", "↓"], description: "Change the part you're on" },
             { keys: ["Backspace"], description: "Clear the part you're on" }
         );
@@ -53,24 +56,48 @@ export function shortcutSections(options: ShortcutOptions): ShortcutSection[] {
             { keys: ["t"], description: "Today" },
             { keys: ["y"], description: "Yesterday" },
             { keys: ["tom"], description: "Tomorrow" },
-            { keys: ["+7", "-7"], description: "7 days from today, or 7 days ago" },
-            { keys: ["+2w", "-3m", "+1q", "+1y"], description: "Weeks, months, quarters or years from today" }
+            {
+                keys: ["+7", "-7"],
+                description: "7 days from today, or 7 days ago"
+            },
+            {
+                keys: ["+2w", "-3m", "+1q", "+1y"],
+                description: "Weeks, months, quarters or years from today"
+            }
         ];
         if (granularity === "day") {
             items.push(
                 { keys: ["15"], description: "The 15th of this month" },
-                { keys: ["fri"], description: "This coming Friday (today if it's Friday)" },
-                { keys: ["next fri", "last mon"], description: "The Friday after today, or the Monday before" }
+                {
+                    keys: ["fri"],
+                    description: "This coming Friday (today if it's Friday)"
+                },
+                {
+                    keys: ["next fri", "last mon"],
+                    description: "The Friday after today, or the Monday before"
+                }
             );
         }
         if (hasTime) {
-            items.push({ keys: ["now"], description: "Today at the current time" });
+            items.push({
+                keys: ["now"],
+                description: "Today at the current time"
+            });
         }
         if (selection === "range") {
             items.push(
-                { keys: ["this week", "last month", "next quarter"], description: "A whole period, filling both dates" },
-                { keys: ["last 7 days", "next 30 days"], description: "A number of days up to or from today" },
-                { keys: ["wtd", "mtd", "qtd", "ytd"], description: "Week, month, quarter or year to date" }
+                {
+                    keys: ["this week", "last month", "next quarter"],
+                    description: "A whole period, filling both dates"
+                },
+                {
+                    keys: ["last 7 days", "next 30 days"],
+                    description: "A number of days up to or from today"
+                },
+                {
+                    keys: ["wtd", "mtd", "qtd", "ytd"],
+                    description: "Week, month, quarter or year to date"
+                }
             );
         }
         sections.push({
@@ -78,7 +105,10 @@ export function shortcutSections(options: ShortcutOptions): ShortcutSection[] {
             title: "Shortcuts you can type",
             items: [
                 ...items,
-                { keys: ["Enter"], description: "Use what you typed. Esc goes back to the date you had." }
+                {
+                    keys: ["Enter"],
+                    description: "Use what you typed. Esc goes back to the date you had."
+                }
             ]
         });
     }
@@ -95,16 +125,37 @@ export function shortcutSections(options: ShortcutOptions): ShortcutSection[] {
                 },
                 ...(granularity === "day"
                     ? [
-                          { keys: ["Page Up", "Page Down"], description: "Previous or next month" },
-                          { keys: ["Shift + Page Up", "Shift + Page Down"], description: "Previous or next year" },
-                          { keys: ["Home", "End"], description: "Start or end of the week" }
+                          {
+                              keys: ["Page Up", "Page Down"],
+                              description: "Previous or next month"
+                          },
+                          {
+                              keys: ["Shift + Page Up", "Shift + Page Down"],
+                              description: "Previous or next year"
+                          },
+                          {
+                              keys: ["Home", "End"],
+                              description: "Start or end of the week"
+                          }
                       ]
-                    : [{ keys: ["Page Up", "Page Down"], description: "Previous or next page" }]),
+                    : [
+                          {
+                              keys: ["Page Up", "Page Down"],
+                              description: "Previous or next page"
+                          }
+                      ]),
                 {
                     keys: ["Enter", "Space"],
                     description: selection === "range" ? "Pick the start, then the end" : `Pick the ${unit}`
                 },
-                ...(inline ? [] : [{ keys: ["Esc"], description: "Close without changing anything" }])
+                ...(inline
+                    ? []
+                    : [
+                          {
+                              keys: ["Esc"],
+                              description: "Close without changing anything"
+                          }
+                      ])
             ]
         });
     }
@@ -114,8 +165,14 @@ export function shortcutSections(options: ShortcutOptions): ShortcutSection[] {
             id: "open",
             title: "Opening the picker",
             items: [
-                { keys: ["Alt + ↓"], description: "Open the calendar from the date field" },
-                { keys: ["?"], description: "Show this help from the date field" }
+                {
+                    keys: ["Alt + ↓"],
+                    description: "Open the calendar from the date field"
+                },
+                {
+                    keys: ["?"],
+                    description: "Show this help from the date field"
+                }
             ]
         });
     }

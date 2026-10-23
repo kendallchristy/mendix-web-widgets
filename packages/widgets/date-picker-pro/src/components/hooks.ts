@@ -1,20 +1,20 @@
-import { useEffect, useState } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 
 /** Tracks a CSS media query, for the mobile layout. */
 export function useMediaQuery(query: string): boolean {
-    const get = (): boolean => typeof window !== "undefined" && !!window.matchMedia?.(query).matches;
-    const [matches, setMatches] = useState(get);
-    useEffect(() => {
-        const list = window.matchMedia?.(query);
-        if (!list) {
-            return;
-        }
-        const update = (): void => setMatches(list.matches);
-        update();
-        list.addEventListener?.("change", update);
-        return () => list.removeEventListener?.("change", update);
-    }, [query]);
-    return matches;
+    const subscribe = useCallback(
+        (onChange: () => void) => {
+            const list = window.matchMedia?.(query);
+            list?.addEventListener?.("change", onChange);
+            return () => list?.removeEventListener?.("change", onChange);
+        },
+        [query]
+    );
+    return useSyncExternalStore(
+        subscribe,
+        () => !!window.matchMedia?.(query).matches,
+        () => false
+    );
 }
 
 export function fillCount(text: string, count: number | undefined): string {

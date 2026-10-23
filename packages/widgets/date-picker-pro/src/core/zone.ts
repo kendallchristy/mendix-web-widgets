@@ -38,7 +38,9 @@ export function toAttribute(date: Date | undefined, utc: boolean): Date | undefi
 
 interface ProbeFormatter {
     type?: string;
-    withConfig?: (config: { type: "custom"; pattern: string }) => { format: (value: Date | undefined) => string };
+    withConfig?: (config: { type: "custom"; pattern: string }) => {
+        format: (value: Date | undefined) => string;
+    };
 }
 
 const pad = (value: number): string => String(value).padStart(2, "0");
@@ -59,8 +61,12 @@ export function detectUtc(formatter: unknown): boolean | undefined {
     }
     try {
         const shown = candidate.withConfig({ type: "custom", pattern: "yyyy-MM-dd HH:mm" }).format(probe);
-        const utc = `${probe.getUTCFullYear()}-${pad(probe.getUTCMonth() + 1)}-${pad(probe.getUTCDate())} ${pad(probe.getUTCHours())}:${pad(probe.getUTCMinutes())}`;
-        const local = `${probe.getFullYear()}-${pad(probe.getMonth() + 1)}-${pad(probe.getDate())} ${pad(probe.getHours())}:${pad(probe.getMinutes())}`;
+        const utc = `${probe.getUTCFullYear()}-${pad(
+            probe.getUTCMonth() + 1
+        )}-${pad(probe.getUTCDate())} ${pad(probe.getUTCHours())}:${pad(probe.getUTCMinutes())}`;
+        const local = `${probe.getFullYear()}-${pad(
+            probe.getMonth() + 1
+        )}-${pad(probe.getDate())} ${pad(probe.getHours())}:${pad(probe.getMinutes())}`;
         if (shown === utc) {
             return true;
         }

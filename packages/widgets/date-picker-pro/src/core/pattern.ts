@@ -5,7 +5,8 @@ import { getDayOfYear, getDaysInMonth, getISODay, getWeek, getWeekOfMonth } from
 import type { LocaleInfo } from "./locale";
 import type { Granularity } from "./types";
 
-export type SegmentType = "year" | "month" | "day" | "hour" | "minute" | "second" | "millisecond" | "dayPeriod" | "quarter";
+export type SegmentType =
+    "year" | "month" | "day" | "hour" | "minute" | "second" | "millisecond" | "dayPeriod" | "quarter";
 
 export type Token =
     | { kind: "literal"; text: string }
@@ -71,7 +72,12 @@ export function tokenize(pattern: string): Token[] {
             }
             tokens.push(
                 segmentLetters[char]
-                    ? { kind: "segment", type: segmentLetters[char], letter: char, length }
+                    ? {
+                          kind: "segment",
+                          type: segmentLetters[char],
+                          letter: char,
+                          length
+                      }
                     : { kind: "display", letter: char, length }
             );
             i += length;

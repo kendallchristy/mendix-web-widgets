@@ -18,7 +18,10 @@ describe("tokenize", () => {
             { kind: "literal", text: " de " },
             { kind: "segment", type: "month", letter: "M", length: 4 }
         ]);
-        expect(tokenize("HH'h'mm''")[1]).toEqual({ kind: "literal", text: "h" });
+        expect(tokenize("HH'h'mm''")[1]).toEqual({
+            kind: "literal",
+            text: "h"
+        });
     });
 });
 

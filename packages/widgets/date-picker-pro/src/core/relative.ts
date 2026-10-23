@@ -86,7 +86,11 @@ function periodRange(today: Date, unit: Unit, offset: number, weekStartsOn: Week
         return { kind: "range", start: date, end: date };
     }
     const date = add(today, offset, unit);
-    return { kind: "range", start: startOfPeriod(date, unit), end: startOfDay(endOfPeriod(date, unit)) };
+    return {
+        kind: "range",
+        start: startOfPeriod(date, unit),
+        end: startOfDay(endOfPeriod(date, unit))
+    };
 }
 
 /**
@@ -100,7 +104,10 @@ export function parseRelative(text: string, context: RelativeContext): RelativeR
     }
     const { now, weekStartsOn, locale } = context;
     const today = startOfDay(now);
-    const date = (value: Date): RelativeResult => ({ kind: "date", date: value });
+    const date = (value: Date): RelativeResult => ({
+        kind: "date",
+        date: value
+    });
 
     switch (input) {
         case "now":
@@ -116,13 +123,29 @@ export function parseRelative(text: string, context: RelativeContext): RelativeR
         case "tomorrow":
             return date(addDays(today, 1));
         case "wtd":
-            return { kind: "range", start: startOfWeek(today, { weekStartsOn }), end: today };
+            return {
+                kind: "range",
+                start: startOfWeek(today, { weekStartsOn }),
+                end: today
+            };
         case "mtd":
-            return { kind: "range", start: startOfPeriod(today, "month"), end: today };
+            return {
+                kind: "range",
+                start: startOfPeriod(today, "month"),
+                end: today
+            };
         case "qtd":
-            return { kind: "range", start: startOfPeriod(today, "quarter"), end: today };
+            return {
+                kind: "range",
+                start: startOfPeriod(today, "quarter"),
+                end: today
+            };
         case "ytd":
-            return { kind: "range", start: startOfPeriod(today, "year"), end: today };
+            return {
+                kind: "range",
+                start: startOfPeriod(today, "year"),
+                end: today
+            };
     }
 
     // +7, -2w, + 3 months
@@ -161,8 +184,16 @@ export function parseRelative(text: string, context: RelativeContext): RelativeR
         }
         // Counted with today included: "last 7 days" is today and the 6 days before it.
         return match[1] === "next"
-            ? { kind: "range", start: today, end: addDays(add(today, count, unit), -1) }
-            : { kind: "range", start: addDays(add(today, -count, unit), 1), end: today };
+            ? {
+                  kind: "range",
+                  start: today,
+                  end: addDays(add(today, count, unit), -1)
+              }
+            : {
+                  kind: "range",
+                  start: addDays(add(today, -count, unit), 1),
+                  end: today
+              };
     }
 
     // fri, next fri, last monday

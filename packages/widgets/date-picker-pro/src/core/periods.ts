@@ -85,5 +85,8 @@ export function samePeriod(a: Date | undefined, b: Date | undefined, unit: Perio
 
 /** Local calendar day as "yyyy-mm-dd", for lookups. */
 export function dayKey(date: Date): string {
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+        2,
+        "0"
+    )}-${String(date.getDate()).padStart(2, "0")}`;
 }
