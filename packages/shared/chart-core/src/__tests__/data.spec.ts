@@ -1,5 +1,5 @@
 import { aggregate, sortByX } from "../data/aggregate";
-import { detectXKind, toNumber } from "../data/values";
+import { detectXKind, isAnyLoading, toNumber } from "../data/values";
 
 const points = [
     { x: "A", y: 1, source: "a1" },
@@ -61,5 +61,12 @@ describe("values", () => {
         expect(detectXKind([1, 2])).toBe("value");
         expect(detectXKind(["a", 1])).toBe("category");
         expect(detectXKind([])).toBe("category");
+    });
+});
+
+describe("isAnyLoading", () => {
+    it("is true while any data source loads, including a reload of data already delivered", () => {
+        expect(isAnyLoading([{ status: "available" }, { status: "loading" }])).toBe(true);
+        expect(isAnyLoading([{ status: "available" }, { status: "unavailable" }, undefined])).toBe(false);
     });
 });

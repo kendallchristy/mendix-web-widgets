@@ -29,6 +29,17 @@ describe("createTooltipFormatter", () => {
         expect(format({ seriesName: "Sales", value: 1, data: { hcTooltip: "Order 42" } })).toContain("Order 42");
     });
 
+    it("can look tooltip texts up by point instead", () => {
+        const format = createTooltipFormatter({
+            tokens: HYPER_LIGHT,
+            style: defaultChartStyle,
+            formatValue,
+            tooltipOf: p => (p.dataIndex === 2 ? "Order 7" : undefined)
+        });
+        expect(format({ seriesName: "Sales", value: 1, dataIndex: 2 })).toContain("Order 7");
+        expect(format({ seriesName: "Sales", value: 1, dataIndex: 1 })).toContain("#1");
+    });
+
     it("shows only values in pill mode", () => {
         const format = createTooltipFormatter({
             tokens: HYPER_LIGHT,

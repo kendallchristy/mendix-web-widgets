@@ -19,7 +19,10 @@ export function init(_element: unknown, theme: unknown): FakeChart {
         options: [],
         theme,
         handlers: {},
-        setOption: option => chart.options.push(option),
+        setOption: option => {
+            chart.options.push(option);
+            chart.handlers.rendered?.({});
+        },
         setTheme: next => {
             chart.theme = next;
         },

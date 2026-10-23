@@ -31,12 +31,9 @@ describe("ChartView", () => {
         expect(lastOption().series[0].name).toBe("Sales");
     });
 
-    it("shows the empty message, the loading state and JSON errors", () => {
+    it("shows the empty message and JSON errors", () => {
         const { rerender } = render(<ChartView {...view({ series: [] })} />);
         expect(screen.getByText("Nothing yet")).toBeInTheDocument();
-
-        rerender(<ChartView {...view({ loading: true })} />);
-        expect(screen.getByLabelText("Loading chart")).toBeInTheDocument();
 
         rerender(
             <ChartView
@@ -44,6 +41,23 @@ describe("ChartView", () => {
             />
         );
         expect(screen.getByRole("alert")).toHaveTextContent("Theme JSON");
+    });
+
+    it("shows a placeholder until the data has loaded, then keeps the chart while it reloads", () => {
+        const { rerender } = render(<ChartView {...view({ loading: true })} />);
+        expect(screen.getByLabelText("Loading chart")).toBeInTheDocument();
+        const charts = lastChart();
+
+        rerender(<ChartView {...view()} />);
+        expect(screen.queryByLabelText("Loading chart")).not.toBeInTheDocument();
+        expect(lastChart()).not.toBe(charts);
+        const drawn = lastChart().options.length;
+
+        // A reload with partial data neither rebuilds nor hides the chart.
+        rerender(<ChartView {...view({ loading: true, series: [] })} />);
+        expect(screen.getByLabelText("Updating chart")).toBeInTheDocument();
+        expect(screen.queryByText("Nothing yet")).not.toBeInTheDocument();
+        expect(lastChart().options).toHaveLength(drawn);
     });
 
     it("merges the option override last", () => {

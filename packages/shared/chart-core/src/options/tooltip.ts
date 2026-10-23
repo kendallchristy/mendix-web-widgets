@@ -14,6 +14,7 @@ export interface TooltipData {
 
 export interface TooltipParam {
     seriesIndex?: number;
+    dataIndex?: number;
     seriesName?: string;
     name?: string;
     color?: unknown;
@@ -31,6 +32,8 @@ export interface TooltipFormatterOptions {
     pickValue?: (value: unknown) => number | undefined;
     /** Header for item tooltips, when there's no axis label. */
     headerOf?: (param: TooltipParam) => string;
+    /** Custom text for a point; defaults to the data item's hcTooltip. Lets large series keep plain array items. */
+    tooltipOf?: (param: TooltipParam) => string | undefined;
     /** The swatch colour for a row; defaults to the colour ECharts reports, which can be a gradient object. */
     colorOf?: (param: TooltipParam) => string | undefined;
 }
@@ -67,7 +70,7 @@ export function createTooltipFormatter(
         const header = first.axisValueLabel ?? options.headerOf?.(first) ?? first.name ?? "";
 
         const rows = params.map(p => {
-            const custom = (p.data as TooltipData | undefined)?.hcTooltip;
+            const custom = options.tooltipOf ? options.tooltipOf(p) : (p.data as TooltipData | undefined)?.hcTooltip;
             const value = pickValue(p.value);
             const formatted = value === undefined ? "" : formatValue(value);
             if (style.tooltip === "pill") {

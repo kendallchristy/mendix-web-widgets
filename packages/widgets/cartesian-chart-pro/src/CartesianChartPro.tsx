@@ -8,7 +8,9 @@ import "./ui/CartesianChartPro.scss";
 
 export function CartesianChartPro(props: CartesianChartProContainerProps): ReactElement {
     // Mendix hands over new props objects whenever data or expressions change, so these recompute only then.
-    const series = useMemo(() => seriesFromProps(props), [props]);
+    // Nothing is read until every data source has loaded.
+    const loading = isLoading(props);
+    const series = useMemo(() => (loading ? [] : seriesFromProps(props)), [loading, props]);
     const settings = useMemo(() => settingsFromProps(props), [props]);
 
     return (
@@ -25,7 +27,7 @@ export function CartesianChartPro(props: CartesianChartProContainerProps): React
             renderer={props.renderer}
             heightUnit={props.heightUnit}
             height={props.height}
-            loading={isLoading(props)}
+            loading={loading}
             emptyMessage={props.emptyMessage?.value ?? "No data"}
             className={props.class}
             style={props.style}

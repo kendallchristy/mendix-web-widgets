@@ -1,12 +1,15 @@
-import type { Aggregation, ChartStyle, DateLevel, NumberFormatOptions, XValue } from "@kendallchristy/chart-core";
+import type {
+    Aggregation,
+    ChartStyle,
+    ClickAction,
+    DateLevel,
+    NumberFormatOptions,
+    XValue
+} from "@kendallchristy/chart-core";
+
+export type { ClickAction };
 
 export type SeriesKind = "line" | "area" | "bar" | "scatter" | "bubble";
-
-/** Something a click can run: a Mendix action for the clicked object. */
-export interface ClickAction {
-    canExecute: boolean;
-    execute: () => void;
-}
 
 /** One source object, read from Mendix. */
 export interface InputPoint {

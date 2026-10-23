@@ -46,6 +46,22 @@ export function bucketDate(date: Date, level: DateLevel): DateBucket {
     }
 }
 
+const dateTimeFormats = new Map<string, Intl.DateTimeFormat>();
+
+/**
+ * A shared Intl.DateTimeFormat for a locale and options. Creating one is slow, and charts format thousands of
+ * dates per build, so each combination is created once.
+ */
+export function dateTimeFormat(locale: string | undefined, options: Intl.DateTimeFormatOptions): Intl.DateTimeFormat {
+    const key = `${locale ?? ""}|${JSON.stringify(options)}`;
+    let format = dateTimeFormats.get(key);
+    if (!format) {
+        format = new Intl.DateTimeFormat(locale, options);
+        dateTimeFormats.set(key, format);
+    }
+    return format;
+}
+
 /**
  * A short label for a bucket. The year is added to months, weeks and days only when the buckets on screen span
  * more than one year.
@@ -60,13 +76,12 @@ export function formatBucket(bucket: DateBucket, level: DateLevel, showYear: boo
                 ? `Q${Math.floor(bucket.start.getMonth() / 3) + 1} ${year}`
                 : `Q${Math.floor(bucket.start.getMonth() / 3) + 1}`;
         case "month":
-            return new Intl.DateTimeFormat(
-                locale,
-                showYear ? { month: "short", year: "numeric" } : { month: "short" }
-            ).format(bucket.start);
+            return dateTimeFormat(locale, showYear ? { month: "short", year: "numeric" } : { month: "short" }).format(
+                bucket.start
+            );
         case "week":
         case "day":
-            return new Intl.DateTimeFormat(
+            return dateTimeFormat(
                 locale,
                 showYear ? { month: "short", day: "numeric", year: "numeric" } : { month: "short", day: "numeric" }
             ).format(bucket.start);

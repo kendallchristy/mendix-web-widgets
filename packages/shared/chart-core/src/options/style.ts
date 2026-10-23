@@ -140,12 +140,12 @@ export function legendPlacement(style: ChartStyle, seriesCount: number): LegendP
     return style.legend;
 }
 
-export function legendOption(placement: LegendPlacement, hasTitle: boolean): Record<string, unknown> {
+export function legendOption(placement: LegendPlacement): Record<string, unknown> {
     switch (placement) {
         case "hidden":
             return { show: false };
         case "top":
-            return { show: true, type: "scroll", top: hasTitle ? 52 : 0, left: 0 };
+            return { show: true, type: "scroll", top: 0, left: 0 };
         case "bottom":
             return { show: true, type: "scroll", bottom: 0, left: 0 };
         case "right":
@@ -153,39 +153,21 @@ export function legendOption(placement: LegendPlacement, hasTitle: boolean): Rec
     }
 }
 
-export function titleOption(
-    title: string | undefined,
-    subtitle: string | undefined,
-    align: "left" | "center"
-): Record<string, unknown> | undefined {
-    if (!title && !subtitle) {
-        return undefined;
-    }
+/**
+ * Space around the plot, leaving room for the legend. The title sits above the chart in HTML (see ChartFrame), so it
+ * wraps instead of running into the plot.
+ */
+export function gridOption(placement: LegendPlacement): Record<string, unknown> {
+    const legendTop = placement === "top" ? 32 : 0;
     return {
-        show: true,
-        text: title ?? "",
-        subtext: subtitle ?? "",
-        left: align === "center" ? "center" : 0,
-        top: 0,
-        padding: 0,
-        itemGap: 6
-    };
-}
-
-/** Space around the plot, leaving room for the title and legend. */
-export function gridOption(
-    placement: LegendPlacement,
-    hasTitle: boolean,
-    hasSubtitle: boolean
-): Record<string, unknown> {
-    const titleSpace = hasTitle ? (hasSubtitle ? 52 : 34) : 0;
-    const legendTop = placement === "top" ? 28 : 0;
-    return {
-        top: titleSpace + legendTop + 12,
+        top: legendTop + 12,
         bottom: placement === "bottom" ? 36 : 8,
         left: 8,
         right: placement === "right" ? 120 : 16,
-        containLabel: true
+        // Keep axis labels and axis titles inside the chart. containLabel only covers the labels, so long axis
+        // titles ended up on top of them or outside the chart.
+        outerBoundsMode: "same",
+        outerBoundsContain: "all"
     };
 }
 

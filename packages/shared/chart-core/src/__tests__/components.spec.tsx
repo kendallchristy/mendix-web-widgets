@@ -1,6 +1,10 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 
 import { Breadcrumb } from "../components/Breadcrumb";
+import type { BuiltChart, ChartFrameProps } from "../components/ChartFrame";
+import { ChartFrame, themeSettingsFromProps } from "../components/ChartFrame";
+import type { DrillStep } from "../hooks/useDrillPath";
+import { defaultChartStyle } from "../options/style";
 import { EChart } from "../components/EChart";
 import { charts } from "../__mocks__/echarts/core";
 
@@ -33,5 +37,128 @@ describe("EChart", () => {
 
         chart.handlers.click({ componentType: "series", dataIndex: 0 });
         expect(onClick).toHaveBeenCalled();
+    });
+});
+
+describe("ChartFrame", () => {
+    const action = { canExecute: true, execute: jest.fn() };
+    const build = jest.fn((_tokens: unknown, path: Array<DrillStep<string>>): BuiltChart<string> => ({
+        option: { series: [{ name: path.map(s => s.value).join("/") || "top" }] },
+        clickTargets: [[path.length === 0 ? { drill: { label: "Europe", value: "Europe" } } : { action }]],
+        breadcrumb: ["All", ...path.map(s => s.label)],
+        table: { columns: ["Name"], rows: [["Europe"]] },
+        pointCount: 1
+    }));
+    const props = (overrides: Partial<ChartFrameProps<string>> = {}): ChartFrameProps<string> => ({
+        widgetClass: "widget-test",
+        build,
+        theme: { preset: "hyper", palette: "theme", themeJson: [], optionOverride: [] },
+        chartStyle: defaultChartStyle,
+        caption: "Test data",
+        renderer: "svg",
+        heightUnit: "pixels",
+        height: 180,
+        loading: false,
+        emptyMessage: "Empty",
+        ...overrides
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const lastOption = () => charts[charts.length - 1].options.at(-1) as Record<string, any>;
+
+    it("drills down on click, then runs the action at the last level", () => {
+        render(<ChartFrame {...props()} />);
+        expect(screen.getByRole("table")).toHaveTextContent("Test data");
+        const chart = charts[charts.length - 1];
+        act(() => chart.handlers.click({ componentType: "series", seriesIndex: 0, dataIndex: 0 }));
+        expect(lastOption().series[0].name).toBe("Europe");
+        expect(screen.getByRole("navigation", { name: "Drilldown" })).toHaveTextContent("Europe");
+
+        act(() => chart.handlers.click({ componentType: "series", seriesIndex: 0, dataIndex: 0 }));
+        expect(action.execute).toHaveBeenCalledTimes(1);
+
+        fireEvent.click(screen.getByRole("button", { name: "All" }));
+        expect(lastOption().series[0].name).toBe("top");
+    });
+
+    it("merges the option override and reports bad JSON", () => {
+        const { rerender } = render(
+            <ChartFrame
+                {...props({
+                    theme: { preset: "hyper", palette: "theme", themeJson: [], optionOverride: ['{"color": ["#000"]}'] }
+                })}
+            />
+        );
+        expect(lastOption().color).toEqual(["#000"]);
+        rerender(
+            <ChartFrame
+                {...props({ theme: { preset: "hyper", palette: "theme", themeJson: [], optionOverride: ["{"] } })}
+            />
+        );
+        expect(screen.getByRole("alert")).toHaveTextContent("Option override");
+    });
+
+    it("shows loading and empty states", () => {
+        const { rerender } = render(<ChartFrame {...props({ loading: true })} />);
+        expect(screen.getByLabelText("Loading chart")).toBeInTheDocument();
+        rerender(<ChartFrame {...props({ build: () => ({ ...build({}, []), pointCount: 0 }) })} />);
+        expect(screen.getByText("Empty")).toBeInTheDocument();
+    });
+
+    it("puts the title above the plot, using the theme's title colours", () => {
+        const { container } = render(
+            <ChartFrame
+                {...props({
+                    title: "Revenue",
+                    subtitle: "Per month",
+                    titleAlign: "center",
+                    theme: {
+                        preset: "custom",
+                        palette: "theme",
+                        themeJson: ['{"title": {"textStyle": {"color": "#123456"}}}'],
+                        optionOverride: []
+                    }
+                })}
+            />
+        );
+        const header = container.querySelector(".hc-chart__header--center")!;
+        expect(header).toHaveTextContent("RevenuePer month");
+        expect(screen.getByText("Revenue")).toHaveStyle({ color: "#123456" });
+        expect(header.nextElementSibling).toHaveClass("hc-chart__body");
+    });
+
+    it("waits for data, then keeps the last chart while it reloads", () => {
+        build.mockClear();
+        const { rerender } = render(<ChartFrame {...props({ loading: true })} />);
+        expect(build).not.toHaveBeenCalled();
+        expect(screen.getByLabelText("Loading chart")).toBeInTheDocument();
+
+        rerender(<ChartFrame {...props()} />);
+        expect(build).toHaveBeenCalledTimes(1);
+        expect(screen.queryByLabelText("Loading chart")).not.toBeInTheDocument();
+
+        rerender(<ChartFrame {...props({ loading: true })} />);
+        expect(build).toHaveBeenCalledTimes(1);
+        expect(screen.getByLabelText("Updating chart")).toBeInTheDocument();
+        expect(screen.getByRole("table")).toBeInTheDocument();
+    });
+
+    it("reads theme settings from widget properties", () => {
+        expect(
+            themeSettingsFromProps({
+                theme: "custom",
+                palette: "custom",
+                customPalette: "#111",
+                themeJson: "{}",
+                themeJsonExpression: { value: '{"a":1}' },
+                optionOverride: "",
+                optionOverrideExpression: undefined
+            })
+        ).toEqual({
+            preset: "custom",
+            palette: "custom",
+            customPalette: "#111",
+            themeJson: ["{}", '{"a":1}'],
+            optionOverride: ["", undefined]
+        });
     });
 });

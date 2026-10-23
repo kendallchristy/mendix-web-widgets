@@ -76,6 +76,8 @@ Make the first series dashed and start the value axis at zero:
 }
 ```
 
+The title and subtitle sit above the chart as HTML, so they wrap instead of running into the plot. Style them through the theme's `title.textStyle` and `title.subtextStyle` or the CSS tokens, not the option override.
+
 An object applied to a list applies to every item, so `"yAxis": { "min": 0 }` sets both axes when a chart has a right-hand axis.
 
 ## The Hyper look

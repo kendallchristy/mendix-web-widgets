@@ -12,8 +12,14 @@ Line, area, bar, column, scatter and bubble charts, alone or combined, built on 
 
 - **Tooltips** show every series at the hovered point. **Tooltip text** on a series replaces its row with your own text template.
 - **On click** runs an action with the clicked object (for an aggregated point, the first object behind it).
-- **Drilldown**: Date drilldown goes from year to quarter, month, week and day; Category drilldown regroups a clicked X value by each series' **Drilldown level 2** and **Drilldown level 3** attributes. A breadcrumb in the top-right corner steps back up, and On click runs at the last level.
+- **Drilldown**: Date drilldown goes from year to quarter, month, week and day; Category drilldown regroups a clicked X value by each series' **Drilldown level 2** and **Drilldown level 3** attributes. A breadcrumb beside the title steps back up, and On click runs at the last level.
 - **Zoom** adds a slider or drag-and-scroll zoom for long time series.
+
+### Loading and large data
+
+The chart shows a placeholder until every series' data source has loaded completely, and it is never drawn from partial data. When the data reloads, the last chart stays on screen with a thin progress bar until the new data is in.
+
+Series with more than 2,000 points are drawn the fast way: lines are downsampled to the pixels available, and bars and scatter points are drawn in one batch without glow, rounded corners or greyed-out points outside a highlight range. Five charts of 10,000 points each draw in about a second.
 
 ### Styling
 

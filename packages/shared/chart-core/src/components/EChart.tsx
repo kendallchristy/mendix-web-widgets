@@ -23,23 +23,25 @@ export interface EChartProps {
     className?: string;
     style?: CSSProperties;
     onClick?: (event: ChartClickEvent) => void;
+    /** Called once the chart has drawn for the first time. */
+    onRendered?: () => void;
 }
 
 /**
  * Renders an ECharts option. The chart is created once per renderer; theme and option changes are applied to the
  * live chart, so toggling dark mode or new data never rebuilds it.
  */
-export function EChart({ option, theme, renderer, className, style, onClick }: EChartProps): ReactElement {
+export function EChart({ option, theme, renderer, className, style, onClick, onRendered }: EChartProps): ReactElement {
     const ref = useRef<HTMLDivElement>(null);
     const chartRef = useRef<EChartsType | null>(null);
     // The latest props for the chart's creation, and what the live chart was last given, so the effects below
     // only push real changes.
-    const latestRef = useRef({ theme, option });
+    const latestRef = useRef({ theme, option, onRendered });
     const appliedThemeRef = useRef<EChartsTheme | null>(null);
     const appliedOptionRef = useRef<EChartsCoreOption | null>(null);
 
     useEffect(() => {
-        latestRef.current = { theme, option };
+        latestRef.current = { theme, option, onRendered };
     });
 
     useEffect(() => {
@@ -49,6 +51,11 @@ export function EChart({ option, theme, renderer, className, style, onClick }: E
         }
         const latest = latestRef.current;
         const chart = echarts.init(element, latest.theme, { renderer });
+        const rendered = (): void => {
+            chart.off("rendered", rendered);
+            latestRef.current.onRendered?.();
+        };
+        chart.on("rendered", rendered);
         chart.setOption(latest.option);
         chartRef.current = chart;
         appliedThemeRef.current = latest.theme;

@@ -83,3 +83,11 @@ export function detectXKind(values: Iterable<XValue | undefined>): XKind {
     }
     return kind ?? "category";
 }
+
+/**
+ * Whether any data source is still loading. Mendix also reports loading while it reloads a list it already
+ * delivered; the chart then keeps the previous data on screen until the new list is complete.
+ */
+export function isAnyLoading(sources: Array<{ status: string } | undefined>): boolean {
+    return sources.some(source => source?.status === "loading");
+}

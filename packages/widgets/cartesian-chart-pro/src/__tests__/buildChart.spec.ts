@@ -1,6 +1,6 @@
 import { HYPER_LIGHT } from "@kendallchristy/chart-core";
 
-import { buildChart } from "../model/buildChart";
+import { LARGE_SERIES, buildChart } from "../model/buildChart";
 import { series, settings } from "./helpers";
 
 // ECharts options are loosely typed JSON; the tests read into them freely.
@@ -16,12 +16,17 @@ function seriesOf(option: AnyRecord): AnyRecord[] {
     return option.series as AnyRecord[];
 }
 
+// Points without their own style are plain [x, y] arrays; the rest are objects with a value.
+const valuesOf = (s: AnyRecord): unknown[][] =>
+    s.data.map((d: unknown) => (Array.isArray(d) ? d : (d as AnyRecord).value));
+const itemsOf = (s: AnyRecord): AnyRecord[] => s.data.map((d: unknown) => (Array.isArray(d) ? {} : d));
+
 describe("buildChart", () => {
     it("draws text X values on a category axis in first-seen order", () => {
         const { option, pointCount } = buildChart([series("Sales", monthly([1, 2, 3]))], settings(), HYPER_LIGHT, []);
         expect(axisOf(option)).toMatchObject({ type: "category", data: ["Jan", "Feb", "Mar"], boundaryGap: false });
         expect(seriesOf(option)[0]).toMatchObject({ type: "line", name: "Sales", color: HYPER_LIGHT.palette[0] });
-        expect(seriesOf(option)[0].data.map((d: AnyRecord) => d.value)).toEqual([
+        expect(valuesOf(seriesOf(option)[0])).toEqual([
             ["Jan", 1],
             ["Feb", 2],
             ["Mar", 3]
@@ -36,7 +41,7 @@ describe("buildChart", () => {
         ];
         const { option } = buildChart([series("S", points)], settings(), HYPER_LIGHT, []);
         expect(axisOf(option).type).toBe("time");
-        expect(seriesOf(option)[0].data.map((d: AnyRecord) => d.value[1])).toEqual([1, 3]);
+        expect(valuesOf(seriesOf(option)[0]).map(v => v[1])).toEqual([1, 3]);
     });
 
     it("aggregates points with the same X value", () => {
@@ -46,7 +51,7 @@ describe("buildChart", () => {
             { x: "B", y: 5 }
         ];
         const { option } = buildChart([series("S", points, { aggregation: "sum" })], settings(), HYPER_LIGHT, []);
-        expect(seriesOf(option)[0].data.map((d: AnyRecord) => d.value)).toEqual([
+        expect(valuesOf(seriesOf(option)[0])).toEqual([
             ["A", 3],
             ["B", 5]
         ]);
@@ -59,7 +64,7 @@ describe("buildChart", () => {
             HYPER_LIGHT,
             []
         );
-        const data = seriesOf(option)[0].data as AnyRecord[];
+        const data = itemsOf(seriesOf(option)[0]);
         expect(data.map(d => d.itemStyle?.color)).toEqual([
             HYPER_LIGHT.muted,
             undefined,
@@ -84,8 +89,9 @@ describe("buildChart", () => {
                 pieces: [{ gte: 1, lte: 3, color: HYPER_LIGHT.palette[0] }]
             })
         ]);
-        const data = seriesOf(option)[0].data as AnyRecord[];
-        expect(data.map(d => d.symbol)).toEqual(["none", "circle", "none", "circle", "none"]);
+        const data = itemsOf(seriesOf(option)[0]);
+        expect(seriesOf(option)[0].symbol).toBe("none");
+        expect(data.map(d => d.symbol)).toEqual([undefined, "circle", undefined, "circle", undefined]);
     });
 
     it("ignores a highlight that names an unknown category", () => {
@@ -110,7 +116,7 @@ describe("buildChart", () => {
         );
         expect(option.yAxis).toMatchObject({ type: "category", inverse: true });
         expect(axisOf(option)).toHaveLength(2);
-        expect(seriesOf(option)[0].data[0].value).toEqual([1, "Jan"]);
+        expect(valuesOf(seriesOf(option)[0])[0]).toEqual([1, "Jan"]);
         expect(seriesOf(option)[1].xAxisIndex).toBe(1);
     });
 
@@ -188,7 +194,7 @@ describe("buildChart", () => {
         it("starts with yearly totals and offers the next level", () => {
             const built = buildChart([series("S", points)], drill, HYPER_LIGHT, []);
             expect(axisOf(built.option).data).toEqual(["2025", "2026"]);
-            expect(seriesOf(built.option)[0].data.map((d: AnyRecord) => d.value[1])).toEqual([1, 9]);
+            expect(valuesOf(seriesOf(built.option)[0]).map(v => v[1])).toEqual([1, 9]);
             expect(built.breadcrumb).toEqual(["All"]);
             expect(built.clickTargets[0][1].drill).toEqual({
                 label: "2026",
@@ -204,7 +210,7 @@ describe("buildChart", () => {
 
             const q1 = quarters.clickTargets[0][0].drill!;
             const months = buildChart([series("S", points)], drill, HYPER_LIGHT, [year, q1]);
-            expect(seriesOf(months.option)[0].data.map((d: AnyRecord) => d.value)).toEqual([["Feb", 5]]);
+            expect(valuesOf(seriesOf(months.option)[0])).toEqual([["Feb", 5]]);
             expect(months.clickTargets[0][0].drill).toBeUndefined();
         });
 
@@ -231,7 +237,7 @@ describe("buildChart", () => {
             expect(europe.value).toEqual({ kind: "category", value: "Europe" });
 
             const countries = buildChart([series("S", points)], drill, HYPER_LIGHT, [europe]);
-            expect(seriesOf(countries.option)[0].data.map((d: AnyRecord) => d.value)).toEqual([
+            expect(valuesOf(seriesOf(countries.option)[0])).toEqual([
                 ["France", 3],
                 ["Spain", 4]
             ]);
@@ -256,5 +262,61 @@ describe("buildChart", () => {
             built.clickTargets[0][0].action!.execute();
             expect(execute).toHaveBeenCalled();
         });
+    });
+
+    describe("large series", () => {
+        const many = (n: number) => Array.from({ length: n }, (_, i) => ({ x: i, y: i % 7 }));
+
+        it("downsamples lines and keeps points as plain arrays", () => {
+            const { option } = buildChart([series("S", many(LARGE_SERIES + 1))], settings(), HYPER_LIGHT, []);
+            const line = seriesOf(option)[0];
+            expect(line.sampling).toBe("lttb");
+            expect(line.data.every((d: unknown) => Array.isArray(d))).toBe(true);
+        });
+
+        it("draws bars and scatter points in one batch without glow", () => {
+            const { option } = buildChart(
+                [
+                    series("Bars", many(LARGE_SERIES + 1), { kind: "bar" }),
+                    series("Dots", many(LARGE_SERIES + 1), { kind: "scatter" })
+                ],
+                settings(),
+                HYPER_LIGHT,
+                []
+            );
+            const [bars, dots] = seriesOf(option);
+            expect(bars).toMatchObject({ type: "bar", large: true });
+            expect(bars.itemStyle.shadowBlur).toBeUndefined();
+            expect(dots).toMatchObject({ type: "scatter", large: true });
+            expect(dots.itemStyle.shadowBlur).toBeUndefined();
+        });
+
+        it("keeps small series in the detailed style", () => {
+            const { option } = buildChart([series("Bars", many(10), { kind: "bar" })], settings(), HYPER_LIGHT, []);
+            expect(seriesOf(option)[0].large).toBe(false);
+            expect(seriesOf(option)[0].itemStyle.shadowBlur).toBeGreaterThan(0);
+        });
+    });
+
+    it("reads a point's tooltip text only when it's hovered", () => {
+        const tooltip = jest.fn(() => "Order 42");
+        const point = {
+            x: "Jan",
+            y: 1,
+            drill: [],
+            get tooltip() {
+                return tooltip();
+            }
+        };
+        const input = series("S", []);
+        const { option } = buildChart([{ ...input, points: [point] }], settings(), HYPER_LIGHT, []);
+        expect(tooltip).not.toHaveBeenCalled();
+        const html = (option as AnyRecord).tooltip.formatter({
+            seriesIndex: 0,
+            dataIndex: 0,
+            seriesName: "S",
+            value: ["Jan", 1]
+        });
+        expect(html).toContain("Order 42");
     });
 });

@@ -1,5 +1,6 @@
 export * from "./components/Breadcrumb";
 export * from "./components/ChartContainer";
+export * from "./components/ChartFrame";
 export * from "./components/ChartStatus";
 export * from "./components/EChart";
 export * from "./components/ScreenReaderTable";
@@ -10,6 +11,7 @@ export * from "./format/date";
 export * from "./format/number";
 export * from "./hooks/useChartTokens";
 export * from "./hooks/useDrillPath";
+export * from "./hooks/useElementSize";
 export * from "./options/merge";
 export * from "./options/style";
 export * from "./options/tooltip";

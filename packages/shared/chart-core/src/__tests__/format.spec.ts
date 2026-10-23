@@ -1,4 +1,4 @@
-import { bucketDate, formatBucket, nextDateLevel } from "../format/date";
+import { bucketDate, dateTimeFormat, formatBucket, nextDateLevel } from "../format/date";
 import { createNumberFormatter } from "../format/number";
 
 describe("createNumberFormatter", () => {
@@ -84,5 +84,14 @@ describe("date buckets", () => {
     it("stops at the deepest level", () => {
         expect(nextDateLevel("year", "day")).toBe("quarter");
         expect(nextDateLevel("month", "month")).toBeUndefined();
+    });
+});
+
+describe("dateTimeFormat", () => {
+    it("creates each format once", () => {
+        const format = dateTimeFormat("en-US", { month: "short" });
+        expect(dateTimeFormat("en-US", { month: "short" })).toBe(format);
+        expect(dateTimeFormat("en-GB", { month: "short" })).not.toBe(format);
+        expect(format.format(new Date(2026, 9, 1))).toBe("Oct");
     });
 });

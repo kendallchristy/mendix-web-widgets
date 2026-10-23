@@ -1,6 +1,8 @@
 import type {
     AggregatedPoint,
+    BuiltChart as CoreBuiltChart,
     ChartTokens,
+    ClickTarget as CoreClickTarget,
     DateBucket,
     DateLevel,
     DrillStep,
@@ -15,6 +17,7 @@ import {
     bucketDate,
     createNumberFormatter,
     createTooltipFormatter,
+    dateTimeFormat,
     detectXKind,
     formatBucket,
     glowStyle,
@@ -24,27 +27,23 @@ import {
     mixColors,
     sortByX,
     surfaceBackground,
-    titleOption,
     tooltipOption,
     valueLabelStyle,
     verticalGradient
 } from "@kendallchristy/chart-core";
 
-import type { ChartSettings, ClickAction, DrillValue, InputPoint, SeriesInput } from "./types";
+import type { ChartSettings, DrillValue, InputPoint, SeriesInput } from "./types";
 
-export interface ClickTarget {
-    drill?: DrillStep<DrillValue>;
-    action?: ClickAction;
-}
+export type ClickTarget = CoreClickTarget<DrillValue>;
 
-export interface BuiltChart {
-    option: Record<string, unknown>;
-    /** What clicking each point does, by series index and data index. */
-    clickTargets: ClickTarget[][];
-    breadcrumb: string[];
-    table: { columns: string[]; rows: string[][] };
-    pointCount: number;
-}
+export type BuiltChart = CoreBuiltChart<DrillValue>;
+
+/**
+ * Above this many points a series is drawn the fast way: lines are downsampled to the pixels available, bars and
+ * scatter points are drawn as one batch (no glow, rounded corners or greyed-out points outside the highlight), and
+ * lines only mark highlighted points.
+ */
+export const LARGE_SERIES = 2000;
 
 interface WorkingPoint extends Point<InputPoint> {
     /** The label shown on a category axis. */
@@ -72,7 +71,7 @@ function dateLevels(from: DateLevel, to: DateLevel): DateLevel[] {
 function plainLabel(x: XValue, formatNumber: (n: number) => string, locale?: string): string {
     if (x instanceof Date) {
         const hasTime = x.getHours() !== 0 || x.getMinutes() !== 0;
-        return new Intl.DateTimeFormat(
+        return dateTimeFormat(
             locale,
             hasTime ? { dateStyle: "medium", timeStyle: "short" } : { dateStyle: "medium" }
         ).format(x);
@@ -308,6 +307,8 @@ export function buildChart(
     const allItems = projected.length > 0 && projected.every(s => s.kind === "scatter" || s.kind === "bubble");
 
     const clickTargets: ClickTarget[][] = [];
+    const sources: InputPoint[][][] = [];
+    let hasValueLabels = false;
     const tableRows: string[][] = [];
     const colors: string[] = [];
     const visualMaps: Array<Record<string, unknown>> = [];
@@ -315,7 +316,9 @@ export function buildChart(
     const echartsSeries = projected.map((s, seriesIndex) => {
         const color = s.input.color || tokens.palette[seriesIndex % tokens.palette.length];
         colors.push(color);
+        const large = s.points.length > LARGE_SERIES;
         const targets: ClickTarget[] = [];
+        sources.push(s.points.map(p => p.sources));
         const inRange = s.points.map(p =>
             highlight ? highlight.contains(p.x, categoryIndex.get(p.meta.sortKey ?? p.meta.label) ?? -1) : true
         );
@@ -331,10 +334,8 @@ export function buildChart(
             if (s.kind === "bubble") {
                 value.push(p.size ?? 0);
             }
-            const item: Record<string, unknown> = { value };
-            if (p.sources.length === 1 && p.sources[0].tooltip) {
-                item.hcTooltip = p.sources[0].tooltip;
-            }
+            // Plain [x, y] items unless a point needs its own label or style: ECharts draws those much faster.
+            const item: Record<string, unknown> = {};
 
             const isEnd = j === firstIn || j === lastIn;
             const labelled =
@@ -343,6 +344,7 @@ export function buildChart(
                     (style.valueLabelPoints === "last" && j === lastIndex) ||
                     (style.valueLabelPoints === "highlightEnds" && isEnd));
             if (labelled) {
+                hasValueLabels = true;
                 item.label = {
                     ...valueLabelStyle(tokens, style, formatNumber),
                     position: horizontal ? "right" : "top"
@@ -350,26 +352,36 @@ export function buildChart(
             }
 
             if (s.kind === "line" || s.kind === "area") {
-                const marked = style.markers === "always" || (style.markers === "highlighted" && (isEnd || labelled));
-                if (style.markers === "highlighted" || style.markers === "always") {
-                    item.symbol = marked ? "circle" : "none";
-                }
+                const marked =
+                    (style.markers === "always" && !large) || (style.markers === "highlighted" && (isEnd || labelled));
                 if (marked) {
+                    item.symbol = "circle";
                     item.itemStyle = {
                         color: tokens.surface,
                         borderColor: inRange[j] ? color : tokens.muted,
                         borderWidth: 2.5
                     };
                 }
-            } else if (!inRange[j]) {
+            } else if (!inRange[j] && !large) {
                 item.itemStyle = { color: tokens.muted, shadowBlur: 0 };
             }
 
+            const first = p.sources[0];
+            const nextStep = drill.nextStep;
+            // Read when a point is clicked, so Mendix creates no action objects for points nobody clicks.
             targets.push({
-                drill: drill.nextStep?.(p.meta),
-                action: p.sources[0]?.action
+                get drill() {
+                    return nextStep?.(p.meta);
+                },
+                get action() {
+                    return first?.action;
+                }
             });
             tableRows.push([s.input.name, p.meta.label, p.y === undefined ? "" : formatNumber(p.y)]);
+            if (Object.keys(item).length === 0) {
+                return value;
+            }
+            item.value = value;
             return item;
         });
         clickTargets.push(targets);
@@ -382,7 +394,9 @@ export function buildChart(
             yAxisIndex: horizontal ? undefined : s.input.yAxisSide === "right" ? 1 : 0,
             xAxisIndex: horizontal ? (s.input.yAxisSide === "right" ? 1 : 0) : undefined,
             stack: s.input.stack || undefined,
-            emphasis: { focus: "none" }
+            emphasis: { focus: "none" },
+            // Value labels that would collide are dropped rather than drawn over each other.
+            labelLayout: { hideOverlap: true }
         };
 
         if (s.kind === "line" || s.kind === "area") {
@@ -409,9 +423,16 @@ export function buildChart(
                 type: "line",
                 smooth: style.lineCurve === "smooth" ? 0.4 : false,
                 step: style.lineCurve === "step" ? "middle" : false,
-                symbol: style.markers === "never" ? "none" : "circle",
+                // Highlighted markers are switched on per point; large series only get those.
+                symbol:
+                    style.markers === "never" ||
+                    style.markers === "highlighted" ||
+                    (style.markers === "always" && large)
+                        ? "none"
+                        : "circle",
                 symbolSize: 9,
                 showSymbol: style.markers !== "hover",
+                sampling: "lttb",
                 lineStyle: { width: style.lineWidth, ...glowStyle(color, tokens, style) },
                 areaStyle: s.kind === "area" ? areaStyle(color, tokens, style) : undefined,
                 markArea: horizontal ? undefined : band,
@@ -424,10 +445,10 @@ export function buildChart(
             const radius = outermost ? style.barRadius : 0;
             // A glow offset below a bar reads as a smudge under the baseline, so bars glow evenly and stripes don't.
             const barGlow =
-                style.barStyle === "striped" ? {} : { ...glowStyle(color, tokens, style), shadowOffsetY: 0 };
+                style.barStyle === "striped" || large ? {} : { ...glowStyle(color, tokens, style), shadowOffsetY: 0 };
             const corners = horizontal ? [0, radius, radius, 0] : [radius, radius, 0, 0];
             const width = `${Math.max(1, Math.min(100, style.barWidth)) / Math.max(1, barGroups)}%`;
-            if (style.barStyle === "dots") {
+            if (style.barStyle === "dots" && !large) {
                 return {
                     ...base,
                     type: "pictorialBar",
@@ -442,7 +463,8 @@ export function buildChart(
             return {
                 ...base,
                 type: "bar",
-                barWidth: width,
+                large,
+                barWidth: large ? undefined : width,
                 barGap: "20%",
                 itemStyle: {
                     borderRadius: corners,
@@ -467,7 +489,9 @@ export function buildChart(
         return {
             ...base,
             type: "scatter",
-            symbolSize: bubble ? (value: number[]) => scaleBubble(value[2]) : 11,
+            // Large mode draws every point in one batch; bubbles need their own sizes, so they stay normal.
+            large: large && !bubble,
+            symbolSize: bubble ? (value: number[]) => scaleBubble(value[2]) : large ? 6 : 11,
             itemStyle: {
                 color: bubble
                     ? {
@@ -482,7 +506,7 @@ export function buildChart(
                       }
                     : color,
                 opacity: bubble ? 0.92 : 1,
-                ...glowStyle(color, tokens, style)
+                ...(large ? {} : glowStyle(color, tokens, style))
             }
         };
     });
@@ -496,11 +520,16 @@ export function buildChart(
         boundaryGap: kind === "category" ? hasBars || allItems : undefined,
         name: settings.xAxisTitle || undefined,
         nameLocation: "middle",
-        nameGap: horizontal ? 56 : 30,
+        // The gap is measured from the axis labels, which ECharts moves the title clear of.
+        nameGap: 10,
+        nameMoveOverlap: true,
         inverse: horizontal && kind === "category",
         axisLabel: {
             show: settings.showXAxis,
             hideOverlap: true,
+            // Long category names are cut short, so ECharts can still fit some of them instead of none.
+            width: kind === "category" ? 120 : undefined,
+            overflow: kind === "category" ? "truncate" : undefined,
             formatter: kind === "time" ? settings.xDateFormat || undefined : kind === "value" ? formatNumber : undefined
         },
         splitLine: { show: horizontal ? horizontalLines : verticalLines }
@@ -512,17 +541,17 @@ export function buildChart(
         position: horizontal ? (side === "left" ? "bottom" : "top") : side,
         name: side === "left" ? settings.yAxisTitle || undefined : undefined,
         nameLocation: "middle",
-        nameGap: horizontal ? 30 : 48,
+        nameGap: 10,
+        nameMoveOverlap: true,
         axisLabel: { show: settings.showYAxis, formatter: formatNumber, hideOverlap: true },
         splitLine: { show: side === "left" && (horizontal ? verticalLines : horizontalLines) }
     });
     const valueAxes = usesRightAxis ? [valueAxis("left"), valueAxis("right")] : [valueAxis("left")];
 
     const placement = legendPlacement(style, projected.length);
-    const hasTitle = Boolean(settings.title || settings.subtitle);
-    const grid = gridOption(placement, hasTitle, Boolean(settings.subtitle));
+    const grid = gridOption(placement);
     // Room for value labels that sit above the highest point or beyond the last one.
-    if (style.valueLabels !== "off") {
+    if (hasValueLabels) {
         grid.top = Number(grid.top) + 22;
         grid.right = Number(grid.right) + (horizontal ? 36 : 18);
     }
@@ -551,6 +580,11 @@ export function buildChart(
             return Number.isFinite(n) ? n : undefined;
         },
         colorOf: param => (param.seriesIndex !== undefined ? colors[param.seriesIndex] : undefined),
+        // Tooltip texts are read when a point is hovered, not for every point up front.
+        tooltipOf: param => {
+            const group = sources[param.seriesIndex ?? -1]?.[param.dataIndex ?? -1];
+            return group?.length === 1 ? group[0].tooltip : undefined;
+        },
         headerOf: param => {
             const value = param.value;
             if (!Array.isArray(value)) {
@@ -567,8 +601,7 @@ export function buildChart(
         animationDuration: style.animationDuration,
         animationDurationUpdate: Math.round(style.animationDuration / 2),
         aria: { enabled: true },
-        title: titleOption(settings.title, settings.subtitle, settings.titleAlign) ?? { show: false },
-        legend: legendOption(placement, hasTitle),
+        legend: legendOption(placement),
         grid,
         tooltip: tooltipOption(tokens, style, allItems ? "item" : "axis", tooltipFormatter),
         xAxis: horizontal ? valueAxes : categoryAxis,

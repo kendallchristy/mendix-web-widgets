@@ -1,5 +1,5 @@
 import type { ChartStyle } from "@kendallchristy/chart-core";
-import { readNumber, readText, readXValue, toNumber } from "@kendallchristy/chart-core";
+import { isAnyLoading, readNumber, readText, readXValue, toNumber } from "@kendallchristy/chart-core";
 import type { ObjectItem } from "mendix";
 
 import type { CartesianChartProContainerProps, SeriesType } from "../../typings/CartesianChartProProps";
@@ -58,13 +58,19 @@ function readSeries(config: SeriesType, index: number): SeriesInput[] {
         if (x === undefined) {
             continue;
         }
+        const { tooltipText, onClick } = config;
         const point: InputPoint = {
             x,
             y: readNumber(config.yAttribute, item),
             size: readNumber(config.sizeAttribute, item),
             drill: [readText(config.drillAttribute1, item), readText(config.drillAttribute2, item)],
-            tooltip: config.tooltipText?.get(item).value || undefined,
-            action: config.onClick?.get(item)
+            // Read on hover and click only: with thousands of objects, evaluating these up front is slow.
+            get tooltip() {
+                return tooltipText?.get(item).value || undefined;
+            },
+            get action() {
+                return onClick?.get(item);
+            }
         };
         const group = config.groupByAttribute ? (readText(config.groupByAttribute, item) ?? "") : baseName;
         const points = groups.get(group);
@@ -89,8 +95,9 @@ export function seriesFromProps(props: CartesianChartProContainerProps): SeriesI
     return props.series.flatMap(readSeries);
 }
 
+/** True until every series' data source has loaded completely. */
 export function isLoading(props: CartesianChartProContainerProps): boolean {
-    return props.series.some(s => s.dataSource.status === "loading" && (s.dataSource.items ?? []).length === 0);
+    return isAnyLoading(props.series.map(s => s.dataSource));
 }
 
 export function settingsFromProps(props: CartesianChartProContainerProps): ChartSettings {
