@@ -31,7 +31,13 @@
 }
 
 .dgp--height-fill {
+    // Stretches in a flex parent, or takes the height of a parent that has one.
+    flex: 1 1 auto;
     height: 100%;
+    min-height: 0;
+    // A parent without a set height would let the grid grow to its full content height and draw every row.
+    // Cap it at the window height so it stays scrollable.
+    max-height: 100vh;
 }
 
 // Toolbar
@@ -166,6 +172,8 @@
     min-height: 0;
     overflow: auto;
     overscroll-behavior: contain;
+    // The virtualizer keeps the scroll position steady itself; browser scroll anchoring would fight it.
+    overflow-anchor: none;
     outline: none;
 }
 
@@ -275,6 +283,7 @@
     position: absolute;
     top: 0;
     left: 0;
+    box-sizing: border-box;
     width: 100%;
     min-width: var(--dgp-min-width);
     background: var(--dgp-row-bg);
@@ -301,8 +310,11 @@
     display: flex;
     align-items: center;
     gap: 8px;
+    box-sizing: border-box;
     min-width: 0;
-    height: var(--dgp-row-height);
+    // Every row is exactly the row height, border included, so the scroll height never changes as rows are
+    // drawn. Otherwise the scrollbar drifts away from the pointer while it's dragged.
+    height: calc(var(--dgp-row-height) - 1px);
     padding: 0 var(--dgp-cell-padding);
     overflow: hidden;
     white-space: nowrap;

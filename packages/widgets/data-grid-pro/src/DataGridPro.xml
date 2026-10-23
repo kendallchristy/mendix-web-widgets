@@ -292,7 +292,7 @@
             <propertyGroup caption="Size">
                 <property key="heightMode" type="enumeration" defaultValue="fixed">
                     <caption>Height</caption>
-                    <description>Virtual scrolling needs a bounded height.</description>
+                    <description>Fill takes the height of the parent container, so the parent needs a height of its own. Without one, the grid is as tall as the window.</description>
                     <enumerationValues>
                         <enumerationValue key="fixed">Fixed</enumerationValue>
                         <enumerationValue key="fill">Fill the parent container</enumerationValue>

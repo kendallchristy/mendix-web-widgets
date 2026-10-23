@@ -1,4 +1,4 @@
-import { useVirtualizer } from "@tanstack/react-virtual";
+import { observeElementRect, useVirtualizer } from "@tanstack/react-virtual";
 import classNames from "classnames";
 import type { ObjectItem } from "mendix";
 import {
@@ -77,6 +77,12 @@ export function Grid(props: GridProps): ReactElement {
             return rowHeight + (item && expanded.has(item.id) ? DETAIL_ESTIMATE : 0);
         },
         getItemKey,
+        // Never plan more rows than fit in the window, even if styling lets the grid grow taller than it.
+        // Drawing every row of a large list would freeze the page.
+        observeElementRect: (instance, callback) =>
+            observeElementRect(instance, rect =>
+                callback({ width: rect.width, height: Math.min(rect.height, window.innerHeight) })
+            ),
         overscan: 8,
         scrollMargin: headerHeight
     });

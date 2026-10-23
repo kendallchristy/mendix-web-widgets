@@ -116,7 +116,7 @@ function App(): ReactElement {
         showDensityToggle: true,
         pagination: params.get("pages") ? "pages" : "virtualScrolling",
         pageSize: 50,
-        heightMode: "fixed",
+        heightMode: params.get("fill") ? "fill" : "fixed",
         height: 640,
         configurationStorage: "browser",
         columns: [
