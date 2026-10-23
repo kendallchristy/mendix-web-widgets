@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, type RenderResult } from "@testing-library/react";
 import type { ObjectItem } from "mendix";
 
 import { Grid, type GridProps } from "../components/Grid";
@@ -6,15 +6,16 @@ import { column, gridData, items, noSelection } from "./fixtures";
 
 // jsdom has no layout. Give elements a size so the virtualizer renders rows.
 beforeAll(() => {
-    Element.prototype.scrollTo = () => undefined;
+    // Newer browsers return a Promise from scrollTo.
+    Element.prototype.scrollTo = (() => Promise.resolve()) as unknown as typeof Element.prototype.scrollTo;
     jest.spyOn(HTMLElement.prototype, "clientHeight", "get").mockReturnValue(400);
     jest.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(800);
 });
 
 afterAll(() => jest.restoreAllMocks());
 
-function renderGrid(overrides: Partial<GridProps> = {}): void {
-    render(
+function grid(overrides: Partial<GridProps> = {}): JSX.Element {
+    return (
         <Grid
             columns={[column()]}
             data={gridData(items(20))}
@@ -38,6 +39,10 @@ function renderGrid(overrides: Partial<GridProps> = {}): void {
             {...overrides}
         />
     );
+}
+
+function renderGrid(overrides: Partial<GridProps> = {}): RenderResult {
+    return render(grid(overrides));
 }
 
 const expandButton = (row: number): HTMLElement => screen.getAllByRole("button", { name: "Expand row" })[row];
@@ -103,5 +108,17 @@ describe("Grid row details", () => {
         cell.focus();
         fireEvent.keyDown(cell, { key: "Enter" });
         expect(screen.getByText("Details 2")).toBeInTheDocument();
+    });
+});
+
+describe("Grid sorting", () => {
+    it("scrolls back to the top after a sort without breaking effect cleanup", () => {
+        const errors = jest.spyOn(console, "error").mockImplementation(() => undefined);
+        const { rerender, unmount } = renderGrid({ scrollResetKey: "a" });
+        rerender(grid({ scrollResetKey: "b" }));
+        rerender(grid({ scrollResetKey: "c" }));
+        expect(() => unmount()).not.toThrow();
+        expect(errors).not.toHaveBeenCalled();
+        errors.mockRestore();
     });
 });

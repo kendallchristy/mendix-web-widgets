@@ -85,16 +85,24 @@ export function Grid(props: GridProps): ReactElement {
     const firstIndex = virtualRows[0]?.index ?? 0;
     const lastIndex = virtualRows[virtualRows.length - 1]?.index ?? 0;
     const { showRange } = data;
-    useEffect(() => showRange(firstIndex, lastIndex), [firstIndex, lastIndex, showRange]);
+    useEffect(() => {
+        showRange(firstIndex, lastIndex);
+    }, [firstIndex, lastIndex, showRange]);
 
     // Row heights change with density, and indexes shift after a sort.
-    useEffect(() => virtualizer.measure(), [rowHeight, virtualizer]);
+    useEffect(() => {
+        virtualizer.measure();
+    }, [rowHeight, virtualizer]);
     const [resetKey, setResetKey] = useState(props.scrollResetKey);
     if (resetKey !== props.scrollResetKey) {
         setResetKey(props.scrollResetKey);
         setFocus(f => ({ ...f, row: 0 }));
     }
-    useEffect(() => scrollRef.current?.scrollTo({ top: 0 }), [resetKey]);
+    // Block bodies on purpose: newer browsers return a Promise from scrollTo, and React treats an effect's
+    // return value as its cleanup function.
+    useEffect(() => {
+        scrollRef.current?.scrollTo({ top: 0 });
+    }, [resetKey]);
 
     const toggleExpanded = useCallback(
         (id: string) => {
