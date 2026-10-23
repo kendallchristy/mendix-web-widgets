@@ -22,7 +22,12 @@ export function xKey(x: XValue): string | number {
     return x instanceof Date ? x.getTime() : x;
 }
 
-function combine(values: number[], aggregation: Exclude<Aggregation, "none">, count: number): number | undefined {
+/** Combines values with an aggregation; count is the number of objects, values or not. */
+export function combineValues(
+    values: number[],
+    aggregation: Exclude<Aggregation, "none">,
+    count: number
+): number | undefined {
     if (aggregation === "count") {
         return count;
     }
@@ -68,10 +73,10 @@ export function aggregate<T>(
         const sizes = group.map(p => p.size).filter((s): s is number => s !== undefined);
         return {
             x: group[0].x,
-            y: combine(ys, aggregation, group.length),
+            y: combineValues(ys, aggregation, group.length),
             size:
                 sizes.length > 0
-                    ? combine(sizes, aggregation === "count" ? "sum" : aggregation, sizes.length)
+                    ? combineValues(sizes, aggregation === "count" ? "sum" : aggregation, sizes.length)
                     : undefined,
             sources: group.map(p => p.source)
         };

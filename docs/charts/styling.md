@@ -2,7 +2,7 @@
 
 Every chart widget in this repo shares one styling system. It starts from the Hyper look, follows your app's light and dark mode, and lets you restyle charts app-wide, per chart, or with a theme you design in the [ECharts theme builder](https://echarts.apache.org/en/theme-builder.html).
 
-This is the page Studio Pro opens from a chart widget's help link.
+This is the page Studio Pro opens from a chart widget's help link. It applies to all the chart widgets: Cartesian Chart Pro, Pie Chart Pro, Radial Bar Chart Pro, Gauge Chart Pro and Funnel Chart Pro.
 
 ## How the layers combine
 
@@ -10,7 +10,7 @@ Each layer overrides the one before it.
 
 1. **Theme** (Chart style tab): Hyper, Hyper light, Hyper dark, or Custom. Custom uses the Theme JSON on the Advanced tab, with Hyper filling in anything it leaves out.
 2. **CSS design tokens** in your app's theme SCSS. Set them once and every chart in the app follows.
-3. **Chart style properties** on each widget: palette, line curve, glow, bar style, gridlines, legend, tooltip and so on.
+3. **Chart style properties** on each widget: palette, glow, legend, tooltip and so on, plus each widget's own shape options, such as line curve and bar style on Cartesian Chart Pro or hole size on Pie Chart Pro.
 4. **Option override** (Advanced tab): ECharts option JSON merged over everything else, for anything the properties don't cover.
 
 ## Dark mode
@@ -29,17 +29,17 @@ The theme follows the `--hc-mode` CSS custom property, so an app with a differen
 
 Set any of these in your theme SCSS, globally or on a container to scope them to part of a page.
 
-| Token                            | What it sets                                          |
-| -------------------------------- | ----------------------------------------------------- |
-| `--hc-mode`                      | `light` or `dark`                                     |
-| `--hc-color-1` to `--hc-color-8` | Series colours, in order (used when Palette is Theme) |
-| `--hc-font-family`               | Titles, legends and tooltips                          |
-| `--hc-font-figures`              | Numbers: axis labels, value labels and tooltip values |
-| `--hc-text-color`                | Titles and tooltip values                             |
-| `--hc-label-color`               | Axis labels, legend text and subtitles                |
-| `--hc-grid-color`                | Gridlines                                             |
-| `--hc-muted-color`               | Marks outside a highlight range                       |
-| `--hc-surface`                   | Chart background when Background is Theme surface     |
+| Token                            | What it sets                                                                         |
+| -------------------------------- | ------------------------------------------------------------------------------------ |
+| `--hc-mode`                      | `light` or `dark`                                                                    |
+| `--hc-color-1` to `--hc-color-8` | Series colours, in order (used when Palette is Theme)                                |
+| `--hc-font-family`               | Titles, legends and tooltips                                                         |
+| `--hc-font-figures`              | Numbers: axis labels, value labels and tooltip values                                |
+| `--hc-text-color`                | Titles and tooltip values                                                            |
+| `--hc-label-color`               | Axis labels, legend text and subtitles                                               |
+| `--hc-grid-color`                | Gridlines                                                                            |
+| `--hc-muted-color`               | Marks outside a highlight range, the Other slice, and the tracks of rings and gauges |
+| `--hc-surface`                   | Chart background when Background is Theme surface                                    |
 
 For example, to brand every chart with three company colours:
 

@@ -17,3 +17,7 @@ export const BarChart = stub;
 export const LineChart = stub;
 export const PictorialBarChart = stub;
 export const ScatterChart = stub;
+export const PolarComponent = stub;
+export const FunnelChart = stub;
+export const GaugeChart = stub;
+export const PieChart = stub;

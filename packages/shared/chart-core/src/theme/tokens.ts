@@ -215,3 +215,26 @@ export function mixColors(a: string, b: string, amount: number): string {
     const mixed = ca.map((v, i) => Math.round(v + (cb[i] - v) * amount));
     return `#${mixed.map(v => v.toString(16).padStart(2, "0")).join("")}`;
 }
+
+/** Whichever of two inks reads better on a background colour, by WCAG contrast. Non-hex colours get `light`. */
+export function readableInk(background: string, dark: string, light: string): string {
+    const luminance = (color: string): number | undefined => {
+        const rgb = parseHex(color);
+        if (!rgb) {
+            return undefined;
+        }
+        const [r, g, b] = rgb.map(v => {
+            const c = v / 255;
+            return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+        });
+        return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    };
+    const bg = luminance(background);
+    const d = luminance(dark);
+    const l = luminance(light);
+    if (bg === undefined || d === undefined || l === undefined) {
+        return light;
+    }
+    const contrast = (a: number, b: number): number => (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+    return contrast(bg, d) > contrast(bg, l) ? dark : light;
+}

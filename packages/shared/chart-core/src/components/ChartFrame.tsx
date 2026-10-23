@@ -107,6 +107,7 @@ function titleStyles(theme: EChartsTheme): { title: CSSProperties; subtitle: CSS
 export function ChartFrame<D>(props: ChartFrameProps<D>): ReactElement {
     const { build, theme, chartStyle } = props;
     const containerRef = useRef<HTMLDivElement>(null);
+    const bodyRef = useRef<HTMLDivElement>(null);
 
     const themeKey = theme.preset === "custom" ? JSON.stringify(theme.themeJson) : "";
     const customTheme = useMemo(
@@ -126,7 +127,8 @@ export function ChartFrame<D>(props: ChartFrameProps<D>): ReactElement {
     const overrideKey = JSON.stringify(theme.optionOverride);
     const override = useMemo(() => mergeJsonTexts(JSON.parse(overrideKey) as string[]), [overrideKey]);
 
-    const size = useElementSize(containerRef, props.measure ?? false);
+    // The plot's own box, below the title.
+    const size = useElementSize(bodyRef, props.measure ?? false);
     const drillPath = useDrillPath<D>();
     const { loading } = props;
     const fresh = useMemo(
@@ -232,7 +234,7 @@ export function ChartFrame<D>(props: ChartFrameProps<D>): ReactElement {
                     <Breadcrumb items={breadcrumb} onNavigate={drillPath.goTo} />
                 </div>
             )}
-            <div className="hc-chart__body">
+            <div ref={bodyRef} className="hc-chart__body">
                 {body}
                 {loading && built && <div className="hc-chart__progress" role="status" aria-label="Updating chart" />}
             </div>
