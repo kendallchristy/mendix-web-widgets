@@ -1,3 +1,8 @@
+import { render, waitFor } from "@testing-library/react";
+import type { ReactElement } from "react";
+import { useRef } from "react";
+
+import { usePageThemeChanges } from "../hooks/useChartTokens";
 import {
     HYPER_DARK,
     HYPER_LIGHT,
@@ -101,5 +106,29 @@ describe("colour helpers", () => {
     it("splits colour lists on commas and spaces", () => {
         expect(parseColorList(" #111, #222  #333 ")).toEqual(["#111", "#222", "#333"]);
         expect(parseColorList(undefined)).toEqual([]);
+    });
+});
+
+describe("usePageThemeChanges", () => {
+    function Probe({ onChange }: { onChange: () => void }): ReactElement {
+        const ref = useRef<HTMLDivElement>(null);
+        usePageThemeChanges(ref, onChange);
+        return <div ref={ref} />;
+    }
+
+    it("notices a dark-mode class on any element around the chart", async () => {
+        const onChange = jest.fn();
+        const { container } = render(
+            <section>
+                <Probe onChange={onChange} />
+            </section>
+        );
+        container.querySelector("section")!.classList.add("dark-mode");
+        await waitFor(() => expect(onChange).toHaveBeenCalled());
+
+        onChange.mockClear();
+        document.documentElement.classList.toggle("dark-mode");
+        await waitFor(() => expect(onChange).toHaveBeenCalled());
+        document.documentElement.classList.toggle("dark-mode");
     });
 });

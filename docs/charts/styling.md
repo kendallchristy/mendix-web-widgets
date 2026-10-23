@@ -15,15 +15,15 @@ Each layer overrides the one before it.
 
 ## Dark mode
 
-The Hyper theme follows a CSS custom property, so it works with whatever class your app uses for dark mode. Add one line under that class:
+Charts switch to Hyper dark when an element around them, usually `<html>` or `<body>`, has the `dark-mode` class. They watch for that class and switch theme live, with no reload. Choose Hyper light or Hyper dark on a widget to pin it to one mode.
+
+The theme follows the `--hc-mode` CSS custom property, so an app with a different dark-mode class adds one line under that class:
 
 ```scss
 .my-dark-mode-class {
     --hc-mode: dark;
 }
 ```
-
-Charts watch `<html>` and `<body>` for class changes and switch theme live, with no reload. Choose Hyper light or Hyper dark on a widget to pin it to one mode.
 
 ## CSS design tokens
 

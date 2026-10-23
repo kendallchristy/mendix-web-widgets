@@ -1,6 +1,11 @@
 // Shared styles for the chart widgets. Each widget's stylesheet imports this file.
 // Colours and fonts come from the chart's resolved theme through the --hc-current-* properties.
 
+// The apps' dark-mode class. :where keeps it weak, so an app's own --hc-mode rule still wins.
+:where(.dark-mode) .hc-chart {
+    --hc-mode: dark;
+}
+
 .hc-chart {
     position: relative;
     display: flex;
