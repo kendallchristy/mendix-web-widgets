@@ -1,8 +1,8 @@
 // Date Picker Pro. Every color and size is a CSS variable, so an app's theme can restyle the picker by
 // setting --dpp-* on any ancestor (or on .widget-date-picker-pro).
 
-// Any of these on an ancestor switches the picker to dark colors.
-$dark-mode-ancestors: ":is(.dark, .dark-mode, .theme-dark, [data-theme='dark'], [data-bs-theme='dark'])";
+// The class Kendall's apps put on <html> or <body> for dark mode; any ancestor works.
+$dark-mode-ancestors: ".dark-mode";
 
 @mixin light-tokens {
     --dpp-accent: #7c5cfc;

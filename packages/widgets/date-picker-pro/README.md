@@ -76,7 +76,7 @@ Point **Markers › Data source** at objects with a date, and the calendar shows
 
 ### Dark mode and theming
 
-The picker switches to dark colors when any ancestor has one of these: `.dark`, `.dark-mode`, `.theme-dark`, `[data-theme="dark"]` or `[data-bs-theme="dark"]`. The popup is not portaled, so it follows the same class.
+The picker switches to dark colors when the page, or any element around the widget, has the `dark-mode` class, and switches back as soon as the class is removed. The popup is not portaled, so it follows the same class. For another class, set the dark `--dpp-*` variables under it (see below).
 
 Every color and size is a CSS variable, so an app can restyle the picker from its theme:
 
