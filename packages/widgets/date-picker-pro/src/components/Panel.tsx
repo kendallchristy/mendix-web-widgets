@@ -238,7 +238,9 @@ export function Panel(props: PanelProps): ReactElement {
     ) : null;
 
     const showHelpButton = config.helpButton !== "hidden";
-    const showFooter = props.showFields || config.applyMode || config.showTodayButton || showHelpButton;
+    // "Today" means nothing to a time-only picker.
+    const showTodayButton = config.showTodayButton && granularity !== "time";
+    const showFooter = props.showFields || config.applyMode || showTodayButton || showHelpButton;
 
     return (
         <div
@@ -318,7 +320,7 @@ export function Panel(props: PanelProps): ReactElement {
                                     <HelpIcon />
                                 </button>
                             ) : null}
-                            {config.showTodayButton ? (
+                            {showTodayButton ? (
                                 <button type="button" className="dpp-button-secondary" onClick={actions.goToToday}>
                                     {texts.todayButton}
                                 </button>

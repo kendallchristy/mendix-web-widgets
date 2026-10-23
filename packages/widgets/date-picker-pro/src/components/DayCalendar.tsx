@@ -7,6 +7,7 @@ import {
     DayPicker,
     type CustomComponents,
     type DayButtonProps,
+    type DayProps,
     type Matcher,
     type MonthCaptionProps
 } from "react-day-picker";
@@ -61,6 +62,17 @@ function useCalendarContext(): CalendarContextValue {
 }
 
 const MAX_DOTS = 3;
+
+const rangeClasses =
+    /\bdpp-day--(selected|range-start|range-middle|range-end|preview-start|preview-end|preview)(?=\s|$)/g;
+
+/** With several months side by side, a range shows once: outside days don't repeat the neighbouring month's band. */
+function Day(props: DayProps): ReactElement {
+    const { day, modifiers: _modifiers, className, ...cellProps } = props;
+    const { numberOfMonths } = useCalendarContext();
+    const plain = day.outside && numberOfMonths > 1;
+    return <td {...cellProps} className={plain ? className?.replace(rangeClasses, "").trim() : className} />;
+}
 
 function DayButton(props: DayButtonProps): ReactElement {
     const { day, modifiers, children, className, ...buttonProps } = props;
@@ -154,7 +166,7 @@ function nextLabel(date: Date, locale: LocaleInfo): string {
     return `${locale.monthsLong[next.getMonth()]} ${next.getFullYear()}`;
 }
 
-const components: Partial<CustomComponents> = { DayButton, MonthCaption };
+const components: Partial<CustomComponents> = { Day, DayButton, MonthCaption };
 
 export function DayCalendar(props: DayCalendarProps): ReactElement {
     const { value, pending, hover, month, numberOfMonths, locale, texts, markers } = props;

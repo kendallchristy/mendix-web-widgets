@@ -1,7 +1,8 @@
 // Date Picker Pro. Every color and size is a CSS variable, so an app's theme can restyle the picker by
 // setting --dpp-* on any ancestor (or on .widget-date-picker-pro).
 
-$dark-mode-ancestors: ".dark, .dark-mode, .theme-dark, [data-theme='dark'], [data-bs-theme='dark']";
+// Any of these on an ancestor switches the picker to dark colors.
+$dark-mode-ancestors: ":is(.dark, .dark-mode, .theme-dark, [data-theme='dark'], [data-bs-theme='dark'])";
 
 @mixin light-tokens {
     --dpp-accent: #7c5cfc;
@@ -71,6 +72,13 @@ $dark-mode-ancestors: ".dark, .dark-mode, .theme-dark, [data-theme='dark'], [dat
         --dpp-day-size: 42px;
         --dpp-font-size: 15px;
         --dpp-presets-width: 148px;
+    }
+
+    &,
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
     }
 
     button {
@@ -275,6 +283,10 @@ $dark-mode-ancestors: ".dark, .dark-mode, .theme-dark, [data-theme='dark'], [dat
 .dpp-field__literal,
 .dpp-field__display {
     color: var(--dpp-text-subtle);
+}
+
+.dpp-field__literal {
+    white-space: pre;
 }
 
 .dpp-field--empty .dpp-field__literal {
@@ -775,8 +787,14 @@ $dark-mode-ancestors: ".dark, .dark-mode, .theme-dark, [data-theme='dark'], [dat
 // ---- Month, quarter and year grids ----
 
 .dpp-periods {
+    flex: 1 1 auto;
     padding: 16px 20px;
     min-width: 260px;
+
+    > * {
+        max-width: 340px;
+        margin-inline: auto;
+    }
 
     &__grid {
         display: flex;
@@ -953,7 +971,10 @@ $dark-mode-ancestors: ".dark, .dark-mode, .theme-dark, [data-theme='dark'], [dat
     &__keys {
         display: flex;
         flex-wrap: wrap;
+        align-items: flex-start;
+        align-content: flex-start;
         gap: 4px;
+        margin: 0;
         font-weight: 400;
     }
 
@@ -966,6 +987,7 @@ $dark-mode-ancestors: ".dark, .dark-mode, .theme-dark, [data-theme='dark'], [dat
         color: var(--dpp-text);
         font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
         font-size: 0.82em;
+        line-height: 1.6;
         white-space: nowrap;
         box-shadow: none;
     }
