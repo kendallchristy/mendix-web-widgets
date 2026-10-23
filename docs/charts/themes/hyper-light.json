@@ -1,0 +1,224 @@
+{
+    "color": [
+        "#8038D0",
+        "#F87800",
+        "#0860F8",
+        "#48B840",
+        "#BD16CE",
+        "#D99A00",
+        "#E5466F",
+        "#0F8FC4"
+    ],
+    "backgroundColor": "transparent",
+    "textStyle": {
+        "fontFamily": "Inter, \"Segoe UI\", -apple-system, BlinkMacSystemFont, Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        "color": "#8A8F9C"
+    },
+    "title": {
+        "textStyle": {
+            "color": "#111318",
+            "fontFamily": "Inter, \"Segoe UI\", -apple-system, BlinkMacSystemFont, Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            "fontSize": 17,
+            "fontWeight": 700
+        },
+        "subtextStyle": {
+            "color": "#8A8F9C",
+            "fontFamily": "Inter, \"Segoe UI\", -apple-system, BlinkMacSystemFont, Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            "fontSize": 12
+        }
+    },
+    "legend": {
+        "icon": "circle",
+        "itemWidth": 8,
+        "itemHeight": 8,
+        "itemGap": 16,
+        "textStyle": {
+            "color": "#8A8F9C",
+            "fontFamily": "Inter, \"Segoe UI\", -apple-system, BlinkMacSystemFont, Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            "fontSize": 12
+        },
+        "inactiveColor": "#C9CCD6"
+    },
+    "tooltip": {
+        "backgroundColor": "#FFFFFF",
+        "borderColor": "#ECEEF3",
+        "borderWidth": 1,
+        "padding": [
+            10,
+            12
+        ],
+        "textStyle": {
+            "color": "#111318",
+            "fontFamily": "Inter, \"Segoe UI\", -apple-system, BlinkMacSystemFont, Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            "fontSize": 12
+        },
+        "extraCssText": "border-radius: 10px; box-shadow: 0 8px 24px rgba(16, 24, 40, 0.12);",
+        "axisPointer": {
+            "lineStyle": {
+                "color": "#8A8F9C",
+                "width": 1,
+                "type": "dashed"
+            },
+            "crossStyle": {
+                "color": "#8A8F9C"
+            },
+            "shadowStyle": {
+                "color": "#EEF0F4"
+            }
+        }
+    },
+    "categoryAxis": {
+        "axisLine": {
+            "show": false,
+            "lineStyle": {
+                "color": "#EEF0F4"
+            }
+        },
+        "axisTick": {
+            "show": false
+        },
+        "axisLabel": {
+            "color": "#8A8F9C",
+            "fontFamily": "\"JetBrains Mono\", \"Geist Mono\", \"SFMono-Regular\", Menlo, Consolas, monospace",
+            "fontSize": 12
+        },
+        "nameTextStyle": {
+            "color": "#8A8F9C",
+            "fontFamily": "Inter, \"Segoe UI\", -apple-system, BlinkMacSystemFont, Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            "fontSize": 12
+        },
+        "splitLine": {
+            "lineStyle": {
+                "color": "#EEF0F4",
+                "width": 1
+            }
+        },
+        "splitArea": {
+            "show": false
+        }
+    },
+    "valueAxis": {
+        "axisLine": {
+            "show": false,
+            "lineStyle": {
+                "color": "#EEF0F4"
+            }
+        },
+        "axisTick": {
+            "show": false
+        },
+        "axisLabel": {
+            "color": "#8A8F9C",
+            "fontFamily": "\"JetBrains Mono\", \"Geist Mono\", \"SFMono-Regular\", Menlo, Consolas, monospace",
+            "fontSize": 12
+        },
+        "nameTextStyle": {
+            "color": "#8A8F9C",
+            "fontFamily": "Inter, \"Segoe UI\", -apple-system, BlinkMacSystemFont, Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            "fontSize": 12
+        },
+        "splitLine": {
+            "lineStyle": {
+                "color": "#EEF0F4",
+                "width": 1
+            }
+        },
+        "splitArea": {
+            "show": false
+        }
+    },
+    "timeAxis": {
+        "axisLine": {
+            "show": false,
+            "lineStyle": {
+                "color": "#EEF0F4"
+            }
+        },
+        "axisTick": {
+            "show": false
+        },
+        "axisLabel": {
+            "color": "#8A8F9C",
+            "fontFamily": "\"JetBrains Mono\", \"Geist Mono\", \"SFMono-Regular\", Menlo, Consolas, monospace",
+            "fontSize": 12
+        },
+        "nameTextStyle": {
+            "color": "#8A8F9C",
+            "fontFamily": "Inter, \"Segoe UI\", -apple-system, BlinkMacSystemFont, Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            "fontSize": 12
+        },
+        "splitLine": {
+            "lineStyle": {
+                "color": "#EEF0F4",
+                "width": 1
+            }
+        },
+        "splitArea": {
+            "show": false
+        }
+    },
+    "logAxis": {
+        "axisLine": {
+            "show": false,
+            "lineStyle": {
+                "color": "#EEF0F4"
+            }
+        },
+        "axisTick": {
+            "show": false
+        },
+        "axisLabel": {
+            "color": "#8A8F9C",
+            "fontFamily": "\"JetBrains Mono\", \"Geist Mono\", \"SFMono-Regular\", Menlo, Consolas, monospace",
+            "fontSize": 12
+        },
+        "nameTextStyle": {
+            "color": "#8A8F9C",
+            "fontFamily": "Inter, \"Segoe UI\", -apple-system, BlinkMacSystemFont, Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            "fontSize": 12
+        },
+        "splitLine": {
+            "lineStyle": {
+                "color": "#EEF0F4",
+                "width": 1
+            }
+        },
+        "splitArea": {
+            "show": false
+        }
+    },
+    "line": {
+        "smooth": true,
+        "symbol": "circle",
+        "symbolSize": 8,
+        "lineStyle": {
+            "width": 2.5
+        }
+    },
+    "bar": {
+        "itemStyle": {
+            "borderRadius": 4
+        }
+    },
+    "candlestick": {
+        "itemStyle": {
+            "color": "#0860F8",
+            "color0": "#E5484D",
+            "borderColor": "#0860F8",
+            "borderColor0": "#E5484D"
+        }
+    },
+    "dataZoom": {
+        "backgroundColor": "transparent",
+        "borderColor": "#EEF0F4",
+        "fillerColor": "#EEF0F4",
+        "handleStyle": {
+            "color": "#FFFFFF",
+            "borderColor": "#8A8F9C"
+        },
+        "textStyle": {
+            "color": "#8A8F9C",
+            "fontFamily": "\"JetBrains Mono\", \"Geist Mono\", \"SFMono-Regular\", Menlo, Consolas, monospace"
+        }
+    }
+}

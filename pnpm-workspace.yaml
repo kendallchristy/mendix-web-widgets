@@ -12,6 +12,8 @@ catalog:
     "@testing-library/react": "^16.3.2"
     "@testing-library/user-event": "^14.6.1"
     classnames: "^2.5.1"
+    # Charting library for the chart widgets (packages/shared/chart-core)
+    echarts: "^6.1.0"
     # Widget API types. Keep in step with the tools version.
     mendix: "11.15.0"
     # The Mendix widget tooling targets TypeScript 5.x
