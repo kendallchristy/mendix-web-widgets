@@ -1,7 +1,9 @@
 import type { Properties } from "@mendix/pluggable-widgets-tools";
 
 import {
+    checkCategoryDataProperties,
     checkSharedStyleProperties,
+    hideCategoryDataProperties,
     hideNestedProperties,
     hideProperties,
     hideSharedStyleProperties
@@ -96,5 +98,43 @@ describe("editor helpers", () => {
             optionOverride: "[]"
         });
         expect(problems.map(p => p.property)).toEqual(["customPalette", "themeJson", "optionOverride"]);
+    });
+});
+
+describe("category data properties", () => {
+    const values = (overrides: Record<string, unknown> = {}) => ({
+        valueAttribute: "",
+        aggregation: "sum",
+        drilldown: true,
+        drillAttribute1: "",
+        title: "",
+        ...overrides
+    });
+
+    it("asks for a value unless counting, and for a level 2 attribute with drilldown", () => {
+        expect(checkCategoryDataProperties(values()).map(p => p.property)).toEqual([
+            "valueAttribute",
+            "drillAttribute1"
+        ]);
+        expect(checkCategoryDataProperties(values({ aggregation: "count", drilldown: false }))).toEqual([]);
+    });
+
+    it("hides drilldown attributes until they apply", () => {
+        const keys = (props: Properties): string[] => props.flatMap(g => (g.properties ?? []).map(p => p.key));
+        const props = (): Properties => [
+            {
+                caption: "General",
+                properties: ["drillAttribute1", "drillAttribute2", "drillTopLabel", "titleAlign"].map(key => ({
+                    key,
+                    caption: key
+                }))
+            }
+        ];
+        const off = props();
+        hideCategoryDataProperties(values({ drilldown: false }), off);
+        expect(keys(off)).toEqual([]);
+        const on = props();
+        hideCategoryDataProperties(values({ title: "T" }), on);
+        expect(keys(on)).toEqual(["drillAttribute1", "drillTopLabel", "titleAlign"]);
     });
 });

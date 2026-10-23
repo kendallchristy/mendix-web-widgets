@@ -34,6 +34,8 @@ export interface TooltipFormatterOptions {
     headerOf?: (param: TooltipParam) => string;
     /** Custom text for a point; defaults to the data item's hcTooltip. Lets large series keep plain array items. */
     tooltipOf?: (param: TooltipParam) => string | undefined;
+    /** The name in a row; defaults to the series name. */
+    nameOf?: (param: TooltipParam) => string;
     /** The swatch colour for a row; defaults to the colour ECharts reports, which can be a gradient object. */
     colorOf?: (param: TooltipParam) => string | undefined;
 }
@@ -81,7 +83,7 @@ export function createTooltipFormatter(
             }
             return (
                 `<div class="hc-tooltip__row">${swatch(options.colorOf?.(p) ?? p.color, tokens.palette[0])}` +
-                `<span class="hc-tooltip__name">${escapeHtml(p.seriesName ?? "")}</span>` +
+                `<span class="hc-tooltip__name">${escapeHtml(options.nameOf?.(p) ?? p.seriesName ?? "")}</span>` +
                 `<span class="hc-tooltip__value" style="font-family:${figures}">${escapeHtml(formatted)}</span></div>`
             );
         });

@@ -94,3 +94,56 @@ export function checkSharedStyleProperties(values: SharedStyleValues): Problem[]
     }
     return problems;
 }
+
+// In design mode Studio Pro hands over an expression as its source text, so a preview can only use literals.
+
+/** The text of a string literal expression such as 'Q1', or undefined for anything else. */
+export function previewText(expression: string | undefined): string | undefined {
+    const match = /^'(.*)'$/.exec((expression ?? "").trim());
+    return match ? match[1] : undefined;
+}
+
+/** The value of a number literal expression such as 75 or 0.5, or undefined for anything else. */
+export function previewNumber(expression: string | undefined): number | undefined {
+    const text = (expression ?? "").trim();
+    return /^-?\d+(\.\d+)?$/.test(text) ? Number(text) : undefined;
+}
+
+/** The data and drilldown properties of the one-item-per-category widgets, as Studio Pro sees them. */
+export interface CategoryDataValues {
+    valueAttribute: string;
+    aggregation: string;
+    drilldown: boolean;
+    drillAttribute1: string;
+    title: string;
+}
+
+export function hideCategoryDataProperties(values: CategoryDataValues, properties: Properties): void {
+    if (!values.drilldown) {
+        hideProperties(properties, ["drillAttribute1", "drillAttribute2", "drillTopLabel"]);
+    } else if (!values.drillAttribute1) {
+        hideProperties(properties, ["drillAttribute2"]);
+    }
+    if (!values.title) {
+        hideProperties(properties, ["titleAlign"]);
+    }
+}
+
+export function checkCategoryDataProperties(values: CategoryDataValues): Problem[] {
+    const problems: Problem[] = [];
+    if (!values.valueAttribute && values.aggregation !== "count") {
+        problems.push({
+            property: "valueAttribute",
+            severity: "error",
+            message: "Choose a Value, or set Aggregation to Count."
+        });
+    }
+    if (values.drilldown && !values.drillAttribute1) {
+        problems.push({
+            property: "drillAttribute1",
+            severity: "error",
+            message: "Drilldown needs a Drilldown level 2 attribute to split a clicked item by."
+        });
+    }
+    return problems;
+}

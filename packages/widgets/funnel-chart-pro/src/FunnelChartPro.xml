@@ -1,0 +1,362 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<widget id="com.kendallchristy.widget.web.funnelchartpro.FunnelChartPro" pluginWidget="true" offlineCapable="true" supportedPlatform="Web" xmlns="http://www.mendix.com/widget/1.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mendix.com/widget/1.0/ ../node_modules/mendix/custom_widget.xsd">
+    <name>Funnel Chart Pro</name>
+    <description>Stages that narrow down, with the conversion between them.</description>
+    <studioProCategory>Charts</studioProCategory>
+    <studioCategory>Charts</studioCategory>
+    <helpUrl>https://github.com/kendallchristy/mendix-web-widgets/blob/main/docs/charts/styling.md</helpUrl>
+    <properties>
+        <propertyGroup caption="General">
+            <propertyGroup caption="Data">
+                <property key="dataSource" type="datasource" isList="true">
+                    <caption>Data source</caption>
+                    <description>One object per stage, or many to aggregate.</description>
+                </property>
+                <property key="categoryAttribute" type="attribute" dataSource="dataSource">
+                    <caption>Category</caption>
+                    <description>Names each stage. Objects with the same category are combined.</description>
+                    <attributeTypes>
+                        <attributeType name="String" />
+                        <attributeType name="Enum" />
+                        <attributeType name="Boolean" />
+                        <attributeType name="AutoNumber" />
+                        <attributeType name="Integer" />
+                        <attributeType name="Long" />
+                    </attributeTypes>
+                </property>
+                <property key="valueAttribute" type="attribute" dataSource="dataSource" required="false">
+                    <caption>Value</caption>
+                    <description>Not needed when Aggregation is Count.</description>
+                    <attributeTypes>
+                        <attributeType name="AutoNumber" />
+                        <attributeType name="Integer" />
+                        <attributeType name="Long" />
+                        <attributeType name="Decimal" />
+                    </attributeTypes>
+                </property>
+                <property key="aggregation" type="enumeration" defaultValue="sum">
+                    <caption>Aggregation</caption>
+                    <description>How objects with the same category combine.</description>
+                    <enumerationValues>
+                        <enumerationValue key="sum">Sum</enumerationValue>
+                        <enumerationValue key="count">Count</enumerationValue>
+                        <enumerationValue key="avg">Average</enumerationValue>
+                        <enumerationValue key="min">Minimum</enumerationValue>
+                        <enumerationValue key="max">Maximum</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="sortOrder" type="enumeration" defaultValue="data">
+                    <caption>Order</caption>
+                    <description />
+                    <enumerationValues>
+                        <enumerationValue key="valueDesc">Largest first</enumerationValue>
+                        <enumerationValue key="valueAsc">Smallest first</enumerationValue>
+                        <enumerationValue key="name">By name</enumerationValue>
+                        <enumerationValue key="data">Data source order</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="colorAttribute" type="attribute" dataSource="dataSource" required="false">
+                    <caption>Colour</caption>
+                    <description>Optional. A colour per stage, for example #8038D0, so a category keeps its colour whatever the data.</description>
+                    <attributeTypes>
+                        <attributeType name="String" />
+                    </attributeTypes>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Interaction">
+                <property key="tooltipText" type="textTemplate" required="false" dataSource="dataSource">
+                    <caption>Tooltip text</caption>
+                    <description>Replaces the tooltip of a stage that stands for a single object.</description>
+                </property>
+                <property key="onClick" type="action" dataSource="dataSource" required="false">
+                    <caption>On click</caption>
+                    <description>Runs with the clicked stage's first object. With drilldown, runs at the last level.</description>
+                </property>
+                <property key="drilldown" type="boolean" defaultValue="false">
+                    <caption>Drilldown</caption>
+                    <description>Click a stage to split it by Drilldown level 2, then level 3.</description>
+                </property>
+                <property key="drillAttribute1" type="attribute" dataSource="dataSource" required="false">
+                    <caption>Drilldown level 2</caption>
+                    <description />
+                    <attributeTypes>
+                        <attributeType name="String" />
+                        <attributeType name="Enum" />
+                        <attributeType name="Boolean" />
+                        <attributeType name="AutoNumber" />
+                        <attributeType name="Integer" />
+                        <attributeType name="Long" />
+                    </attributeTypes>
+                </property>
+                <property key="drillAttribute2" type="attribute" dataSource="dataSource" required="false">
+                    <caption>Drilldown level 3</caption>
+                    <description />
+                    <attributeTypes>
+                        <attributeType name="String" />
+                        <attributeType name="Enum" />
+                        <attributeType name="Boolean" />
+                        <attributeType name="AutoNumber" />
+                        <attributeType name="Integer" />
+                        <attributeType name="Long" />
+                    </attributeTypes>
+                </property>
+                <property key="drillTopLabel" type="textTemplate" required="false">
+                    <caption>Top level label</caption>
+                    <description>First item in the breadcrumb.</description>
+                    <translations>
+                        <translation lang="en_US">All</translation>
+                    </translations>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Title">
+                <property key="title" type="textTemplate" required="false">
+                    <caption>Title</caption>
+                    <description>Leave empty when the page already has a heading.</description>
+                </property>
+                <property key="subtitle" type="textTemplate" required="false">
+                    <caption>Subtitle</caption>
+                    <description />
+                </property>
+                <property key="titleAlign" type="enumeration" defaultValue="left">
+                    <caption>Title position</caption>
+                    <description />
+                    <enumerationValues>
+                        <enumerationValue key="left">Top left</enumerationValue>
+                        <enumerationValue key="center">Top centre</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="emptyMessage" type="textTemplate" required="false">
+                    <caption>No data message</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">No data</translation>
+                    </translations>
+                </property>
+            </propertyGroup>
+        </propertyGroup>
+        <propertyGroup caption="Shape and labels">
+            <propertyGroup caption="Shape">
+                <property key="orientation" type="enumeration" defaultValue="vertical">
+                    <caption>Direction</caption>
+                    <description />
+                    <enumerationValues>
+                        <enumerationValue key="vertical">Top to bottom</enumerationValue>
+                        <enumerationValue key="horizontal">Left to right</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="align" type="enumeration" defaultValue="center">
+                    <caption>Alignment</caption>
+                    <description />
+                    <enumerationValues>
+                        <enumerationValue key="center">Centred</enumerationValue>
+                        <enumerationValue key="start">Along one edge</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="neckWidth" type="integer" defaultValue="20">
+                    <caption>Narrowest width</caption>
+                    <description>Percent of the widest stage that the smallest stage still gets.</description>
+                </property>
+                <property key="stageGap" type="integer" defaultValue="4">
+                    <caption>Gap between stages</caption>
+                    <description>In pixels.</description>
+                </property>
+                <property key="cornerRadius" type="integer" defaultValue="4">
+                    <caption>Corner radius</caption>
+                    <description>In pixels.</description>
+                </property>
+                <property key="colorMode" type="enumeration" defaultValue="shades">
+                    <caption>Colours</caption>
+                    <description>Stages are steps of one thing, so shades read best.</description>
+                    <enumerationValues>
+                        <enumerationValue key="shades">Shades of one colour</enumerationValue>
+                        <enumerationValue key="palette">A palette colour per stage</enumerationValue>
+                    </enumerationValues>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Labels">
+                <property key="labelPosition" type="enumeration" defaultValue="outside">
+                    <caption>Labels</caption>
+                    <description>Inside suits wide stages; narrow ones can't fit their label.</description>
+                    <enumerationValues>
+                        <enumerationValue key="outside">Beside the stages</enumerationValue>
+                        <enumerationValue key="inside">Inside the stages</enumerationValue>
+                        <enumerationValue key="hidden">Hidden</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="showName" type="boolean" defaultValue="true">
+                    <caption>Show names</caption>
+                    <description />
+                </property>
+                <property key="showValue" type="boolean" defaultValue="true">
+                    <caption>Show values</caption>
+                    <description />
+                </property>
+                <property key="conversion" type="enumeration" defaultValue="first">
+                    <caption>Conversion</caption>
+                    <description>Shown in the label and tooltip.</description>
+                    <enumerationValues>
+                        <enumerationValue key="first">Share of the first stage</enumerationValue>
+                        <enumerationValue key="previous">Share of the previous stage</enumerationValue>
+                        <enumerationValue key="off">Off</enumerationValue>
+                    </enumerationValues>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Number format">
+                <property key="decimals" type="integer" defaultValue="-1">
+                    <caption>Decimals</caption>
+                    <description>-1 shows up to two decimals, only when needed.</description>
+                </property>
+                <property key="prefix" type="string" required="false">
+                    <caption>Prefix</caption>
+                    <description>For example $.</description>
+                </property>
+                <property key="suffix" type="string" required="false">
+                    <caption>Suffix</caption>
+                    <description>For example % or  kg.</description>
+                </property>
+                <property key="thousandsSeparator" type="boolean" defaultValue="true">
+                    <caption>Thousands separator</caption>
+                    <description />
+                </property>
+                <property key="compactNumbers" type="boolean" defaultValue="false">
+                    <caption>Compact numbers</caption>
+                    <description>1.2K instead of 1,200.</description>
+                </property>
+                <property key="percentDecimals" type="integer" defaultValue="0">
+                    <caption>Percentage decimals</caption>
+                    <description />
+                </property>
+            </propertyGroup>
+        </propertyGroup>
+        <propertyGroup caption="Chart style">
+            <propertyGroup caption="Theme">
+                <property key="theme" type="enumeration" defaultValue="hyper">
+                    <caption>Theme</caption>
+                    <description>Hyper follows the app: set --hc-mode: dark under your dark-mode class.</description>
+                    <enumerationValues>
+                        <enumerationValue key="hyper">Hyper</enumerationValue>
+                        <enumerationValue key="hyperLight">Hyper light</enumerationValue>
+                        <enumerationValue key="hyperDark">Hyper dark</enumerationValue>
+                        <enumerationValue key="custom">Custom</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="palette" type="enumeration" defaultValue="theme">
+                    <caption>Palette</caption>
+                    <description>Theme colours come from the theme, or from --hc-color-1 to --hc-color-8 in your theme SCSS.</description>
+                    <enumerationValues>
+                        <enumerationValue key="theme">Theme colours</enumerationValue>
+                        <enumerationValue key="hyper">Hyper</enumerationValue>
+                        <enumerationValue key="hyperHighContrast">Hyper high-contrast</enumerationValue>
+                        <enumerationValue key="monochrome">Monochrome</enumerationValue>
+                        <enumerationValue key="custom">Custom</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="customPalette" type="string" required="false">
+                    <caption>Custom colours</caption>
+                    <description>Comma-separated, in order, for example #8038D0, #F87800, #0860F8.</description>
+                </property>
+                <property key="background" type="enumeration" defaultValue="transparent">
+                    <caption>Background</caption>
+                    <description>Transparent lets the chart sit on whatever container holds it.</description>
+                    <enumerationValues>
+                        <enumerationValue key="transparent">Transparent</enumerationValue>
+                        <enumerationValue key="surface">Theme surface</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="figuresFont" type="enumeration" defaultValue="mono">
+                    <caption>Figures font</caption>
+                    <description>Font for numbers on labels and tooltips.</description>
+                    <enumerationValues>
+                        <enumerationValue key="mono">Monospaced</enumerationValue>
+                        <enumerationValue key="text">Same as text</enumerationValue>
+                    </enumerationValues>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Marks">
+                <property key="glow" type="enumeration" defaultValue="soft">
+                    <caption>Glow</caption>
+                    <description>A soft coloured shadow under the stages.</description>
+                    <enumerationValues>
+                        <enumerationValue key="soft">Soft</enumerationValue>
+                        <enumerationValue key="off">Off</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="legend" type="enumeration" defaultValue="auto">
+                    <caption>Legend</caption>
+                    <description>Automatic shows it when labels don't already name each item.</description>
+                    <enumerationValues>
+                        <enumerationValue key="auto">Automatic</enumerationValue>
+                        <enumerationValue key="top">Top</enumerationValue>
+                        <enumerationValue key="bottom">Bottom</enumerationValue>
+                        <enumerationValue key="right">Right</enumerationValue>
+                        <enumerationValue key="hidden">Hidden</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="tooltip" type="enumeration" defaultValue="card">
+                    <caption>Tooltip</caption>
+                    <description />
+                    <enumerationValues>
+                        <enumerationValue key="card">Card</enumerationValue>
+                        <enumerationValue key="pill">Pill</enumerationValue>
+                        <enumerationValue key="off">Off</enumerationValue>
+                    </enumerationValues>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Size and motion">
+                <property key="heightUnit" type="enumeration" defaultValue="pixels">
+                    <caption>Height unit</caption>
+                    <description />
+                    <enumerationValues>
+                        <enumerationValue key="pixels">Pixels</enumerationValue>
+                        <enumerationValue key="percentageOfWidth">Percentage of width</enumerationValue>
+                        <enumerationValue key="fill">Fill the container</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="height" type="integer" defaultValue="260">
+                    <caption>Height</caption>
+                    <description />
+                </property>
+                <property key="animation" type="boolean" defaultValue="true">
+                    <caption>Animation</caption>
+                    <description />
+                </property>
+                <property key="animationDuration" type="integer" defaultValue="600">
+                    <caption>Animation duration</caption>
+                    <description>In milliseconds.</description>
+                </property>
+                <property key="renderer" type="enumeration" defaultValue="canvas">
+                    <caption>Renderer</caption>
+                    <description>Canvas is fastest for large data. SVG is sharper when printed.</description>
+                    <enumerationValues>
+                        <enumerationValue key="canvas">Canvas</enumerationValue>
+                        <enumerationValue key="svg">SVG</enumerationValue>
+                    </enumerationValues>
+                </property>
+            </propertyGroup>
+        </propertyGroup>
+        <propertyGroup caption="Advanced">
+            <propertyGroup caption="Custom theme">
+                <property key="themeJson" type="string" multiline="true" required="false">
+                    <caption>Theme JSON</caption>
+                    <description>Used when Theme is Custom. Build one at https://echarts.apache.org/en/theme-builder.html: 1. Import hyper-light.theme-builder.json from the styling guide (Help). 2. Adjust it. 3. Download the JSON version and paste it here.</description>
+                </property>
+                <property key="themeJsonExpression" type="expression" required="false">
+                    <caption>Theme JSON (dynamic)</caption>
+                    <description>A theme from an attribute or expression, merged over Theme JSON. Lets each customer or user have their own.</description>
+                    <returnType type="String" />
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Option override">
+                <property key="optionOverride" type="string" multiline="true" required="false">
+                    <caption>Option override</caption>
+                    <description>ECharts option JSON merged over everything else, last. Anything ECharts supports: https://echarts.apache.org/en/option.html</description>
+                </property>
+                <property key="optionOverrideExpression" type="expression" required="false">
+                    <caption>Option override (dynamic)</caption>
+                    <description>Merged after Option override.</description>
+                    <returnType type="String" />
+                </property>
+            </propertyGroup>
+        </propertyGroup>
+    </properties>
+</widget>

@@ -174,3 +174,49 @@ export function gridOption(placement: LegendPlacement): Record<string, unknown> 
 export function surfaceBackground(tokens: ChartTokens, style: ChartStyle): string {
     return style.background === "surface" ? tokens.surface : "transparent";
 }
+
+/** The parts of an option every chart widget starts from: background, motion and accessibility. */
+export function baseOption(tokens: ChartTokens, style: ChartStyle): Record<string, unknown> {
+    return {
+        backgroundColor: surfaceBackground(tokens, style),
+        animation: style.animation,
+        animationDuration: style.animationDuration,
+        animationDurationUpdate: Math.round(style.animationDuration / 2),
+        aria: { enabled: true }
+    };
+}
+
+/** Rows a wrapping legend needs for some names, estimated from their length. Width 0 means not measured yet. */
+export function legendRowCount(names: string[], width: number): number {
+    if (width <= 0) {
+        return names.length > 3 ? 2 : 1;
+    }
+    let rows = 1;
+    let used = 0;
+    for (const name of names) {
+        const itemWidth = 34 + name.length * 6.5;
+        if (used > 0 && used + itemWidth > width) {
+            rows += 1;
+            used = 0;
+        }
+        used += itemWidth;
+    }
+    return rows;
+}
+
+/**
+ * A legend that wraps instead of paging, for charts with a few named items such as slices or rings, and the
+ * height it takes.
+ */
+export function wrappingLegend(
+    placement: LegendPlacement,
+    names: string[],
+    width: number
+): { option: Record<string, unknown>; height: number } {
+    const base = legendOption(placement);
+    if (placement !== "top" && placement !== "bottom") {
+        return { option: { ...base, data: names }, height: 0 };
+    }
+    const rows = legendRowCount(names, width - 16);
+    return { option: { ...base, type: "plain", itemGap: 14, data: names }, height: 8 + rows * 22 };
+}
