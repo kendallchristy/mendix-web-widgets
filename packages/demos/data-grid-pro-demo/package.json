@@ -1,6 +1,6 @@
 {
     "name": "@kendallchristy/data-grid-pro-demo",
-    "version": "0.0.0",
+    "version": "0.0.1",
     "private": true,
     "description": "Runs Data Grid Pro in the browser on generated data, with a mocked Mendix API, for development and performance checks.",
     "type": "module",
