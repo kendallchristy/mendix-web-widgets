@@ -1,0 +1,36 @@
+{
+    "name": "@kendallchristy/date-picker-pro",
+    "widgetName": "DatePickerPro",
+    "version": "0.1.0",
+    "private": true,
+    "description": "Date and date range picker with presets, event markers and typed shortcuts.",
+    "license": "Apache-2.0",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/kendallchristy/mendix-web-widgets.git"
+    },
+    "packagePath": "com.kendallchristy.widget.web",
+    "config": {},
+    "scripts": {
+        "build": "pluggable-widgets-tools build:web",
+        "dev": "pluggable-widgets-tools start:web",
+        "lint": "eslint src",
+        "release": "pluggable-widgets-tools release:web",
+        "test": "pluggable-widgets-tools test:unit:web",
+        "typecheck": "tsc --noEmit"
+    },
+    "dependencies": {
+        "@floating-ui/react": "^0.27.20",
+        "classnames": "catalog:",
+        "date-fns": "^4.4.0",
+        "react-day-picker": "^10.0.2"
+    },
+    "devDependencies": {
+        "@mendix/pluggable-widgets-tools": "catalog:",
+        "@testing-library/jest-dom": "catalog:",
+        "@testing-library/react": "catalog:",
+        "@testing-library/user-event": "catalog:",
+        "mendix": "catalog:",
+        "typescript": "catalog:"
+    }
+}
