@@ -4,7 +4,7 @@
     <description>A fast, high-density data grid with true row virtualization.</description>
     <studioProCategory>Data containers</studioProCategory>
     <studioCategory>Data Containers</studioCategory>
-    <helpUrl>https://github.com/kendallchristy/mendix-web-widgets/tree/main/packages/widgets/data-grid-pro</helpUrl>
+    <helpUrl>https://github.com/kendallchristy/mendix-web-widgets/blob/main/packages/widgets/data-grid-pro/README.md</helpUrl>
     <properties>
         <propertyGroup caption="General">
             <propertyGroup caption="Data">
@@ -116,7 +116,7 @@
                                 <caption>Related data source</caption>
                                 <description>The objects to show, for example order lines. Use this when the related entity owns the association to the row entity.</description>
                             </property>
-                            <property key="relatedParent" type="association" dataSource="relatedSource" required="false">
+                            <property key="relatedParent" type="association" dataSource="relatedSource" selectableObjects="../datasource" required="false">
                                 <caption>Association to row</caption>
                                 <description>The association from the related object to the grid's row object.</description>
                                 <associationTypes>
