@@ -81,6 +81,15 @@ describe("buildGauge", () => {
         expect(series[0].progress.show).toBe(true);
     });
 
+    it("makes room under a needle for the value and caption", () => {
+        const bottomOfText = (indicator: string): number => {
+            const gauge = (build({ indicator }).option.series as any[])[0];
+            return gauge.center[1] + gauge.title.offsetCenter[1] + 8;
+        };
+        expect(bottomOfText("progress")).toBeLessThanOrEqual(192);
+        expect(bottomOfText("needle")).toBeLessThanOrEqual(192);
+    });
+
     it("shows a share of the range as a percentage", () => {
         const gauge = (build({ showAsPercent: true, min: 0, max: 200, value: 50 }).option.series as any[])[0];
         expect(gauge.detail.formatter(50)).toBe("25%");

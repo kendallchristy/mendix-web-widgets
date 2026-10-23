@@ -122,7 +122,12 @@ export function ChartFrame<D>(props: ChartFrameProps<D>): ReactElement {
         customPalette: theme.customPalette,
         customThemePalette
     });
-    const echartsTheme = useMemo(() => buildTheme(tokens, customTheme.value), [tokens, customTheme]);
+    // Axis labels take the figures font from the theme, so Figures font must reach it too.
+    const figuresFont = figuresFontFamily(tokens, chartStyle);
+    const echartsTheme = useMemo(
+        () => buildTheme({ ...tokens, figuresFont }, customTheme.value),
+        [tokens, figuresFont, customTheme]
+    );
 
     const overrideKey = JSON.stringify(theme.optionOverride);
     const override = useMemo(() => mergeJsonTexts(JSON.parse(overrideKey) as string[]), [overrideKey]);
@@ -209,7 +214,7 @@ export function ChartFrame<D>(props: ChartFrameProps<D>): ReactElement {
             height={props.height}
             background={surfaceBackground(tokens, chartStyle)}
             textFont={tokens.fontFamily}
-            figuresFont={figuresFontFamily(tokens, chartStyle)}
+            figuresFont={figuresFont}
             labelColor={tokens.label}
             textColor={tokens.text}
         >

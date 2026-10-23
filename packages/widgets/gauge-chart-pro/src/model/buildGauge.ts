@@ -53,10 +53,21 @@ export function buildGauge(
     const caption = settings.caption && settings.showValue ? 18 : 0;
     // A half circle's value sits on its flat edge, so it needs room below the centre.
     const below = settings.shape === "half" && settings.showValue ? settings.valueSize * 0.5 + caption : 0;
+    const needle = settings.indicator !== "progress";
+    // Under a needle the value sits below the pivot, which can reach past the bottom of an arc.
+    const needleText = (r: number): number =>
+        needle && settings.shape !== "half" && settings.showValue
+            ? Math.round(r * 0.38) + settings.valueSize * 0.6 + caption
+            : 0;
     let layout: Record<string, unknown>;
     let radius = 0;
     if (size.width > 0) {
-        const fit = fitArc(start, sweep, 0, size.width - 16, size.height - top - 8 - below, 0);
+        const height = size.height - top - 8;
+        let fit = fitArc(start, sweep, 0, size.width - 16, height - below, 0);
+        const overflow = fit.y + needleText(fit.radius) - height;
+        if (overflow > 0) {
+            fit = fitArc(start, sweep, 0, size.width - 16, height - overflow, 0);
+        }
         radius = fit.radius;
         layout = { center: [8 + fit.x, top + fit.y], radius: Math.round(radius) };
     } else {
@@ -77,7 +88,6 @@ export function buildGauge(
               ]
             : [[1, track]];
 
-    const needle = settings.indicator !== "progress";
     // The value sits in the middle, below the needle's pivot, or just above a half circle's flat edge.
     const valueOffset =
         settings.shape === "half" ? -settings.valueSize * 0.2 : needle ? Math.round((radius || 80) * 0.38) : 0;

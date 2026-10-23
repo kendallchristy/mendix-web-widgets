@@ -175,7 +175,7 @@
             <propertyGroup caption="Labels">
                 <property key="showNames" type="boolean" defaultValue="true">
                     <caption>Show names</caption>
-                    <description>At the start of each ring. A sweep over 300° leaves no room, so the legend names the rings instead.</description>
+                    <description>At the start of each ring. A sweep over 300°, or a start at the side, leaves no room, so the legend names the rings instead.</description>
                 </property>
                 <property key="valueLabel" type="enumeration" defaultValue="value">
                     <caption>Value labels</caption>

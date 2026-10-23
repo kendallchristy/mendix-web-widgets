@@ -64,7 +64,7 @@ describe("buildRadialBar", () => {
         expect((build().option.angleAxis as any).max).toBe((120 * 360) / 270);
     });
 
-    it("names each ring beside its value, or in the legend for a closed circle", () => {
+    it("names each ring beside its value, or in the legend when they can't fit", () => {
         const axis = build().option.radiusAxis as any;
         expect(axis.axisLabel.show).toBe(true);
         expect(axis.axisLabel.formatter("", 1)).toBe("{name|Sales} {value|80}");
@@ -73,6 +73,10 @@ describe("buildRadialBar", () => {
         const closed = build({ sweep: 360 }).option;
         expect((closed.radiusAxis as any).axisLabel.show).toBe(false);
         expect((closed.legend as any).show).toBe(true);
+
+        // A start at the side would stack the names on top of each other.
+        expect((build({ sweep: 180, startAngle: 180 }).option.radiusAxis as any).axisLabel.show).toBe(false);
+        expect((build({ startAngle: 270 }).option.radiusAxis as any).axisLabel.show).toBe(true);
     });
 
     it("fits the rings into the measured chart", () => {

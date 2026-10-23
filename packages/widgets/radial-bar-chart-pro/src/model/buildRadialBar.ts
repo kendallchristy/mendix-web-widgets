@@ -61,8 +61,10 @@ export function buildRadialBar(
     const figures = figuresFontFamily(tokens, style);
     const sweep = Math.min(360, Math.max(30, settings.sweep));
 
-    // A closed circle leaves no gap at the start for names, so the legend names the rings instead.
-    const names = settings.showNames && sweep <= 300;
+    // Names stack beside the rings' start, which needs a gap there and a start near the top or bottom. A closed
+    // circle or a start at the side would overlap them, so the legend names the rings instead.
+    const startOffVertical = Math.abs((((settings.startAngle % 180) + 180) % 180) - 90);
+    const names = settings.showNames && sweep <= 300 && startOffVertical <= 30;
     const placement = style.legend === "auto" ? (names ? "hidden" : "bottom") : legendPlacement(style, 2);
     const legend = wrappingLegend(
         placement,
