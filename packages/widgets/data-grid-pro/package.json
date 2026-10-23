@@ -1,7 +1,7 @@
 {
     "name": "@kendallchristy/data-grid-pro",
     "widgetName": "DataGridPro",
-    "version": "0.0.0",
+    "version": "0.1.0",
     "private": true,
     "description": "A fast, high-density data grid with true row virtualization.",
     "license": "Apache-2.0",
