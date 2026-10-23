@@ -1,5 +1,2 @@
+// The shared chart styles. The widget adds nothing of its own: a display rule here would override the frame's layout.
 @import "../../../../shared/chart-core/src/ui/chart-core";
-
-.widget-cartesian-chart-pro {
-    display: block;
-}
