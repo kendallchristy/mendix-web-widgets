@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<widget id="com.kendallchristy.widget.web.heatmapchartpro.HeatmapChartPro" pluginWidget="true" offlineCapable="true" supportedPlatform="Web" xmlns="http://www.mendix.com/widget/1.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mendix.com/widget/1.0/ ../node_modules/mendix/custom_widget.xsd">
+    <name>Heatmap Chart Pro</name>
+    <description>A grid of cells coloured by value, or a calendar of days.</description>
+    <studioProCategory>Charts</studioProCategory>
+    <studioCategory>Charts</studioCategory>
+    <helpUrl>https://github.com/kendallchristy/mendix-web-widgets/blob/main/docs/charts/styling.md</helpUrl>
+    <properties>
+        <propertyGroup caption="General">
+            <propertyGroup caption="Data">
+                <property key="dataSource" type="datasource" isList="true">
+                    <caption>Data source</caption>
+                    <description>One object per cell, or many to aggregate.</description>
+                </property>
+                <property key="layout" type="enumeration" defaultValue="grid">
+                    <caption>Layout</caption>
+                    <description>Calendar lays out one cell per day.</description>
+                    <enumerationValues>
+                        <enumerationValue key="grid">Grid</enumerationValue>
+                        <enumerationValue key="calendar">Calendar</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="xAttribute" type="attribute" dataSource="dataSource">
+                    <caption>Column</caption>
+                    <description>The column of each cell. For a calendar, the date.</description>
+                    <attributeTypes>
+                        <attributeType name="String" />
+                        <attributeType name="Enum" />
+                        <attributeType name="Boolean" />
+                        <attributeType name="DateTime" />
+                        <attributeType name="AutoNumber" />
+                        <attributeType name="Integer" />
+                        <attributeType name="Long" />
+                        <attributeType name="Decimal" />
+                    </attributeTypes>
+                </property>
+                <property key="yAttribute" type="attribute" dataSource="dataSource" required="false">
+                    <caption>Row</caption>
+                    <description>The row of each cell. Not used by a calendar.</description>
+                    <attributeTypes>
+                        <attributeType name="String" />
+                        <attributeType name="Enum" />
+                        <attributeType name="Boolean" />
+                        <attributeType name="DateTime" />
+                        <attributeType name="AutoNumber" />
+                        <attributeType name="Integer" />
+                        <attributeType name="Long" />
+                        <attributeType name="Decimal" />
+                    </attributeTypes>
+                </property>
+                <property key="valueAttribute" type="attribute" dataSource="dataSource" required="false">
+                    <caption>Value</caption>
+                    <description>Not needed when Aggregation is Count.</description>
+                    <attributeTypes>
+                        <attributeType name="AutoNumber" />
+                        <attributeType name="Integer" />
+                        <attributeType name="Long" />
+                        <attributeType name="Decimal" />
+                    </attributeTypes>
+                </property>
+                <property key="aggregation" type="enumeration" defaultValue="sum">
+                    <caption>Aggregation</caption>
+                    <description>How objects in the same cell combine.</description>
+                    <enumerationValues>
+                        <enumerationValue key="sum">Sum</enumerationValue>
+                        <enumerationValue key="count">Count</enumerationValue>
+                        <enumerationValue key="avg">Average</enumerationValue>
+                        <enumerationValue key="min">Minimum</enumerationValue>
+                        <enumerationValue key="max">Maximum</enumerationValue>
+                    </enumerationValues>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Interaction">
+                <property key="tooltipText" type="textTemplate" required="false" dataSource="dataSource">
+                    <caption>Tooltip text</caption>
+                    <description>Replaces the tooltip of a cell that holds a single object.</description>
+                </property>
+                <property key="onClick" type="action" dataSource="dataSource" required="false">
+                    <caption>On click</caption>
+                    <description>Runs with the clicked cell's first object.</description>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Title">
+                <property key="title" type="textTemplate" required="false">
+                    <caption>Title</caption>
+                    <description>Leave empty when the page already has a heading.</description>
+                </property>
+                <property key="subtitle" type="textTemplate" required="false">
+                    <caption>Subtitle</caption>
+                    <description />
+                </property>
+                <property key="titleAlign" type="enumeration" defaultValue="left">
+                    <caption>Title position</caption>
+                    <description />
+                    <enumerationValues>
+                        <enumerationValue key="left">Top left</enumerationValue>
+                        <enumerationValue key="center">Top centre</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="emptyMessage" type="textTemplate" required="false">
+                    <caption>No data message</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">No data</translation>
+                    </translations>
+                </property>
+            </propertyGroup>
+        </propertyGroup>
+        <propertyGroup caption="Cells and scale">
+            <propertyGroup caption="Cells">
+                <property key="cellLabels" type="boolean" defaultValue="true">
+                    <caption>Show values</caption>
+                    <description>In each cell. Hidden on cells too small to fit them.</description>
+                </property>
+                <property key="cellGap" type="integer" defaultValue="2">
+                    <caption>Gap between cells</caption>
+                    <description>In pixels.</description>
+                </property>
+                <property key="cornerRadius" type="integer" defaultValue="3">
+                    <caption>Corner radius</caption>
+                    <description>In pixels.</description>
+                </property>
+                <property key="dateFormat" type="string" required="false">
+                    <caption>Date format</caption>
+                    <description>For date columns or rows, an ECharts format such as {MMM} {d}.</description>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Colour scale">
+                <property key="colorScale" type="enumeration" defaultValue="hyper">
+                    <caption>Scale</caption>
+                    <description />
+                    <enumerationValues>
+                        <enumerationValue key="hyper">Green, amber, coral</enumerationValue>
+                        <enumerationValue key="palette">Shades of the first palette colour</enumerationValue>
+                        <enumerationValue key="custom">Custom</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="customScale" type="string" required="false">
+                    <caption>Custom colours</caption>
+                    <description>From low to high, comma-separated, for example #F2F4F8, #8038D0.</description>
+                </property>
+                <property key="reverseScale" type="boolean" defaultValue="false">
+                    <caption>Reverse</caption>
+                    <description>Swaps the ends, for when high values are the good ones.</description>
+                </property>
+                <property key="scaleMin" type="expression" required="false">
+                    <caption>Scale minimum</caption>
+                    <description>Empty uses the smallest value.</description>
+                    <returnType type="Decimal" />
+                </property>
+                <property key="scaleMax" type="expression" required="false">
+                    <caption>Scale maximum</caption>
+                    <description>Empty uses the largest value.</description>
+                    <returnType type="Decimal" />
+                </property>
+                <property key="showScale" type="boolean" defaultValue="true">
+                    <caption>Show the scale</caption>
+                    <description>A colour bar that explains the colours.</description>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Number format">
+                <property key="decimals" type="integer" defaultValue="-1">
+                    <caption>Decimals</caption>
+                    <description>-1 shows up to two decimals, only when needed.</description>
+                </property>
+                <property key="prefix" type="string" required="false">
+                    <caption>Prefix</caption>
+                    <description>For example $.</description>
+                </property>
+                <property key="suffix" type="string" required="false">
+                    <caption>Suffix</caption>
+                    <description>For example % or  kg.</description>
+                </property>
+                <property key="thousandsSeparator" type="boolean" defaultValue="true">
+                    <caption>Thousands separator</caption>
+                    <description />
+                </property>
+                <property key="compactNumbers" type="boolean" defaultValue="false">
+                    <caption>Compact numbers</caption>
+                    <description>1.2K instead of 1,200.</description>
+                </property>
+            </propertyGroup>
+        </propertyGroup>
+        <propertyGroup caption="Chart style">
+            <propertyGroup caption="Theme">
+                <property key="theme" type="enumeration" defaultValue="hyper">
+                    <caption>Theme</caption>
+                    <description>Hyper turns dark under the app's .dark-mode class, or wherever --hc-mode: dark is set.</description>
+                    <enumerationValues>
+                        <enumerationValue key="hyper">Hyper</enumerationValue>
+                        <enumerationValue key="hyperLight">Hyper light</enumerationValue>
+                        <enumerationValue key="hyperDark">Hyper dark</enumerationValue>
+                        <enumerationValue key="custom">Custom</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="palette" type="enumeration" defaultValue="theme">
+                    <caption>Palette</caption>
+                    <description>Theme colours come from the theme, or from --hc-color-1 to --hc-color-8 in your theme SCSS.</description>
+                    <enumerationValues>
+                        <enumerationValue key="theme">Theme colours</enumerationValue>
+                        <enumerationValue key="hyper">Hyper</enumerationValue>
+                        <enumerationValue key="hyperHighContrast">Hyper high-contrast</enumerationValue>
+                        <enumerationValue key="monochrome">Monochrome</enumerationValue>
+                        <enumerationValue key="custom">Custom</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="customPalette" type="string" required="false">
+                    <caption>Custom colours</caption>
+                    <description>Comma-separated, in order, for example #8038D0, #F87800, #0860F8.</description>
+                </property>
+                <property key="background" type="enumeration" defaultValue="transparent">
+                    <caption>Background</caption>
+                    <description>Transparent lets the chart sit on whatever container holds it.</description>
+                    <enumerationValues>
+                        <enumerationValue key="transparent">Transparent</enumerationValue>
+                        <enumerationValue key="surface">Theme surface</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="figuresFont" type="enumeration" defaultValue="mono">
+                    <caption>Figures font</caption>
+                    <description>Font for numbers on labels and tooltips.</description>
+                    <enumerationValues>
+                        <enumerationValue key="mono">Monospaced</enumerationValue>
+                        <enumerationValue key="text">Same as text</enumerationValue>
+                    </enumerationValues>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Marks">
+                <property key="tooltip" type="enumeration" defaultValue="card">
+                    <caption>Tooltip</caption>
+                    <description />
+                    <enumerationValues>
+                        <enumerationValue key="card">Card</enumerationValue>
+                        <enumerationValue key="pill">Pill</enumerationValue>
+                        <enumerationValue key="off">Off</enumerationValue>
+                    </enumerationValues>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Size and motion">
+                <property key="heightUnit" type="enumeration" defaultValue="pixels">
+                    <caption>Height unit</caption>
+                    <description />
+                    <enumerationValues>
+                        <enumerationValue key="pixels">Pixels</enumerationValue>
+                        <enumerationValue key="percentageOfWidth">Percentage of width</enumerationValue>
+                        <enumerationValue key="fill">Fill the container</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="height" type="integer" defaultValue="260">
+                    <caption>Height</caption>
+                    <description />
+                </property>
+                <property key="animation" type="boolean" defaultValue="true">
+                    <caption>Animation</caption>
+                    <description />
+                </property>
+                <property key="animationDuration" type="integer" defaultValue="600">
+                    <caption>Animation duration</caption>
+                    <description>In milliseconds.</description>
+                </property>
+                <property key="renderer" type="enumeration" defaultValue="canvas">
+                    <caption>Renderer</caption>
+                    <description>Canvas is fastest for large data. SVG is sharper when printed.</description>
+                    <enumerationValues>
+                        <enumerationValue key="canvas">Canvas</enumerationValue>
+                        <enumerationValue key="svg">SVG</enumerationValue>
+                    </enumerationValues>
+                </property>
+            </propertyGroup>
+        </propertyGroup>
+        <propertyGroup caption="Advanced">
+            <propertyGroup caption="Custom theme">
+                <property key="themeJson" type="string" multiline="true" required="false">
+                    <caption>Theme JSON</caption>
+                    <description>Used when Theme is Custom. Build one at https://echarts.apache.org/en/theme-builder.html: 1. Import hyper-light.theme-builder.json from the styling guide (Help). 2. Adjust it. 3. Download the JSON version and paste it here.</description>
+                </property>
+                <property key="themeJsonExpression" type="expression" required="false">
+                    <caption>Theme JSON (dynamic)</caption>
+                    <description>A theme from an attribute or expression, merged over Theme JSON. Lets each customer or user have their own.</description>
+                    <returnType type="String" />
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Option override">
+                <property key="optionOverride" type="string" multiline="true" required="false">
+                    <caption>Option override</caption>
+                    <description>ECharts option JSON merged over everything else, last. Anything ECharts supports: https://echarts.apache.org/en/option.html</description>
+                </property>
+                <property key="optionOverrideExpression" type="expression" required="false">
+                    <caption>Option override (dynamic)</caption>
+                    <description>Merged after Option override.</description>
+                    <returnType type="String" />
+                </property>
+            </propertyGroup>
+        </propertyGroup>
+    </properties>
+</widget>

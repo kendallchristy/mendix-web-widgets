@@ -2,7 +2,7 @@
 
 Every chart widget in this repo shares one styling system. It starts from the Hyper look, follows your app's light and dark mode, and lets you restyle charts app-wide, per chart, or with a theme you design in the [ECharts theme builder](https://echarts.apache.org/en/theme-builder.html).
 
-This is the page Studio Pro opens from a chart widget's help link. It applies to all the chart widgets: Cartesian Chart Pro, Pie Chart Pro, Radial Bar Chart Pro, Gauge Chart Pro and Funnel Chart Pro.
+This is the page Studio Pro opens from a chart widget's help link. It applies to all the chart widgets: Cartesian, Pie, Radial Bar, Gauge, Funnel, Range, Candlestick, Heatmap, Stream and Radar Chart Pro.
 
 ## How the layers combine
 
@@ -40,6 +40,8 @@ Set any of these in your theme SCSS, globally or on a container to scope them to
 | `--hc-grid-color`                | Gridlines                                                                            |
 | `--hc-muted-color`               | Marks outside a highlight range, the Other slice, and the tracks of rings and gauges |
 | `--hc-surface`                   | Chart background when Background is Theme surface                                    |
+| `--hc-up-color`                  | Rising candles and volume bars (Candlestick Chart Pro)                               |
+| `--hc-down-color`                | Falling candles and volume bars                                                      |
 
 For example, to brand every chart with three company colours:
 

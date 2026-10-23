@@ -203,9 +203,9 @@
     "candlestick": {
         "itemStyle": {
             "color": "#3D7DF5",
-            "color0": "#F97066",
+            "color0": "#F0605A",
             "borderColor": "#3D7DF5",
-            "borderColor0": "#F97066"
+            "borderColor0": "#F0605A"
         }
     },
     "dataZoom": {

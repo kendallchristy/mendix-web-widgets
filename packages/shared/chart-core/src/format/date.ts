@@ -95,3 +95,47 @@ export function nextDateLevel(level: DateLevel, deepest: DateLevel): DateLevel |
     }
     return DATE_LEVELS[index + 1];
 }
+
+/**
+ * Formats a date with an ECharts-style template such as `{MMM} {d}` or `{yyyy}-{MM}-{dd}`, for axes ECharts doesn't
+ * format itself (category and calendar axes). Month names follow the locale.
+ */
+export function formatDateTemplate(date: Date, template: string, locale?: string): string {
+    const parts: Record<string, () => string> = {
+        yyyy: () => String(date.getFullYear()),
+        yy: () => pad(date.getFullYear() % 100),
+        MMMM: () => dateTimeFormat(locale, { month: "long" }).format(date),
+        MMM: () => dateTimeFormat(locale, { month: "short" }).format(date),
+        MM: () => pad(date.getMonth() + 1),
+        M: () => String(date.getMonth() + 1),
+        dd: () => pad(date.getDate()),
+        d: () => String(date.getDate()),
+        eeee: () => dateTimeFormat(locale, { weekday: "long" }).format(date),
+        ee: () => dateTimeFormat(locale, { weekday: "short" }).format(date),
+        HH: () => pad(date.getHours()),
+        H: () => String(date.getHours()),
+        mm: () => pad(date.getMinutes()),
+        ss: () => pad(date.getSeconds())
+    };
+    return template.replace(/\{(\w+)\}/g, (whole, key: string) => parts[key]?.() ?? whole);
+}
+
+/**
+ * A date label: the template when one is set, otherwise a short date, with the year only when the dates on screen
+ * span more than one year, and the time only when some have one.
+ */
+export function formatDateLabel(
+    date: Date,
+    options: { template?: string; showYear: boolean; showTime?: boolean },
+    locale?: string
+): string {
+    if (options.template) {
+        return formatDateTemplate(date, options.template, locale);
+    }
+    return dateTimeFormat(locale, {
+        month: "short",
+        day: "numeric",
+        ...(options.showYear ? { year: "numeric" } : {}),
+        ...(options.showTime ? { hour: "numeric", minute: "2-digit" } : {})
+    }).format(date);
+}

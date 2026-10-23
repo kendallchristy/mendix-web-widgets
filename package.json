@@ -8,7 +8,7 @@
         "url": "https://github.com/kendallchristy/mendix-web-widgets.git"
     },
     "scripts": {
-        "build": "turbo run build",
+        "build": "turbo run build --concurrency=4",
         "changeset": "changeset",
         "dev": "turbo run dev --filter",
         "format": "prettier --write .",
@@ -16,9 +16,9 @@
         "github-release": "node scripts/github-release.mjs",
         "lint": "turbo run lint",
         "new-widget": "node scripts/new-widget.mjs",
-        "release": "turbo run release",
-        "test": "turbo run test",
-        "typecheck": "turbo run typecheck",
+        "release": "turbo run release --concurrency=4",
+        "test": "turbo run test --concurrency=4",
+        "typecheck": "turbo run typecheck --concurrency=4",
         "verify": "node scripts/verify-widgets.mjs",
         "version-packages": "changeset version && node scripts/sync-package-xml.mjs"
     },

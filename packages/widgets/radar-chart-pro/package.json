@@ -1,0 +1,35 @@
+{
+    "name": "@kendallchristy/radar-chart-pro",
+    "widgetName": "RadarChartPro",
+    "version": "0.1.0",
+    "private": true,
+    "description": "Radar charts comparing series across several measures, built on Apache ECharts.",
+    "license": "Apache-2.0",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/kendallchristy/mendix-web-widgets.git"
+    },
+    "packagePath": "com.kendallchristy.widget.web",
+    "config": {},
+    "scripts": {
+        "build": "pluggable-widgets-tools build:web",
+        "dev": "pluggable-widgets-tools start:web",
+        "lint": "eslint src",
+        "release": "pluggable-widgets-tools release:web",
+        "test": "jest --config jest.config.js",
+        "typecheck": "tsc --noEmit"
+    },
+    "dependencies": {
+        "@kendallchristy/chart-core": "workspace:*",
+        "classnames": "catalog:",
+        "echarts": "catalog:"
+    },
+    "devDependencies": {
+        "@mendix/pluggable-widgets-tools": "catalog:",
+        "@testing-library/jest-dom": "catalog:",
+        "@testing-library/react": "catalog:",
+        "@testing-library/user-event": "catalog:",
+        "mendix": "catalog:",
+        "typescript": "catalog:"
+    }
+}

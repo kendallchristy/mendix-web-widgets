@@ -220,6 +220,7 @@
 .hc-tooltip--pill {
     display: flex;
     gap: 8px;
+    min-width: 0;
 }
 
 .hc-sr-only {
