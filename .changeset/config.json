@@ -3,7 +3,7 @@
     "baseBranch": "main",
     "changelog": ["@changesets/changelog-github", { "repo": "kendallchristy/mendix-web-widgets" }],
     "commit": false,
-    "ignore": ["@kendallchristy/template-widget"],
+    "ignore": ["@kendallchristy/template-widget", "@kendallchristy/*-demo"],
     "privatePackages": { "version": true, "tag": false },
     "updateInternalDependencies": "patch"
 }
