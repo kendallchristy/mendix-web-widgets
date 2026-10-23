@@ -19,17 +19,31 @@ function seriesOf(option: AnyRecord): AnyRecord[] {
 // Points without their own style are plain [x, y] arrays; the rest are objects with a value.
 const valuesOf = (s: AnyRecord): unknown[][] =>
     s.data.map((d: unknown) => (Array.isArray(d) ? d : (d as AnyRecord).value));
-const itemsOf = (s: AnyRecord): AnyRecord[] => s.data.map((d: unknown) => (Array.isArray(d) ? {} : d));
+const itemsOf = (s: AnyRecord): AnyRecord[] =>
+    s.data.map((d: unknown) => (Array.isArray(d) ? {} : d));
 
 describe("buildChart", () => {
     it("draws text X values on a category axis in first-seen order", () => {
-        const { option, pointCount } = buildChart([series("Sales", monthly([1, 2, 3]))], settings(), HYPER_LIGHT, []);
-        expect(axisOf(option)).toMatchObject({ type: "category", data: ["Jan", "Feb", "Mar"], boundaryGap: false });
-        expect(seriesOf(option)[0]).toMatchObject({ type: "line", name: "Sales", color: HYPER_LIGHT.palette[0] });
+        const { option, pointCount } = buildChart(
+            [series("Sales", monthly([1, 2, 3]))],
+            settings(),
+            HYPER_LIGHT,
+            []
+        );
+        expect(axisOf(option)).toMatchObject({
+            type: "category",
+            data: ["Jan", "Feb", "Mar"],
+            boundaryGap: false,
+        });
+        expect(seriesOf(option)[0]).toMatchObject({
+            type: "line",
+            name: "Sales",
+            color: HYPER_LIGHT.palette[0],
+        });
         expect(valuesOf(seriesOf(option)[0])).toEqual([
             ["Jan", 1],
             ["Feb", 2],
-            ["Mar", 3]
+            ["Mar", 3],
         ]);
         expect(pointCount).toBe(3);
     });
@@ -37,23 +51,33 @@ describe("buildChart", () => {
     it("uses a time axis for dates and sorts them", () => {
         const points = [
             { x: new Date(2026, 2, 1), y: 3 },
-            { x: new Date(2026, 0, 1), y: 1 }
+            { x: new Date(2026, 0, 1), y: 1 },
         ];
-        const { option } = buildChart([series("S", points)], settings(), HYPER_LIGHT, []);
+        const { option } = buildChart(
+            [series("S", points)],
+            settings(),
+            HYPER_LIGHT,
+            []
+        );
         expect(axisOf(option).type).toBe("time");
-        expect(valuesOf(seriesOf(option)[0]).map(v => v[1])).toEqual([1, 3]);
+        expect(valuesOf(seriesOf(option)[0]).map((v) => v[1])).toEqual([1, 3]);
     });
 
     it("aggregates points with the same X value", () => {
         const points = [
             { x: "A", y: 1 },
             { x: "A", y: 2 },
-            { x: "B", y: 5 }
+            { x: "B", y: 5 },
         ];
-        const { option } = buildChart([series("S", points, { aggregation: "sum" })], settings(), HYPER_LIGHT, []);
+        const { option } = buildChart(
+            [series("S", points, { aggregation: "sum" })],
+            settings(),
+            HYPER_LIGHT,
+            []
+        );
         expect(valuesOf(seriesOf(option)[0])).toEqual([
             ["A", 3],
-            ["B", 5]
+            ["B", 5],
         ]);
     });
 
@@ -65,14 +89,20 @@ describe("buildChart", () => {
             []
         );
         const data = itemsOf(seriesOf(option)[0]);
-        expect(data.map(d => d.itemStyle?.color)).toEqual([
+        expect(data.map((d) => d.itemStyle?.color)).toEqual([
             HYPER_LIGHT.muted,
             undefined,
             undefined,
             undefined,
-            HYPER_LIGHT.muted
+            HYPER_LIGHT.muted,
         ]);
-        expect(data.map(d => Boolean(d.label))).toEqual([false, true, false, true, false]);
+        expect(data.map((d) => Boolean(d.label))).toEqual([
+            false,
+            true,
+            false,
+            true,
+            false,
+        ]);
     });
 
     it("colours a line's highlight range with a visual map", () => {
@@ -86,12 +116,18 @@ describe("buildChart", () => {
             expect.objectContaining({
                 dimension: 0,
                 seriesIndex: 0,
-                pieces: [{ gte: 1, lte: 3, color: HYPER_LIGHT.palette[0] }]
-            })
+                pieces: [{ gte: 1, lte: 3, color: HYPER_LIGHT.palette[0] }],
+            }),
         ]);
         const data = itemsOf(seriesOf(option)[0]);
         expect(seriesOf(option)[0].symbol).toBe("none");
-        expect(data.map(d => d.symbol)).toEqual([undefined, "circle", undefined, "circle", undefined]);
+        expect(data.map((d) => d.symbol)).toEqual([
+            undefined,
+            "circle",
+            undefined,
+            "circle",
+            undefined,
+        ]);
     });
 
     it("ignores a highlight that names an unknown category", () => {
@@ -108,7 +144,10 @@ describe("buildChart", () => {
         const { option } = buildChart(
             [
                 series("A", monthly([1, 2]), { kind: "bar" }),
-                series("B", monthly([3, 4]), { kind: "bar", yAxisSide: "right" })
+                series("B", monthly([3, 4]), {
+                    kind: "bar",
+                    yAxisSide: "right",
+                }),
             ],
             settings({ orientation: "horizontal" }),
             HYPER_LIGHT,
@@ -124,15 +163,15 @@ describe("buildChart", () => {
         const { option } = buildChart(
             [
                 series("A", monthly([1]), { kind: "bar", stack: "s" }),
-                series("B", monthly([2]), { kind: "bar", stack: "s" })
+                series("B", monthly([2]), { kind: "bar", stack: "s" }),
             ],
             settings(),
             HYPER_LIGHT,
             []
         );
-        expect(seriesOf(option).map(s => s.itemStyle.borderRadius)).toEqual([
+        expect(seriesOf(option).map((s) => s.itemStyle.borderRadius)).toEqual([
             [0, 0, 0, 0],
-            [4, 4, 0, 0]
+            [4, 4, 0, 0],
         ]);
     });
 
@@ -144,10 +183,10 @@ describe("buildChart", () => {
                     "Bubbles",
                     [
                         { x: 1, y: 1, size: 10 },
-                        { x: 2, y: 2, size: 40 }
+                        { x: 2, y: 2, size: 40 },
                     ],
                     { kind: "bubble" }
-                )
+                ),
             ],
             settings({ style: { barStyle: "dots" } as never }),
             HYPER_LIGHT,
@@ -156,18 +195,71 @@ describe("buildChart", () => {
         expect(seriesOf(option)[0].type).toBe("pictorialBar");
         const bubbles = seriesOf(option)[1];
         expect(bubbles.type).toBe("scatter");
-        expect(bubbles.symbolSize([1, 1, 10])).toBeLessThan(bubbles.symbolSize([2, 2, 40]));
+        expect(bubbles.symbolSize([1, 1, 10])).toBeLessThan(
+            bubbles.symbolSize([2, 2, 40])
+        );
+        // Bubbles draw past the plot's edge, into room the grid leaves for them.
+        expect(bubbles.clip).toBe(false);
+        expect((option.grid as AnyRecord).top).toBeGreaterThanOrEqual(36);
+    });
+
+    it("sizes dots to the bars, and keeps bars too thin for dots solid", () => {
+        const days = (n: number) =>
+            Array.from({ length: n }, (_, i) => ({
+                x: new Date(2026, 0, 1 + i),
+                y: i + 1,
+            }));
+        const dots = (n: number, width: number) =>
+            seriesOf(
+                buildChart(
+                    [series("Daily", days(n), { kind: "bar" })],
+                    settings({ style: { barStyle: "dots" } as never }),
+                    HYPER_LIGHT,
+                    [],
+                    { width, height: 200 }
+                ).option
+            )[0];
+        expect(dots(10, 600)).toMatchObject({
+            type: "pictorialBar",
+            symbolSize: [9, 9],
+        });
+        const smaller = dots(40, 600);
+        expect(smaller.type).toBe("pictorialBar");
+        expect(smaller.symbolSize[0]).toBeLessThan(9);
+        expect(dots(200, 600).type).toBe("bar");
+    });
+
+    it("names the month on a daily date axis", () => {
+        const { option } = buildChart(
+            [
+                series("S", [
+                    { x: new Date(2026, 0, 1), y: 1 },
+                    { x: new Date(2026, 0, 9), y: 2 },
+                ]),
+            ],
+            settings(),
+            HYPER_LIGHT,
+            []
+        );
+        expect(axisOf(option).axisLabel.formatter.day).toBe("{MMM} {d}");
     });
 
     it("hides the legend for one series and shows it for more", () => {
-        expect(buildChart([series("A", monthly([1]))], settings(), HYPER_LIGHT, []).option.legend).toEqual({
-            show: false
+        expect(
+            buildChart([series("A", monthly([1]))], settings(), HYPER_LIGHT, [])
+                .option.legend
+        ).toEqual({
+            show: false,
         });
         expect(
-            buildChart([series("A", monthly([1])), series("B", monthly([2]))], settings(), HYPER_LIGHT, []).option
-                .legend
+            buildChart(
+                [series("A", monthly([1])), series("B", monthly([2]))],
+                settings(),
+                HYPER_LIGHT,
+                []
+            ).option.legend
         ).toMatchObject({
-            show: true
+            show: true,
         });
     });
 
@@ -187,35 +279,68 @@ describe("buildChart", () => {
             { x: new Date(2025, 5, 1), y: 1 },
             { x: new Date(2026, 1, 10), y: 2 },
             { x: new Date(2026, 1, 20), y: 3 },
-            { x: new Date(2026, 7, 1), y: 4 }
+            { x: new Date(2026, 7, 1), y: 4 },
         ];
-        const drill = settings({ drill: { kind: "date", from: "year", to: "month" } });
+        const drill = settings({
+            drill: { kind: "date", from: "year", to: "month" },
+        });
 
         it("starts with yearly totals and offers the next level", () => {
-            const built = buildChart([series("S", points)], drill, HYPER_LIGHT, []);
+            const built = buildChart(
+                [series("S", points)],
+                drill,
+                HYPER_LIGHT,
+                []
+            );
             expect(axisOf(built.option).data).toEqual(["2025", "2026"]);
-            expect(valuesOf(seriesOf(built.option)[0]).map(v => v[1])).toEqual([1, 9]);
+            expect(
+                valuesOf(seriesOf(built.option)[0]).map((v) => v[1])
+            ).toEqual([1, 9]);
             expect(built.breadcrumb).toEqual(["All"]);
             expect(built.clickTargets[0][1].drill).toEqual({
                 label: "2026",
-                value: { kind: "date", start: new Date(2026, 0, 1).getTime(), end: new Date(2027, 0, 1).getTime() }
+                value: {
+                    kind: "date",
+                    start: new Date(2026, 0, 1).getTime(),
+                    end: new Date(2027, 0, 1).getTime(),
+                },
             });
         });
 
         it("filters to the clicked range at the next level", () => {
-            const year = buildChart([series("S", points)], drill, HYPER_LIGHT, []).clickTargets[0][1].drill!;
-            const quarters = buildChart([series("S", points)], drill, HYPER_LIGHT, [year]);
+            const year = buildChart(
+                [series("S", points)],
+                drill,
+                HYPER_LIGHT,
+                []
+            ).clickTargets[0][1].drill!;
+            const quarters = buildChart(
+                [series("S", points)],
+                drill,
+                HYPER_LIGHT,
+                [year]
+            );
             expect(axisOf(quarters.option).data).toEqual(["Q1", "Q3"]);
             expect(quarters.breadcrumb).toEqual(["All", "2026"]);
 
             const q1 = quarters.clickTargets[0][0].drill!;
-            const months = buildChart([series("S", points)], drill, HYPER_LIGHT, [year, q1]);
+            const months = buildChart(
+                [series("S", points)],
+                drill,
+                HYPER_LIGHT,
+                [year, q1]
+            );
             expect(valuesOf(seriesOf(months.option)[0])).toEqual([["Feb", 5]]);
             expect(months.clickTargets[0][0].drill).toBeUndefined();
         });
 
         it("falls back to a normal chart when X values aren't dates", () => {
-            const built = buildChart([series("S", monthly([1]))], drill, HYPER_LIGHT, []);
+            const built = buildChart(
+                [series("S", monthly([1]))],
+                drill,
+                HYPER_LIGHT,
+                []
+            );
             expect(built.breadcrumb).toEqual([]);
             expect(built.clickTargets[0][0].drill).toBeUndefined();
         });
@@ -226,26 +351,38 @@ describe("buildChart", () => {
             { x: "Europe", y: 1, drill: ["France", "Paris"] },
             { x: "Europe", y: 2, drill: ["France", "Lyon"] },
             { x: "Europe", y: 4, drill: ["Spain", "Madrid"] },
-            { x: "Asia", y: 8, drill: ["Japan", "Tokyo"] }
+            { x: "Asia", y: 8, drill: ["Japan", "Tokyo"] },
         ];
         const drill = settings({ drill: { kind: "category" } });
 
         it("regroups the clicked category by the next attribute", () => {
-            const top = buildChart([series("S", points)], drill, HYPER_LIGHT, []);
+            const top = buildChart(
+                [series("S", points)],
+                drill,
+                HYPER_LIGHT,
+                []
+            );
             expect(axisOf(top.option).data).toEqual(["Europe", "Asia"]);
             const europe = top.clickTargets[0][0].drill!;
             expect(europe.value).toEqual({ kind: "category", value: "Europe" });
 
-            const countries = buildChart([series("S", points)], drill, HYPER_LIGHT, [europe]);
+            const countries = buildChart(
+                [series("S", points)],
+                drill,
+                HYPER_LIGHT,
+                [europe]
+            );
             expect(valuesOf(seriesOf(countries.option)[0])).toEqual([
                 ["France", 3],
-                ["Spain", 4]
+                ["Spain", 4],
             ]);
 
-            const cities = buildChart([series("S", points)], drill, HYPER_LIGHT, [
-                europe,
-                countries.clickTargets[0][0].drill!
-            ]);
+            const cities = buildChart(
+                [series("S", points)],
+                drill,
+                HYPER_LIGHT,
+                [europe, countries.clickTargets[0][0].drill!]
+            );
             expect(axisOf(cities.option).data).toEqual(["Paris", "Lyon"]);
             expect(cities.clickTargets[0][0].drill).toBeUndefined();
         });
@@ -253,7 +390,11 @@ describe("buildChart", () => {
         it("runs the click action at the last level", () => {
             const execute = jest.fn();
             const built = buildChart(
-                [series("S", [{ x: "A", y: 1, action: { canExecute: true, execute } }])],
+                [
+                    series("S", [
+                        { x: "A", y: 1, action: { canExecute: true, execute } },
+                    ]),
+                ],
                 drill,
                 HYPER_LIGHT,
                 []
@@ -265,20 +406,28 @@ describe("buildChart", () => {
     });
 
     describe("large series", () => {
-        const many = (n: number) => Array.from({ length: n }, (_, i) => ({ x: i, y: i % 7 }));
+        const many = (n: number) =>
+            Array.from({ length: n }, (_, i) => ({ x: i, y: i % 7 }));
 
         it("downsamples lines and keeps points as plain arrays", () => {
-            const { option } = buildChart([series("S", many(LARGE_SERIES + 1))], settings(), HYPER_LIGHT, []);
+            const { option } = buildChart(
+                [series("S", many(LARGE_SERIES + 1))],
+                settings(),
+                HYPER_LIGHT,
+                []
+            );
             const line = seriesOf(option)[0];
             expect(line.sampling).toBe("lttb");
-            expect(line.data.every((d: unknown) => Array.isArray(d))).toBe(true);
+            expect(line.data.every((d: unknown) => Array.isArray(d))).toBe(
+                true
+            );
         });
 
         it("draws bars and scatter points in one batch without glow", () => {
             const { option } = buildChart(
                 [
                     series("Bars", many(LARGE_SERIES + 1), { kind: "bar" }),
-                    series("Dots", many(LARGE_SERIES + 1), { kind: "scatter" })
+                    series("Dots", many(LARGE_SERIES + 1), { kind: "scatter" }),
                 ],
                 settings(),
                 HYPER_LIGHT,
@@ -292,7 +441,12 @@ describe("buildChart", () => {
         });
 
         it("keeps small series in the detailed style", () => {
-            const { option } = buildChart([series("Bars", many(10), { kind: "bar" })], settings(), HYPER_LIGHT, []);
+            const { option } = buildChart(
+                [series("Bars", many(10), { kind: "bar" })],
+                settings(),
+                HYPER_LIGHT,
+                []
+            );
             expect(seriesOf(option)[0].large).toBe(false);
             expect(seriesOf(option)[0].itemStyle.shadowBlur).toBeGreaterThan(0);
         });
@@ -306,16 +460,21 @@ describe("buildChart", () => {
             drill: [],
             get tooltip() {
                 return tooltip();
-            }
+            },
         };
         const input = series("S", []);
-        const { option } = buildChart([{ ...input, points: [point] }], settings(), HYPER_LIGHT, []);
+        const { option } = buildChart(
+            [{ ...input, points: [point] }],
+            settings(),
+            HYPER_LIGHT,
+            []
+        );
         expect(tooltip).not.toHaveBeenCalled();
         const html = (option as AnyRecord).tooltip.formatter({
             seriesIndex: 0,
             dataIndex: 0,
             seriesName: "S",
-            value: ["Jan", 1]
+            value: ["Jan", 1],
         });
         expect(html).toContain("Order 42");
     });

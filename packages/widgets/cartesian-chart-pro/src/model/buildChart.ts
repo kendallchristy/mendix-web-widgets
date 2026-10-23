@@ -6,9 +6,10 @@ import type {
     DateBucket,
     DateLevel,
     DrillStep,
+    ElementSize,
     Point,
     XKind,
-    XValue
+    XValue,
 } from "@kendallchristy/chart-core";
 import {
     DATE_LEVELS,
@@ -29,10 +30,15 @@ import {
     surfaceBackground,
     tooltipOption,
     valueLabelStyle,
-    verticalGradient
+    verticalGradient,
 } from "@kendallchristy/chart-core";
 
-import type { ChartSettings, DrillValue, InputPoint, SeriesInput } from "./types";
+import type {
+    ChartSettings,
+    DrillValue,
+    InputPoint,
+    SeriesInput,
+} from "./types";
 
 export type ClickTarget = CoreClickTarget<DrillValue>;
 
@@ -45,6 +51,18 @@ export type BuiltChart = CoreBuiltChart<DrillValue>;
  */
 export const LARGE_SERIES = 2000;
 
+// Date axis labels per level: a day reads as "Mar 5" rather than a bare 5, and the first of a month or year says so.
+const TIME_LABELS = {
+    year: "{yyyy}",
+    month: "{MMM}",
+    day: "{MMM} {d}",
+    hour: "{HH}:{mm}",
+    minute: "{HH}:{mm}",
+    second: "{HH}:{mm}:{ss}",
+    millisecond: "{HH}:{mm}:{ss}",
+    none: "{MMM} {d}",
+};
+
 interface WorkingPoint extends Point<InputPoint> {
     /** The label shown on a category axis. */
     label: string;
@@ -55,7 +73,9 @@ interface WorkingPoint extends Point<InputPoint> {
 
 interface DrillContext {
     /** Turns a source point into the point drawn at this level, or undefined to leave it out. */
-    project: (point: InputPoint) => Omit<WorkingPoint, "y" | "size" | "source"> | undefined;
+    project: (
+        point: InputPoint
+    ) => Omit<WorkingPoint, "y" | "size" | "source"> | undefined;
     /** Builds the next step for a clicked point, when there is a deeper level. */
     nextStep?: (point: WorkingPoint) => DrillStep<DrillValue>;
     forceAggregation: boolean;
@@ -68,18 +88,28 @@ function dateLevels(from: DateLevel, to: DateLevel): DateLevel[] {
     return DATE_LEVELS.slice(start, end + 1);
 }
 
-function plainLabel(x: XValue, formatNumber: (n: number) => string, locale?: string): string {
+function plainLabel(
+    x: XValue,
+    formatNumber: (n: number) => string,
+    locale?: string
+): string {
     if (x instanceof Date) {
         const hasTime = x.getHours() !== 0 || x.getMinutes() !== 0;
         return dateTimeFormat(
             locale,
-            hasTime ? { dateStyle: "medium", timeStyle: "short" } : { dateStyle: "medium" }
+            hasTime
+                ? { dateStyle: "medium", timeStyle: "short" }
+                : { dateStyle: "medium" }
         ).format(x);
     }
     return typeof x === "number" ? formatNumber(x) : x;
 }
 
-function categoryKey(point: InputPoint, level: number, label: (x: XValue) => string): string | undefined {
+function categoryKey(
+    point: InputPoint,
+    level: number,
+    label: (x: XValue) => string
+): string | undefined {
     return level === 0 ? label(point.x) : point.drill[level - 1];
 }
 
@@ -90,22 +120,29 @@ function drillContext(
     label: (x: XValue) => string,
     locale?: string
 ): DrillContext {
-    const allPoints = series.flatMap(s => s.points);
+    const allPoints = series.flatMap((s) => s.points);
     const drill = settings.drill;
 
-    if (drill.kind === "date" && allPoints.length > 0 && allPoints.every(p => p.x instanceof Date)) {
+    if (
+        drill.kind === "date" &&
+        allPoints.length > 0 &&
+        allPoints.every((p) => p.x instanceof Date)
+    ) {
         const levels = dateLevels(drill.from, drill.to);
         const depth = Math.min(path.length, levels.length - 1);
         const level = levels[depth];
         const last = path[depth - 1]?.value;
         const range = last?.kind === "date" ? last : undefined;
         const inScope = allPoints.filter(
-            p => !range || ((p.x as Date).getTime() >= range.start && (p.x as Date).getTime() < range.end)
+            (p) =>
+                !range ||
+                ((p.x as Date).getTime() >= range.start &&
+                    (p.x as Date).getTime() < range.end)
         );
-        const years = new Set(inScope.map(p => (p.x as Date).getFullYear()));
+        const years = new Set(inScope.map((p) => (p.x as Date).getFullYear()));
         const showYear = years.size > 1 || level === "year";
         return {
-            project: point => {
+            project: (point) => {
                 const time = (point.x as Date).getTime();
                 if (range && (time < range.start || time >= range.end)) {
                     return undefined;
@@ -115,22 +152,22 @@ function drillContext(
                     x: bucket.key,
                     label: formatBucket(bucket, level, showYear, locale),
                     sortKey: bucket.key,
-                    bucket
+                    bucket,
                 };
             },
             nextStep:
                 depth < levels.length - 1
-                    ? point => ({
+                    ? (point) => ({
                           label: point.label,
                           value: {
                               kind: "date",
                               start: point.bucket!.start.getTime(),
-                              end: point.bucket!.end.getTime()
-                          }
+                              end: point.bucket!.end.getTime(),
+                          },
                       })
                     : undefined,
             forceAggregation: true,
-            sortCategories: true
+            sortCategories: true,
         };
     }
 
@@ -141,11 +178,16 @@ function drillContext(
                 .slice(0, depth)
                 .every(
                     (step, level) =>
-                        step.value.kind === "category" && categoryKey(point, level, label) === step.value.value
+                        step.value.kind === "category" &&
+                        categoryKey(point, level, label) === step.value.value
                 );
-        const deeper = depth < 2 && allPoints.some(p => matchesPath(p) && p.drill[depth] !== undefined);
+        const deeper =
+            depth < 2 &&
+            allPoints.some(
+                (p) => matchesPath(p) && p.drill[depth] !== undefined
+            );
         return {
-            project: point => {
+            project: (point) => {
                 if (!matchesPath(point)) {
                     return undefined;
                 }
@@ -153,17 +195,20 @@ function drillContext(
                 return key === undefined ? undefined : { x: key, label: key };
             },
             nextStep: deeper
-                ? point => ({ label: point.label, value: { kind: "category", value: point.label } })
+                ? (point) => ({
+                      label: point.label,
+                      value: { kind: "category", value: point.label },
+                  })
                 : undefined,
             forceAggregation: depth > 0,
-            sortCategories: false
+            sortCategories: false,
         };
     }
 
     return {
-        project: point => ({ x: point.x, label: label(point.x) }),
+        project: (point) => ({ x: point.x, label: label(point.x) }),
         forceAggregation: false,
-        sortCategories: false
+        sortCategories: false,
     };
 }
 
@@ -188,17 +233,24 @@ function resolveHighlight(
     let lo: number | undefined;
     let hi: number | undefined;
     if (kind === "category") {
-        const find = (text: string): number => categories.findIndex(c => c.toLowerCase() === text.trim().toLowerCase());
+        const find = (text: string): number =>
+            categories.findIndex(
+                (c) => c.toLowerCase() === text.trim().toLowerCase()
+            );
         lo = hasFrom ? find(from!) : 0;
         hi = hasTo ? find(to!) : categories.length - 1;
         if (lo < 0 || hi < 0) {
             return undefined;
         }
     } else {
-        const parse = (text: string): number => (kind === "time" ? Date.parse(text.trim()) : Number(text.trim()));
+        const parse = (text: string): number =>
+            kind === "time" ? Date.parse(text.trim()) : Number(text.trim());
         lo = hasFrom ? parse(from!) : undefined;
         hi = hasTo ? parse(to!) : undefined;
-        if ((lo !== undefined && Number.isNaN(lo)) || (hi !== undefined && Number.isNaN(hi))) {
+        if (
+            (lo !== undefined && Number.isNaN(lo)) ||
+            (hi !== undefined && Number.isNaN(hi))
+        ) {
             return undefined;
         }
     }
@@ -206,22 +258,35 @@ function resolveHighlight(
     const high = lo !== undefined && hi !== undefined ? Math.max(lo, hi) : hi;
     return {
         contains: (x, index) => {
-            const v = kind === "category" ? index : x instanceof Date ? x.getTime() : Number(x);
-            return (low === undefined || v >= low) && (high === undefined || v <= high);
+            const v =
+                kind === "category"
+                    ? index
+                    : x instanceof Date
+                    ? x.getTime()
+                    : Number(x);
+            return (
+                (low === undefined || v >= low) &&
+                (high === undefined || v <= high)
+            );
         },
         gte: low,
-        lte: high
+        lte: high,
     };
 }
 
 function bubbleScale(
     series: Array<{ kind: string; points: Array<AggregatedPoint<InputPoint>> }>
 ): (size: number | undefined) => number {
-    const sizes = series.filter(s => s.kind === "bubble").flatMap(s => s.points.map(p => p.size ?? 0));
+    const sizes = series
+        .filter((s) => s.kind === "bubble")
+        .flatMap((s) => s.points.map((p) => p.size ?? 0));
     const min = Math.min(...sizes, 0);
     const max = Math.max(...sizes, 1);
-    return size => {
-        const t = max === min ? 1 : Math.sqrt(Math.max(0, ((size ?? 0) - min) / (max - min)));
+    return (size) => {
+        const t =
+            max === min
+                ? 1
+                : Math.sqrt(Math.max(0, ((size ?? 0) - min) / (max - min)));
         return 12 + t * 44;
     };
 }
@@ -231,28 +296,42 @@ export function buildChart(
     settings: ChartSettings,
     tokens: ChartTokens,
     path: Array<DrillStep<DrillValue>>,
+    size: ElementSize = { width: 0, height: 0 },
     locale?: string
 ): BuiltChart {
     const { style } = settings;
-    const formatNumber = createNumberFormatter({ ...settings.numberFormat, locale });
+    const formatNumber = createNumberFormatter({
+        ...settings.numberFormat,
+        locale,
+    });
     const label = (x: XValue): string => plainLabel(x, formatNumber, locale);
     const drill = drillContext(series, settings, path, label, locale);
     const horizontal = settings.orientation === "horizontal";
 
     // Project every source point onto this drilldown level, then aggregate per series.
-    const projected = series.map(s => {
+    const projected = series.map((s) => {
         const points: WorkingPoint[] = [];
         for (const point of s.points) {
             const at = drill.project(point);
             if (at) {
-                points.push({ ...at, y: point.y, size: point.size, source: point });
+                points.push({
+                    ...at,
+                    y: point.y,
+                    size: point.size,
+                    source: point,
+                });
             }
         }
-        const aggregation = s.aggregation === "none" && drill.forceAggregation ? "sum" : s.aggregation;
-        const byKey = new Map(points.map(p => [p.x instanceof Date ? p.x.getTime() : p.x, p]));
-        const aggregated = aggregate(points, aggregation).map(p => ({
+        const aggregation =
+            s.aggregation === "none" && drill.forceAggregation
+                ? "sum"
+                : s.aggregation;
+        const byKey = new Map(
+            points.map((p) => [p.x instanceof Date ? p.x.getTime() : p.x, p])
+        );
+        const aggregated = aggregate(points, aggregation).map((p) => ({
             ...p,
-            meta: byKey.get(p.x instanceof Date ? p.x.getTime() : p.x)!
+            meta: byKey.get(p.x instanceof Date ? p.x.getTime() : p.x)!,
         }));
         return { input: s, kind: s.kind, points: aggregated };
     });
@@ -260,7 +339,7 @@ export function buildChart(
     const kind: XKind =
         drill.sortCategories || settings.drill.kind === "category"
             ? "category"
-            : detectXKind(projected.flatMap(s => s.points.map(p => p.x)));
+            : detectXKind(projected.flatMap((s) => s.points.map((p) => p.x)));
 
     // Category order: first seen, or sorted for date buckets.
     const categoryMap = new Map<string, string>();
@@ -276,7 +355,7 @@ export function buildChart(
     if (drill.sortCategories) {
         categoryKeys.sort();
     }
-    const categories = categoryKeys.map(k => categoryMap.get(k)!);
+    const categories = categoryKeys.map((k) => categoryMap.get(k)!);
     const categoryIndex = new Map(categoryKeys.map((k, i) => [k, i]));
 
     for (const s of projected) {
@@ -291,10 +370,19 @@ export function buildChart(
         }
     }
 
-    const highlight = resolveHighlight(settings.highlightFrom, settings.highlightTo, kind, categories);
+    const highlight = resolveHighlight(
+        settings.highlightFrom,
+        settings.highlightTo,
+        kind,
+        categories
+    );
     const scaleBubble = bubbleScale(projected);
-    const hasBars = projected.some(s => s.kind === "bar");
-    const barGroups = new Set(projected.filter(s => s.kind === "bar").map((s, i) => s.input.stack || `#${i}`)).size;
+    const hasBars = projected.some((s) => s.kind === "bar");
+    const barGroups = new Set(
+        projected
+            .filter((s) => s.kind === "bar")
+            .map((s, i) => s.input.stack || `#${i}`)
+    ).size;
     // Only the outermost bar of a stack gets rounded corners.
     const lastInStack = new Map<string, number>();
     projected.forEach((s, i) => {
@@ -302,9 +390,11 @@ export function buildChart(
             lastInStack.set(s.input.stack, i);
         }
     });
-    const firstLine = projected.findIndex(s => s.kind === "line");
-    const usesRightAxis = projected.some(s => s.input.yAxisSide === "right");
-    const allItems = projected.length > 0 && projected.every(s => s.kind === "scatter" || s.kind === "bubble");
+    const firstLine = projected.findIndex((s) => s.kind === "line");
+    const usesRightAxis = projected.some((s) => s.input.yAxisSide === "right");
+    const allItems =
+        projected.length > 0 &&
+        projected.every((s) => s.kind === "scatter" || s.kind === "bubble");
 
     const clickTargets: ClickTarget[][] = [];
     const sources: InputPoint[][][] = [];
@@ -313,14 +403,33 @@ export function buildChart(
     const colors: string[] = [];
     const visualMaps: Array<Record<string, unknown>> = [];
 
+    // A bar's width in pixels for its share of each slot, or 9 when the chart isn't measured.
+    const slots = Math.max(
+        1,
+        kind === "category"
+            ? categories.length
+            : Math.max(0, ...projected.map((s) => s.points.length))
+    );
+    const barPixels = (share: number): number => {
+        const along = horizontal ? size.height - 60 : size.width - 70;
+        return along > 0 ? ((along / slots) * share) / 100 : 9;
+    };
+
     const echartsSeries = projected.map((s, seriesIndex) => {
-        const color = s.input.color || tokens.palette[seriesIndex % tokens.palette.length];
+        const color =
+            s.input.color ||
+            tokens.palette[seriesIndex % tokens.palette.length];
         colors.push(color);
         const large = s.points.length > LARGE_SERIES;
         const targets: ClickTarget[] = [];
-        sources.push(s.points.map(p => p.sources));
-        const inRange = s.points.map(p =>
-            highlight ? highlight.contains(p.x, categoryIndex.get(p.meta.sortKey ?? p.meta.label) ?? -1) : true
+        sources.push(s.points.map((p) => p.sources));
+        const inRange = s.points.map((p) =>
+            highlight
+                ? highlight.contains(
+                      p.x,
+                      categoryIndex.get(p.meta.sortKey ?? p.meta.label) ?? -1
+                  )
+                : true
         );
         const firstIn = highlight ? inRange.indexOf(true) : -1;
         const lastIn = highlight ? inRange.lastIndexOf(true) : -1;
@@ -328,9 +437,16 @@ export function buildChart(
         const xOuts: Array<string | number> = [];
 
         const data = s.points.map((p, j) => {
-            const xOut = kind === "category" ? p.meta.label : p.x instanceof Date ? p.x.getTime() : p.x;
+            const xOut =
+                kind === "category"
+                    ? p.meta.label
+                    : p.x instanceof Date
+                    ? p.x.getTime()
+                    : p.x;
             xOuts.push(xOut);
-            const value: unknown[] = horizontal ? [p.y ?? null, xOut] : [xOut, p.y ?? null];
+            const value: unknown[] = horizontal
+                ? [p.y ?? null, xOut]
+                : [xOut, p.y ?? null];
             if (s.kind === "bubble") {
                 value.push(p.size ?? 0);
             }
@@ -347,19 +463,20 @@ export function buildChart(
                 hasValueLabels = true;
                 item.label = {
                     ...valueLabelStyle(tokens, style, formatNumber),
-                    position: horizontal ? "right" : "top"
+                    position: horizontal ? "right" : "top",
                 };
             }
 
             if (s.kind === "line" || s.kind === "area") {
                 const marked =
-                    (style.markers === "always" && !large) || (style.markers === "highlighted" && (isEnd || labelled));
+                    (style.markers === "always" && !large) ||
+                    (style.markers === "highlighted" && (isEnd || labelled));
                 if (marked) {
                     item.symbol = "circle";
                     item.itemStyle = {
                         color: tokens.surface,
                         borderColor: inRange[j] ? color : tokens.muted,
-                        borderWidth: 2.5
+                        borderWidth: 2.5,
                     };
                 }
             } else if (!inRange[j] && !large) {
@@ -375,9 +492,13 @@ export function buildChart(
                 },
                 get action() {
                     return first?.action;
-                }
+                },
             });
-            tableRows.push([s.input.name, p.meta.label, p.y === undefined ? "" : formatNumber(p.y)]);
+            tableRows.push([
+                s.input.name,
+                p.meta.label,
+                p.y === undefined ? "" : formatNumber(p.y),
+            ]);
             if (Object.keys(item).length === 0) {
                 return value;
             }
@@ -391,12 +512,20 @@ export function buildChart(
             name: s.input.name,
             color,
             data,
-            yAxisIndex: horizontal ? undefined : s.input.yAxisSide === "right" ? 1 : 0,
-            xAxisIndex: horizontal ? (s.input.yAxisSide === "right" ? 1 : 0) : undefined,
+            yAxisIndex: horizontal
+                ? undefined
+                : s.input.yAxisSide === "right"
+                ? 1
+                : 0,
+            xAxisIndex: horizontal
+                ? s.input.yAxisSide === "right"
+                    ? 1
+                    : 0
+                : undefined,
             stack: s.input.stack || undefined,
             emphasis: { focus: "none" },
             // Value labels that would collide are dropped rather than drawn over each other.
-            labelLayout: { hideOverlap: true }
+            labelLayout: { hideOverlap: true },
         };
 
         if (s.kind === "line" || s.kind === "area") {
@@ -407,15 +536,22 @@ export function buildChart(
                     dimension: horizontal ? 1 : 0,
                     seriesIndex,
                     pieces: [{ gte: highlight.gte, lte: highlight.lte, color }],
-                    outOfRange: { color: tokens.muted }
+                    outOfRange: { color: tokens.muted },
                 });
             }
             const band =
                 highlight && seriesIndex === firstLine && firstIn >= 0
                     ? {
                           silent: true,
-                          itemStyle: { color: verticalGradient(color, 0.14, 0.02) },
-                          data: [[{ xAxis: xOuts[firstIn] }, { xAxis: xOuts[lastIn] }]]
+                          itemStyle: {
+                              color: verticalGradient(color, 0.14, 0.02),
+                          },
+                          data: [
+                              [
+                                  { xAxis: xOuts[firstIn] },
+                                  { xAxis: xOuts[lastIn] },
+                              ],
+                          ],
                       }
                     : undefined;
             return {
@@ -433,31 +569,48 @@ export function buildChart(
                 symbolSize: 9,
                 showSymbol: style.markers !== "hover",
                 sampling: "lttb",
-                lineStyle: { width: style.lineWidth, ...glowStyle(color, tokens, style) },
-                areaStyle: s.kind === "area" ? areaStyle(color, tokens, style) : undefined,
+                lineStyle: {
+                    width: style.lineWidth,
+                    ...glowStyle(color, tokens, style),
+                },
+                areaStyle:
+                    s.kind === "area"
+                        ? areaStyle(color, tokens, style)
+                        : undefined,
                 markArea: horizontal ? undefined : band,
-                connectNulls: true
+                connectNulls: true,
             };
         }
 
         if (s.kind === "bar") {
-            const outermost = !s.input.stack || lastInStack.get(s.input.stack) === seriesIndex;
+            const outermost =
+                !s.input.stack ||
+                lastInStack.get(s.input.stack) === seriesIndex;
             const radius = outermost ? style.barRadius : 0;
             // A glow offset below a bar reads as a smudge under the baseline, so bars glow evenly and stripes don't.
             const barGlow =
-                style.barStyle === "striped" || large ? {} : { ...glowStyle(color, tokens, style), shadowOffsetY: 0 };
-            const corners = horizontal ? [0, radius, radius, 0] : [radius, radius, 0, 0];
-            const width = `${Math.max(1, Math.min(100, style.barWidth)) / Math.max(1, barGroups)}%`;
-            if (style.barStyle === "dots" && !large) {
+                style.barStyle === "striped" || large
+                    ? {}
+                    : { ...glowStyle(color, tokens, style), shadowOffsetY: 0 };
+            const corners = horizontal
+                ? [0, radius, radius, 0]
+                : [radius, radius, 0, 0];
+            const share =
+                Math.max(1, Math.min(100, style.barWidth)) /
+                Math.max(1, barGroups);
+            const width = `${share}%`;
+            // Dots as wide as the bar, up to 9 px. On bars thinner than 4 px they'd run together, so those stay solid.
+            const dot = Math.min(9, barPixels(share));
+            if (style.barStyle === "dots" && !large && dot >= 4) {
                 return {
                     ...base,
                     type: "pictorialBar",
                     symbol: "circle",
                     symbolRepeat: true,
-                    symbolSize: [9, 9],
-                    symbolMargin: 3,
+                    symbolSize: [dot, dot],
+                    symbolMargin: Math.max(1, Math.round(dot / 3)),
                     barWidth: width,
-                    itemStyle: { ...barGlow }
+                    itemStyle: { ...barGlow },
                 };
             }
             return {
@@ -477,10 +630,10 @@ export function buildChart(
                                   color: tokens.surface,
                                   dashArrayX: [1, 2],
                                   dashArrayY: [8, 0],
-                                  rotation: 0
+                                  rotation: 0,
                               }
-                            : undefined
-                }
+                            : undefined,
+                },
             };
         }
 
@@ -491,7 +644,13 @@ export function buildChart(
             type: "scatter",
             // Large mode draws every point in one batch; bubbles need their own sizes, so they stay normal.
             large: large && !bubble,
-            symbolSize: bubble ? (value: number[]) => scaleBubble(value[2]) : large ? 6 : 11,
+            // Bubbles may reach past the plot; the grid leaves them room instead of cutting them off.
+            clip: !bubble,
+            symbolSize: bubble
+                ? (value: number[]) => scaleBubble(value[2])
+                : large
+                ? 6
+                : 11,
             itemStyle: {
                 color: bubble
                     ? {
@@ -500,20 +659,25 @@ export function buildChart(
                           y: 0.3,
                           r: 0.85,
                           colorStops: [
-                              { offset: 0, color: mixColors(color, "#ffffff", 0.55) },
-                              { offset: 1, color }
-                          ]
+                              {
+                                  offset: 0,
+                                  color: mixColors(color, "#ffffff", 0.55),
+                              },
+                              { offset: 1, color },
+                          ],
                       }
                     : color,
                 opacity: bubble ? 0.92 : 1,
-                ...(large ? {} : glowStyle(color, tokens, style))
-            }
+                ...(large ? {} : glowStyle(color, tokens, style)),
+            },
         };
     });
 
     // Axes. Gridlines are by screen direction: vertical lines belong to the horizontal (x) axis component.
-    const verticalLines = style.gridlines === "vertical" || style.gridlines === "both";
-    const horizontalLines = style.gridlines === "horizontal" || style.gridlines === "both";
+    const verticalLines =
+        style.gridlines === "vertical" || style.gridlines === "both";
+    const horizontalLines =
+        style.gridlines === "horizontal" || style.gridlines === "both";
     const categoryAxis: Record<string, unknown> = {
         type: kind,
         data: kind === "category" ? categories : undefined,
@@ -530,9 +694,14 @@ export function buildChart(
             // Long category names are cut short, so ECharts can still fit some of them instead of none.
             width: kind === "category" ? 120 : undefined,
             overflow: kind === "category" ? "truncate" : undefined,
-            formatter: kind === "time" ? settings.xDateFormat || undefined : kind === "value" ? formatNumber : undefined
+            formatter:
+                kind === "time"
+                    ? settings.xDateFormat || TIME_LABELS
+                    : kind === "value"
+                    ? formatNumber
+                    : undefined,
         },
-        splitLine: { show: horizontal ? horizontalLines : verticalLines }
+        splitLine: { show: horizontal ? horizontalLines : verticalLines },
     };
     const valueAxis = (side: "left" | "right"): Record<string, unknown> => ({
         type: settings.yAxisScale === "log" ? "log" : "value",
@@ -543,10 +712,20 @@ export function buildChart(
         nameLocation: "middle",
         nameGap: 10,
         nameMoveOverlap: true,
-        axisLabel: { show: settings.showYAxis, formatter: formatNumber, hideOverlap: true },
-        splitLine: { show: side === "left" && (horizontal ? verticalLines : horizontalLines) }
+        axisLabel: {
+            show: settings.showYAxis,
+            formatter: formatNumber,
+            hideOverlap: true,
+        },
+        splitLine: {
+            show:
+                side === "left" &&
+                (horizontal ? verticalLines : horizontalLines),
+        },
     });
-    const valueAxes = usesRightAxis ? [valueAxis("left"), valueAxis("right")] : [valueAxis("left")];
+    const valueAxes = usesRightAxis
+        ? [valueAxis("left"), valueAxis("right")]
+        : [valueAxis("left")];
 
     const placement = legendPlacement(style, projected.length);
     const grid = gridOption(placement);
@@ -554,6 +733,12 @@ export function buildChart(
     if (hasValueLabels) {
         grid.top = Number(grid.top) + 22;
         grid.right = Number(grid.right) + (horizontal ? 36 : 18);
+    }
+    // Room for half the largest bubble, so bubbles at the edges aren't cut off.
+    if (projected.some((s) => s.kind === "bubble")) {
+        grid.top = Number(grid.top) + 24;
+        grid.right = Number(grid.right) + 24;
+        grid.left = Number(grid.left) + 12;
     }
     const slider = settings.zoom === "slider" || settings.zoom === "both";
     if (slider) {
@@ -564,10 +749,19 @@ export function buildChart(
     }
     const zoomAxis = horizontal ? { yAxisIndex: 0 } : { xAxisIndex: 0 };
     const dataZoom = [
-        ...(settings.zoom === "inside" || settings.zoom === "both" ? [{ type: "inside", ...zoomAxis }] : []),
+        ...(settings.zoom === "inside" || settings.zoom === "both"
+            ? [{ type: "inside", ...zoomAxis }]
+            : []),
         ...(slider
-            ? [{ type: "slider", ...zoomAxis, height: horizontal ? undefined : 24, bottom: horizontal ? undefined : 8 }]
-            : [])
+            ? [
+                  {
+                      type: "slider",
+                      ...zoomAxis,
+                      height: horizontal ? undefined : 24,
+                      bottom: horizontal ? undefined : 8,
+                  },
+              ]
+            : []),
     ];
 
     const valueIndex = horizontal ? 0 : 1;
@@ -575,24 +769,34 @@ export function buildChart(
         tokens,
         style,
         formatValue: formatNumber,
-        pickValue: value => {
-            const n = Array.isArray(value) ? Number(value[valueIndex]) : Number(value);
+        pickValue: (value) => {
+            const n = Array.isArray(value)
+                ? Number(value[valueIndex])
+                : Number(value);
             return Number.isFinite(n) ? n : undefined;
         },
-        colorOf: param => (param.seriesIndex !== undefined ? colors[param.seriesIndex] : undefined),
+        colorOf: (param) =>
+            param.seriesIndex !== undefined
+                ? colors[param.seriesIndex]
+                : undefined,
         // Tooltip texts are read when a point is hovered, not for every point up front.
-        tooltipOf: param => {
-            const group = sources[param.seriesIndex ?? -1]?.[param.dataIndex ?? -1];
+        tooltipOf: (param) => {
+            const group =
+                sources[param.seriesIndex ?? -1]?.[param.dataIndex ?? -1];
             return group?.length === 1 ? group[0].tooltip : undefined;
         },
-        headerOf: param => {
+        headerOf: (param) => {
             const value = param.value;
             if (!Array.isArray(value)) {
                 return param.name ?? "";
             }
             const x = value[horizontal ? 1 : 0];
-            return kind === "time" ? label(new Date(Number(x))) : typeof x === "number" ? formatNumber(x) : String(x);
-        }
+            return kind === "time"
+                ? label(new Date(Number(x)))
+                : typeof x === "number"
+                ? formatNumber(x)
+                : String(x);
+        },
     });
 
     const option: Record<string, unknown> = {
@@ -603,22 +807,36 @@ export function buildChart(
         aria: { enabled: true },
         legend: legendOption(placement),
         grid,
-        tooltip: tooltipOption(tokens, style, allItems ? "item" : "axis", tooltipFormatter),
+        tooltip: tooltipOption(
+            tokens,
+            style,
+            allItems ? "item" : "axis",
+            tooltipFormatter
+        ),
         xAxis: horizontal ? valueAxes : categoryAxis,
         yAxis: horizontal ? categoryAxis : valueAxes,
         dataZoom,
         visualMap: visualMaps,
-        series: echartsSeries
+        series: echartsSeries,
     };
 
     const crumbs =
-        drill.nextStep !== undefined || path.length > 0 ? [settings.topLabel, ...path.map(step => step.label)] : [];
+        drill.nextStep !== undefined || path.length > 0
+            ? [settings.topLabel, ...path.map((step) => step.label)]
+            : [];
 
     return {
         option,
         clickTargets,
         breadcrumb: crumbs,
-        table: { columns: ["Series", settings.xAxisTitle || "X", settings.yAxisTitle || "Value"], rows: tableRows },
-        pointCount: tableRows.length
+        table: {
+            columns: [
+                "Series",
+                settings.xAxisTitle || "X",
+                settings.yAxisTitle || "Value",
+            ],
+            rows: tableRows,
+        },
+        pointCount: tableRows.length,
     };
 }
