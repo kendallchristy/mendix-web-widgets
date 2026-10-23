@@ -18,8 +18,10 @@ export function usePageThemeChanges(ref: RefObject<HTMLElement | null>, onChange
         }
         const observer = new MutationObserver(onChange);
         // Each ancestor on its own, not the whole page's subtree, so unrelated class changes elsewhere cost nothing.
-        for (let target = ref.current?.parentElement ?? document.body; target; target = target.parentElement) {
+        let target: HTMLElement | null = ref.current?.parentElement ?? document.body;
+        while (target) {
             observer.observe(target, { attributes: true, attributeFilter: OBSERVED_ATTRIBUTES });
+            target = target.parentElement;
         }
         return () => observer.disconnect();
     }, [ref, onChange]);
