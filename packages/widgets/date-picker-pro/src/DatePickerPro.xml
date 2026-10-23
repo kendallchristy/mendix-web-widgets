@@ -1,0 +1,880 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<widget id="com.kendallchristy.widget.web.datepickerpro.DatePickerPro" pluginWidget="true" needsEntityContext="true" offlineCapable="true" supportedPlatform="Web" xmlns="http://www.mendix.com/widget/1.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mendix.com/widget/1.0/ ../node_modules/mendix/custom_widget.xsd">
+    <name>Date Picker Pro</name>
+    <description>Date and date range picker with presets, event markers and typed shortcuts.</description>
+    <studioProCategory>Input elements</studioProCategory>
+    <studioCategory>Input Elements</studioCategory>
+    <helpUrl>https://github.com/kendallchristy/mendix-web-widgets/blob/main/packages/widgets/date-picker-pro/README.md</helpUrl>
+    <properties>
+        <propertyGroup caption="General">
+            <propertyGroup caption="Data source">
+                <property key="selectionType" type="enumeration" defaultValue="SINGLE">
+                    <caption>Selection type</caption>
+                    <description>Pick one date, or a start and an end date.</description>
+                    <enumerationValues>
+                        <enumerationValue key="SINGLE">Single date</enumerationValue>
+                        <enumerationValue key="RANGE">Date range</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="dateAttribute" type="attribute" required="false">
+                    <caption>Date attribute</caption>
+                    <description>The attribute the picked date is saved to.</description>
+                    <attributeTypes>
+                        <attributeType name="DateTime" />
+                    </attributeTypes>
+                </property>
+                <property key="startDateAttribute" type="attribute" required="false">
+                    <caption>Start date attribute</caption>
+                    <description>The attribute the start of the range is saved to.</description>
+                    <attributeTypes>
+                        <attributeType name="DateTime" />
+                    </attributeTypes>
+                </property>
+                <property key="endDateAttribute" type="attribute" required="false">
+                    <caption>End date attribute</caption>
+                    <description>The attribute the end of the range is saved to.</description>
+                    <attributeTypes>
+                        <attributeType name="DateTime" />
+                    </attributeTypes>
+                </property>
+                <property key="rangeEndAt" type="enumeration" defaultValue="START">
+                    <caption>Save range end as</caption>
+                    <description>The time saved with the end of a range when no time is shown. End of period suits filters such as [Date] &lt;= $End.</description>
+                    <enumerationValues>
+                        <enumerationValue key="START">Start of the last day (00:00)</enumerationValue>
+                        <enumerationValue key="END">End of the last day (23:59:59)</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="dateHandling" type="enumeration" defaultValue="AUTO">
+                    <caption>Time zone handling</caption>
+                    <description>Automatic follows the attribute's Localize setting in the domain model.</description>
+                    <enumerationValues>
+                        <enumerationValue key="AUTO">Automatic</enumerationValue>
+                        <enumerationValue key="LOCAL">Localized (user's time zone)</enumerationValue>
+                        <enumerationValue key="UTC">Not localized (UTC)</enumerationValue>
+                    </enumerationValues>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Format">
+                <property key="dateFormat" type="enumeration" defaultValue="DATE">
+                    <caption>Date format</caption>
+                    <description>Date, Time and Date and time use the user's language settings. Month, Quarter and Year show a picker for that period.</description>
+                    <enumerationValues>
+                        <enumerationValue key="DATE">Date</enumerationValue>
+                        <enumerationValue key="MONTH">Month</enumerationValue>
+                        <enumerationValue key="QUARTER">Quarter</enumerationValue>
+                        <enumerationValue key="YEAR">Year</enumerationValue>
+                        <enumerationValue key="TIME">Time</enumerationValue>
+                        <enumerationValue key="DATETIME">Date and time</enumerationValue>
+                        <enumerationValue key="CUSTOM">Custom</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="monthFormat" type="enumeration" defaultValue="FULL">
+                    <caption>Month format</caption>
+                    <description>How months are written.</description>
+                    <enumerationValues>
+                        <enumerationValue key="FULL">Full word (September 2026)</enumerationValue>
+                        <enumerationValue key="ABBREVIATION">Abbreviation (Sep 2026)</enumerationValue>
+                        <enumerationValue key="PADDED">Padded number (09 2026)</enumerationValue>
+                        <enumerationValue key="MIN">Number (9 2026)</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="customDateFormat" type="textTemplate" required="true">
+                    <caption>Custom date format</caption>
+                    <description>Uses the formatDateTime symbols, plus QQQ for quarters, for example dd-MM-yyyy HH:mm or yyyy QQQ. The picker follows the pattern: no day means a month, quarter or year picker.</description>
+                    <translations>
+                        <translation lang="en_US">dd-MM-yyyy</translation>
+                    </translations>
+                </property>
+                <property key="timeInterval" type="expression" required="true" defaultValue="15">
+                    <caption>Time interval</caption>
+                    <description>Minutes between the options in the time list.</description>
+                    <returnType type="Integer" />
+                </property>
+                <property key="timeCaption" type="textTemplate" required="true">
+                    <caption>Time caption</caption>
+                    <description>Heading above the time list.</description>
+                    <translations>
+                        <translation lang="en_US">Time</translation>
+                    </translations>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Label">
+                <systemProperty key="Label" />
+            </propertyGroup>
+            <propertyGroup caption="Typing">
+                <property key="typingMode" type="enumeration" defaultValue="SEGMENTED">
+                    <caption>Typing</caption>
+                    <description>Segmented fields fill in separators as you type and work with every format. Free text reads the whole date when the field loses focus.</description>
+                    <enumerationValues>
+                        <enumerationValue key="SEGMENTED">Segmented (recommended)</enumerationValue>
+                        <enumerationValue key="TEXT">Free text</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="relativeTyping" type="boolean" defaultValue="true">
+                    <caption>Relative typing</caption>
+                    <description>Let users type shortcuts like t (today), +7d, next fri or last month. The help popup lists them.</description>
+                </property>
+                <property key="placeholder" type="textTemplate" required="false">
+                    <caption>Placeholder</caption>
+                    <description>Text shown in an empty field or button. For ranges, this is the start field.</description>
+                </property>
+                <property key="endPlaceholder" type="textTemplate" required="false">
+                    <caption>End placeholder</caption>
+                    <description>Text shown in an empty end field.</description>
+                </property>
+                <property key="maskErrorText" type="textTemplate" required="true">
+                    <caption>Invalid character message</caption>
+                    <description>Shown when a typed character doesn't fit the format. Leave empty to show nothing.</description>
+                    <translations>
+                        <translation lang="en_US">That character can't go there.</translation>
+                    </translations>
+                </property>
+                <property key="includeInvalidChar" type="expression" required="true" defaultValue="true">
+                    <caption>Include invalid character</caption>
+                    <description>Add the rejected character to the message.</description>
+                    <returnType type="Boolean" />
+                </property>
+            </propertyGroup>
+        </propertyGroup>
+        <propertyGroup caption="Appearance">
+            <propertyGroup caption="Trigger">
+                <property key="triggerStyle" type="enumeration" defaultValue="INPUT">
+                    <caption>Show as</caption>
+                    <description>Input: typeable date fields. Button: a button showing the date or range, as in a dashboard toolbar. Inline: the calendar shown on the page.</description>
+                    <enumerationValues>
+                        <enumerationValue key="INPUT">Input</enumerationValue>
+                        <enumerationValue key="BUTTON">Button</enumerationValue>
+                        <enumerationValue key="INLINE">Inline calendar</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="showIcon" type="boolean" defaultValue="true">
+                    <caption>Show icon</caption>
+                    <description>Show the calendar icon.</description>
+                </property>
+                <property key="iconPosition" type="enumeration" defaultValue="INSIDE">
+                    <caption>Icon position</caption>
+                    <description />
+                    <enumerationValues>
+                        <enumerationValue key="INSIDE">Inside the field</enumerationValue>
+                        <enumerationValue key="BESIDE">Button beside the field</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="customIcon" type="icon" required="false">
+                    <caption>Custom icon</caption>
+                    <description>Replaces the calendar icon.</description>
+                </property>
+                <property key="clearable" type="expression" required="true" defaultValue="true">
+                    <caption>Clearable</caption>
+                    <description>Show a clear button, and let users empty the field by typing.</description>
+                    <returnType type="Boolean" />
+                </property>
+                <property key="readOnlyStyle" type="enumeration" defaultValue="CONTROL">
+                    <caption>Read-only style</caption>
+                    <description>How the widget looks when it can't be edited.</description>
+                    <enumerationValues>
+                        <enumerationValue key="CONTROL">Control</enumerationValue>
+                        <enumerationValue key="TEXT">Text</enumerationValue>
+                    </enumerationValues>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Calendar">
+                <property key="monthsToDisplay" type="expression" required="true" defaultValue="0">
+                    <caption>Months to display</caption>
+                    <description>How many months show side by side. 0 shows 1 for single dates and 2 for ranges.</description>
+                    <returnType type="Integer" />
+                </property>
+                <property key="showPreviousMonths" type="expression" required="true" defaultValue="false">
+                    <caption>Show previous months</caption>
+                    <description>Show the months before the current one instead of after it.</description>
+                    <returnType type="Boolean" />
+                </property>
+                <property key="firstDayOfWeek" type="enumeration" defaultValue="LOCALE">
+                    <caption>First day of the week</caption>
+                    <description />
+                    <enumerationValues>
+                        <enumerationValue key="LOCALE">User's language setting</enumerationValue>
+                        <enumerationValue key="MONDAY">Monday</enumerationValue>
+                        <enumerationValue key="SUNDAY">Sunday</enumerationValue>
+                        <enumerationValue key="SATURDAY">Saturday</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="showWeekNumbers" type="expression" required="true" defaultValue="false">
+                    <caption>Show week numbers</caption>
+                    <description />
+                    <returnType type="Boolean" />
+                </property>
+                <property key="weekNumbering" type="enumeration" defaultValue="LOCALE">
+                    <caption>Week numbering</caption>
+                    <description>ISO weeks start on Monday, and week 1 holds the first Thursday of the year.</description>
+                    <enumerationValues>
+                        <enumerationValue key="LOCALE">Follow the first day of the week</enumerationValue>
+                        <enumerationValue key="ISO">ISO 8601</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="showOutsideDays" type="boolean" defaultValue="true">
+                    <caption>Show days of other months</caption>
+                    <description>Fill the first and last week with days of the neighboring months, dimmed.</description>
+                </property>
+                <property key="showTodayButton" type="boolean" defaultValue="false">
+                    <caption>Show today button</caption>
+                    <description />
+                </property>
+                <property key="todayButtonText" type="textTemplate" required="true">
+                    <caption>Today button text</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Today</translation>
+                    </translations>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Popup">
+                <property key="alignment" type="enumeration" defaultValue="LEFT">
+                    <caption>Alignment</caption>
+                    <description>Which edge of the field the popup lines up with. It flips when there isn't room.</description>
+                    <enumerationValues>
+                        <enumerationValue key="LEFT">Left</enumerationValue>
+                        <enumerationValue key="RIGHT">Right</enumerationValue>
+                        <enumerationValue key="AUTO">Auto</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="showArrow" type="boolean" defaultValue="false">
+                    <caption>Show arrow</caption>
+                    <description>Show a small arrow pointing at the field.</description>
+                </property>
+                <property key="mobileBreakpoint" type="integer" defaultValue="640">
+                    <caption>Mobile breakpoint</caption>
+                    <description>Below this screen width (in pixels) the popup shows one month, with presets as chips, across the bottom of the screen.</description>
+                </property>
+                <property key="density" type="enumeration" defaultValue="DEFAULT">
+                    <caption>Size</caption>
+                    <description />
+                    <enumerationValues>
+                        <enumerationValue key="COMPACT">Compact</enumerationValue>
+                        <enumerationValue key="DEFAULT">Default</enumerationValue>
+                        <enumerationValue key="LARGE">Large</enumerationValue>
+                    </enumerationValues>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Help">
+                <property key="helpButton" type="enumeration" defaultValue="BESIDE">
+                    <caption>Shortcuts help</caption>
+                    <description>Where the button that explains the typing and keyboard shortcuts appears.</description>
+                    <enumerationValues>
+                        <enumerationValue key="BESIDE">Beside the field and in the popup</enumerationValue>
+                        <enumerationValue key="POPUP">In the popup only</enumerationValue>
+                        <enumerationValue key="HIDDEN">Hidden</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="useCustomHelp" type="boolean" defaultValue="false">
+                    <caption>Custom help content</caption>
+                    <description>Replace the built-in help with your own content, for example to translate it.</description>
+                </property>
+                <property key="customHelp" type="widgets" required="false">
+                    <caption>Help content</caption>
+                    <description>Shown in the help popup instead of the built-in list.</description>
+                </property>
+            </propertyGroup>
+        </propertyGroup>
+        <propertyGroup caption="Presets">
+            <propertyGroup caption="Built-in presets">
+                <property key="showPresets" type="boolean" defaultValue="true">
+                    <caption>Show presets</caption>
+                    <description>Show the preset list beside the calendar. Single dates only offer Today, Yesterday and Tomorrow.</description>
+                </property>
+                <property key="presetToday" type="boolean" defaultValue="true">
+                    <caption>Today</caption>
+                    <description>Offer today.</description>
+                </property>
+                <property key="presetYesterday" type="boolean" defaultValue="true">
+                    <caption>Yesterday</caption>
+                    <description>Offer yesterday.</description>
+                </property>
+                <property key="presetTomorrow" type="boolean" defaultValue="false">
+                    <caption>Tomorrow</caption>
+                    <description>Offer tomorrow.</description>
+                </property>
+                <property key="presetThisWeek" type="boolean" defaultValue="true">
+                    <caption>This week</caption>
+                    <description>Offer this week.</description>
+                </property>
+                <property key="presetLastWeek" type="boolean" defaultValue="true">
+                    <caption>Last week</caption>
+                    <description>Offer last week.</description>
+                </property>
+                <property key="presetThisMonth" type="boolean" defaultValue="true">
+                    <caption>This month</caption>
+                    <description>Offer this month.</description>
+                </property>
+                <property key="presetLastMonth" type="boolean" defaultValue="true">
+                    <caption>Last month</caption>
+                    <description>Offer last month.</description>
+                </property>
+                <property key="presetThisQuarter" type="boolean" defaultValue="false">
+                    <caption>This quarter</caption>
+                    <description>Offer this quarter.</description>
+                </property>
+                <property key="presetLastQuarter" type="boolean" defaultValue="false">
+                    <caption>Last quarter</caption>
+                    <description>Offer last quarter.</description>
+                </property>
+                <property key="presetThisYear" type="boolean" defaultValue="true">
+                    <caption>This year</caption>
+                    <description>Offer this year.</description>
+                </property>
+                <property key="presetLastYear" type="boolean" defaultValue="true">
+                    <caption>Last year</caption>
+                    <description>Offer last year.</description>
+                </property>
+                <property key="presetAllTime" type="boolean" defaultValue="true">
+                    <caption>All time</caption>
+                    <description>Offer all time.</description>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Preset labels">
+                <property key="presetTodayLabel" type="textTemplate" required="true">
+                    <caption>Today label</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Today</translation>
+                    </translations>
+                </property>
+                <property key="presetYesterdayLabel" type="textTemplate" required="true">
+                    <caption>Yesterday label</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Yesterday</translation>
+                    </translations>
+                </property>
+                <property key="presetTomorrowLabel" type="textTemplate" required="true">
+                    <caption>Tomorrow label</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Tomorrow</translation>
+                    </translations>
+                </property>
+                <property key="presetThisWeekLabel" type="textTemplate" required="true">
+                    <caption>This week label</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">This week</translation>
+                    </translations>
+                </property>
+                <property key="presetLastWeekLabel" type="textTemplate" required="true">
+                    <caption>Last week label</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Last week</translation>
+                    </translations>
+                </property>
+                <property key="presetThisMonthLabel" type="textTemplate" required="true">
+                    <caption>This month label</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">This month</translation>
+                    </translations>
+                </property>
+                <property key="presetLastMonthLabel" type="textTemplate" required="true">
+                    <caption>Last month label</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Last month</translation>
+                    </translations>
+                </property>
+                <property key="presetThisQuarterLabel" type="textTemplate" required="true">
+                    <caption>This quarter label</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">This quarter</translation>
+                    </translations>
+                </property>
+                <property key="presetLastQuarterLabel" type="textTemplate" required="true">
+                    <caption>Last quarter label</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Last quarter</translation>
+                    </translations>
+                </property>
+                <property key="presetThisYearLabel" type="textTemplate" required="true">
+                    <caption>This year label</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">This year</translation>
+                    </translations>
+                </property>
+                <property key="presetLastYearLabel" type="textTemplate" required="true">
+                    <caption>Last year label</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Last year</translation>
+                    </translations>
+                </property>
+                <property key="presetAllTimeLabel" type="textTemplate" required="true">
+                    <caption>All time label</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">All time</translation>
+                    </translations>
+                </property>
+                <property key="customPresetLabel" type="textTemplate" required="true">
+                    <caption>Custom label</caption>
+                    <description>Highlighted when the range was picked by hand.</description>
+                    <translations>
+                        <translation lang="en_US">Custom</translation>
+                    </translations>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Custom presets">
+                <property key="customPresets" type="object" required="false" isList="true">
+                    <caption>Presets</caption>
+                    <description>Your own presets, such as Last 90 days or Next quarter.</description>
+                    <properties>
+                        <propertyGroup caption="Preset">
+                            <property key="label" type="textTemplate" required="true">
+                                <caption>Label</caption>
+                                <description />
+                            </property>
+                            <property key="start" type="expression" required="false">
+                                <caption>Start</caption>
+                                <description>For example addDays([%BeginOfCurrentDay%], -89). Leave empty for no start.</description>
+                                <returnType type="DateTime" />
+                            </property>
+                            <property key="end" type="expression" required="false">
+                                <caption>End</caption>
+                                <description>Leave empty to use the start (single dates) or no end.</description>
+                                <returnType type="DateTime" />
+                            </property>
+                        </propertyGroup>
+                    </properties>
+                </property>
+                <property key="presetsSource" type="datasource" required="false" isList="true">
+                    <caption>Presets from data</caption>
+                    <description>Objects that each add a preset, for example fiscal periods kept in the database.</description>
+                </property>
+                <property key="presetSourceLabel" type="textTemplate" required="false" dataSource="presetsSource">
+                    <caption>Label</caption>
+                    <description />
+                </property>
+                <property key="presetSourceStart" type="attribute" required="false" dataSource="presetsSource">
+                    <caption>Start attribute</caption>
+                    <description />
+                    <attributeTypes>
+                        <attributeType name="DateTime" />
+                    </attributeTypes>
+                </property>
+                <property key="presetSourceEnd" type="attribute" required="false" dataSource="presetsSource">
+                    <caption>End attribute</caption>
+                    <description />
+                    <attributeTypes>
+                        <attributeType name="DateTime" />
+                    </attributeTypes>
+                </property>
+                <property key="customPresetsPosition" type="enumeration" defaultValue="AFTER">
+                    <caption>Position</caption>
+                    <description>Where your presets go in the list.</description>
+                    <enumerationValues>
+                        <enumerationValue key="BEFORE">Before the built-in presets</enumerationValue>
+                        <enumerationValue key="AFTER">After the built-in presets</enumerationValue>
+                    </enumerationValues>
+                </property>
+            </propertyGroup>
+        </propertyGroup>
+        <propertyGroup caption="Selectable dates">
+            <propertyGroup caption="Min and max">
+                <property key="minDate" type="expression" required="false">
+                    <caption>Min date</caption>
+                    <description>The earliest date that can be picked (inclusive).</description>
+                    <returnType type="DateTime" />
+                </property>
+                <property key="maxDate" type="expression" required="false">
+                    <caption>Max date</caption>
+                    <description>The latest date that can be picked (inclusive).</description>
+                    <returnType type="DateTime" />
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Specific days">
+                <property key="specificDaysMode" type="enumeration" defaultValue="OFF">
+                    <caption>Mode</caption>
+                    <description>Only these: just the listed days can be picked. All except these: the listed days can't be picked.</description>
+                    <enumerationValues>
+                        <enumerationValue key="OFF">Off</enumerationValue>
+                        <enumerationValue key="INCLUDE">Only these</enumerationValue>
+                        <enumerationValue key="EXCLUDE">All except these</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="specificDaysSource" type="datasource" required="false" isList="true">
+                    <caption>Data source</caption>
+                    <description>For example a list of holidays.</description>
+                </property>
+                <property key="specificDaysAttribute" type="attribute" required="false" dataSource="specificDaysSource">
+                    <caption>Date attribute</caption>
+                    <description />
+                    <attributeTypes>
+                        <attributeType name="DateTime" />
+                    </attributeTypes>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Interval days">
+                <property key="intervalDaysMode" type="enumeration" defaultValue="OFF">
+                    <caption>Mode</caption>
+                    <description>Only these: just the days inside the intervals can be picked. All except these: those days can't.</description>
+                    <enumerationValues>
+                        <enumerationValue key="OFF">Off</enumerationValue>
+                        <enumerationValue key="INCLUDE">Only these</enumerationValue>
+                        <enumerationValue key="EXCLUDE">All except these</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="intervalDaysSource" type="datasource" required="false" isList="true">
+                    <caption>Data source</caption>
+                    <description>For example school holidays.</description>
+                </property>
+                <property key="intervalStartAttribute" type="attribute" required="false" dataSource="intervalDaysSource">
+                    <caption>Start attribute</caption>
+                    <description />
+                    <attributeTypes>
+                        <attributeType name="DateTime" />
+                    </attributeTypes>
+                </property>
+                <property key="intervalEndAttribute" type="attribute" required="false" dataSource="intervalDaysSource">
+                    <caption>End attribute</caption>
+                    <description />
+                    <attributeTypes>
+                        <attributeType name="DateTime" />
+                    </attributeTypes>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Days of the week">
+                <property key="disableSunday" type="expression" required="true" defaultValue="false">
+                    <caption>Disable Sunday</caption>
+                    <description />
+                    <returnType type="Boolean" />
+                </property>
+                <property key="disableMonday" type="expression" required="true" defaultValue="false">
+                    <caption>Disable Monday</caption>
+                    <description />
+                    <returnType type="Boolean" />
+                </property>
+                <property key="disableTuesday" type="expression" required="true" defaultValue="false">
+                    <caption>Disable Tuesday</caption>
+                    <description />
+                    <returnType type="Boolean" />
+                </property>
+                <property key="disableWednesday" type="expression" required="true" defaultValue="false">
+                    <caption>Disable Wednesday</caption>
+                    <description />
+                    <returnType type="Boolean" />
+                </property>
+                <property key="disableThursday" type="expression" required="true" defaultValue="false">
+                    <caption>Disable Thursday</caption>
+                    <description />
+                    <returnType type="Boolean" />
+                </property>
+                <property key="disableFriday" type="expression" required="true" defaultValue="false">
+                    <caption>Disable Friday</caption>
+                    <description />
+                    <returnType type="Boolean" />
+                </property>
+                <property key="disableSaturday" type="expression" required="true" defaultValue="false">
+                    <caption>Disable Saturday</caption>
+                    <description />
+                    <returnType type="Boolean" />
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Range length">
+                <property key="minRangeLength" type="expression" required="false">
+                    <caption>Shortest range</caption>
+                    <description>In days, or in months, quarters or years for those formats, counting both ends. Leave empty for no limit.</description>
+                    <returnType type="Integer" />
+                </property>
+                <property key="maxRangeLength" type="expression" required="false">
+                    <caption>Longest range</caption>
+                    <description>Counting both ends. Leave empty for no limit.</description>
+                    <returnType type="Integer" />
+                </property>
+                <property key="excludeDisabledInRange" type="boolean" defaultValue="false">
+                    <caption>Ranges can't include unavailable days</caption>
+                    <description>Refuse ranges that have a day that can't be picked inside them.</description>
+                </property>
+            </propertyGroup>
+        </propertyGroup>
+        <propertyGroup caption="Selectable times">
+            <propertyGroup caption="Min and max">
+                <property key="minTime" type="expression" required="false">
+                    <caption>Min time</caption>
+                    <description>The earliest time that can be picked. Only the time of day is used.</description>
+                    <returnType type="DateTime" />
+                </property>
+                <property key="maxTime" type="expression" required="false">
+                    <caption>Max time</caption>
+                    <description>The latest time that can be picked. Only the time of day is used.</description>
+                    <returnType type="DateTime" />
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Specific times">
+                <property key="specificTimesMode" type="enumeration" defaultValue="OFF">
+                    <caption>Mode</caption>
+                    <description />
+                    <enumerationValues>
+                        <enumerationValue key="OFF">Off</enumerationValue>
+                        <enumerationValue key="INCLUDE">Only these</enumerationValue>
+                        <enumerationValue key="EXCLUDE">All except these</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="specificTimesSource" type="datasource" required="false" isList="true">
+                    <caption>Data source</caption>
+                    <description>For example appointments already booked.</description>
+                </property>
+                <property key="specificTimesAttribute" type="attribute" required="false" dataSource="specificTimesSource">
+                    <caption>Time attribute</caption>
+                    <description>Only the time of day is used.</description>
+                    <attributeTypes>
+                        <attributeType name="DateTime" />
+                    </attributeTypes>
+                </property>
+            </propertyGroup>
+        </propertyGroup>
+        <propertyGroup caption="Markers">
+            <propertyGroup caption="Event markers">
+                <property key="markersSource" type="datasource" required="false" isList="true">
+                    <caption>Data source</caption>
+                    <description>Objects shown as dots under their day, for example deadlines or events.</description>
+                </property>
+                <property key="markerDateAttribute" type="attribute" required="false" dataSource="markersSource">
+                    <caption>Date attribute</caption>
+                    <description />
+                    <attributeTypes>
+                        <attributeType name="DateTime" />
+                    </attributeTypes>
+                </property>
+                <property key="markerColor" type="expression" required="false" dataSource="markersSource">
+                    <caption>Color</caption>
+                    <description>Any CSS color, for example '#7c5cfc' or 'var(--brand-danger)'. Leave empty for the accent color.</description>
+                    <returnType type="String" />
+                </property>
+                <property key="markerLabel" type="textTemplate" required="false" dataSource="markersSource">
+                    <caption>Label</caption>
+                    <description>Shown when hovering the day and read by screen readers.</description>
+                </property>
+            </propertyGroup>
+        </propertyGroup>
+        <propertyGroup caption="Behavior">
+            <propertyGroup caption="Saving">
+                <property key="applyMode" type="enumeration" defaultValue="AUTO">
+                    <caption>Apply and Cancel</caption>
+                    <description>Automatic shows Apply and Cancel for ranges, so a half-picked range is never saved, and saves single dates on click.</description>
+                    <enumerationValues>
+                        <enumerationValue key="AUTO">Automatic</enumerationValue>
+                        <enumerationValue key="ALWAYS">Always</enumerationValue>
+                        <enumerationValue key="NEVER">Never</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="closeOnSelect" type="boolean" defaultValue="true">
+                    <caption>Close on select</caption>
+                    <description>Close the popup once a date or range is picked (without Apply and Cancel).</description>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Opening">
+                <property key="openToDate" type="expression" required="false">
+                    <caption>Open to date</caption>
+                    <description>The month shown when the popup opens and nothing is picked yet.</description>
+                    <returnType type="DateTime" />
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Custom content">
+                <property key="useCustomContent" type="boolean" defaultValue="false">
+                    <caption>Use custom content</caption>
+                    <description>Add your own content below the calendar, for example buttons that set the date.</description>
+                </property>
+                <property key="customContent" type="widgets" required="false">
+                    <caption>Custom content</caption>
+                    <description />
+                </property>
+                <property key="closeAttribute" type="attribute" required="false">
+                    <caption>Close popup attribute</caption>
+                    <description>Set this Boolean to true, for example from a button in the custom content, to close the popup. The widget sets it back to false.</description>
+                    <attributeTypes>
+                        <attributeType name="Boolean" />
+                    </attributeTypes>
+                </property>
+            </propertyGroup>
+        </propertyGroup>
+        <propertyGroup caption="Events">
+            <propertyGroup caption="Events">
+                <property key="onChange" type="action" required="false">
+                    <caption>On change</caption>
+                    <description>Runs once each time a new date or range is saved.</description>
+                </property>
+                <property key="onEnter" type="action" required="false">
+                    <caption>On enter</caption>
+                    <description>Runs when the popup opens, or when an inline calendar gets focus.</description>
+                </property>
+                <property key="onLeave" type="action" required="false">
+                    <caption>On leave</caption>
+                    <description>Runs when the popup closes, or when an inline calendar loses focus.</description>
+                </property>
+            </propertyGroup>
+        </propertyGroup>
+        <propertyGroup caption="Accessibility">
+            <propertyGroup caption="Validation">
+                <property key="required" type="expression" required="true" defaultValue="false">
+                    <caption>Required</caption>
+                    <description />
+                    <returnType type="Boolean" />
+                </property>
+                <property key="requiredMessage" type="textTemplate" required="true">
+                    <caption>Required message</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Choose a date.</translation>
+                    </translations>
+                </property>
+                <property key="invalidDateMessage" type="textTemplate" required="true">
+                    <caption>Invalid date message</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">That isn't a date that can be picked.</translation>
+                    </translations>
+                </property>
+                <property key="rangeTooShortMessage" type="textTemplate" required="true">
+                    <caption>Range too short message</caption>
+                    <description>{count} is replaced with the shortest length.</description>
+                    <translations>
+                        <translation lang="en_US">Choose a longer range (at least {count}).</translation>
+                    </translations>
+                </property>
+                <property key="rangeTooLongMessage" type="textTemplate" required="true">
+                    <caption>Range too long message</caption>
+                    <description>{count} is replaced with the longest length.</description>
+                    <translations>
+                        <translation lang="en_US">Choose a shorter range (at most {count}).</translation>
+                    </translations>
+                </property>
+                <property key="rangeCrossesDisabledMessage" type="textTemplate" required="true">
+                    <caption>Range includes unavailable days message</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">The range can't include days that are unavailable.</translation>
+                    </translations>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Labels">
+                <property key="calendarIconLabel" type="textTemplate" required="true">
+                    <caption>Calendar button label</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Toggle calendar</translation>
+                    </translations>
+                </property>
+                <property key="navigateButtonPrefix" type="textTemplate" required="true">
+                    <caption>Navigate button prefix</caption>
+                    <description>Read before Previous month or Next month.</description>
+                    <translations>
+                        <translation lang="en_US">Show</translation>
+                    </translations>
+                </property>
+                <property key="selectPrefix" type="textTemplate" required="true">
+                    <caption>Select prefix</caption>
+                    <description>Read before a day, month or year.</description>
+                    <translations>
+                        <translation lang="en_US">Select</translation>
+                    </translations>
+                </property>
+                <property key="weekPrefix" type="textTemplate" required="true">
+                    <caption>Week prefix</caption>
+                    <description>Read before a week number.</description>
+                    <translations>
+                        <translation lang="en_US">Week</translation>
+                    </translations>
+                </property>
+                <property key="monthPrefix" type="textTemplate" required="true">
+                    <caption>Month prefix</caption>
+                    <description>Read before a month in the month picker.</description>
+                    <translations>
+                        <translation lang="en_US">Month</translation>
+                    </translations>
+                </property>
+                <property key="monthSelectLabel" type="textTemplate" required="true">
+                    <caption>Month select label</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Select month</translation>
+                    </translations>
+                </property>
+                <property key="yearSelectLabel" type="textTemplate" required="true">
+                    <caption>Year select label</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Select year</translation>
+                    </translations>
+                </property>
+                <property key="disabledLabel" type="textTemplate" required="true">
+                    <caption>Disabled label</caption>
+                    <description>Read for days that can't be picked.</description>
+                    <translations>
+                        <translation lang="en_US">Not selectable</translation>
+                    </translations>
+                </property>
+                <property key="clearButtonLabel" type="textTemplate" required="true">
+                    <caption>Clear button label</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Clear</translation>
+                    </translations>
+                </property>
+                <property key="startLabel" type="textTemplate" required="true">
+                    <caption>Start label</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Start date</translation>
+                    </translations>
+                </property>
+                <property key="endLabel" type="textTemplate" required="true">
+                    <caption>End label</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">End date</translation>
+                    </translations>
+                </property>
+                <property key="applyLabel" type="textTemplate" required="true">
+                    <caption>Apply label</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Apply</translation>
+                    </translations>
+                </property>
+                <property key="cancelLabel" type="textTemplate" required="true">
+                    <caption>Cancel label</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Cancel</translation>
+                    </translations>
+                </property>
+                <property key="presetsLabel" type="textTemplate" required="true">
+                    <caption>Presets label</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Presets</translation>
+                    </translations>
+                </property>
+                <property key="helpLabel" type="textTemplate" required="true">
+                    <caption>Help label</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Typing and keyboard shortcuts</translation>
+                    </translations>
+                </property>
+            </propertyGroup>
+        </propertyGroup>
+        <propertyGroup caption="Common">
+            <propertyGroup caption="Visibility">
+                <systemProperty key="Visibility" />
+            </propertyGroup>
+            <propertyGroup caption="Editability">
+                <systemProperty key="Editability" />
+            </propertyGroup>
+            <propertyGroup caption="Tab index">
+                <systemProperty key="TabIndex" />
+            </propertyGroup>
+        </propertyGroup>
+    </properties>
+</widget>
