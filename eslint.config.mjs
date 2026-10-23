@@ -24,7 +24,12 @@ export default defineConfig(
             "no-console": ["warn", { allow: ["warn", "error"] }],
             "prefer-const": "error",
             "@typescript-eslint/consistent-type-imports": "error",
-            "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }]
+            "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
+            // eslint-plugin-react-hooks covers these; keep one report per problem.
+            "@eslint-react/exhaustive-deps": "off",
+            "@eslint-react/rules-of-hooks": "off",
+            "@eslint-react/set-state-in-effect": "off",
+            "@eslint-react/naming-convention-ref-name": "off"
         }
     },
     {

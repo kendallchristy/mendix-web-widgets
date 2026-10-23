@@ -1,0 +1,34 @@
+{
+    "name": "@kendallchristy/data-grid-pro",
+    "widgetName": "DataGridPro",
+    "version": "0.0.0",
+    "private": true,
+    "description": "A fast, high-density data grid with true row virtualization.",
+    "license": "Apache-2.0",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/kendallchristy/mendix-web-widgets.git"
+    },
+    "packagePath": "com.kendallchristy.widget.web",
+    "config": {},
+    "scripts": {
+        "build": "pluggable-widgets-tools build:web",
+        "dev": "pluggable-widgets-tools start:web",
+        "lint": "eslint src",
+        "release": "pluggable-widgets-tools release:web",
+        "test": "pluggable-widgets-tools test:unit:web",
+        "typecheck": "tsc --noEmit"
+    },
+    "dependencies": {
+        "@tanstack/react-virtual": "^3.14.22",
+        "classnames": "catalog:"
+    },
+    "devDependencies": {
+        "@mendix/pluggable-widgets-tools": "catalog:",
+        "@testing-library/jest-dom": "catalog:",
+        "@testing-library/react": "catalog:",
+        "@testing-library/user-event": "catalog:",
+        "mendix": "catalog:",
+        "typescript": "catalog:"
+    }
+}
