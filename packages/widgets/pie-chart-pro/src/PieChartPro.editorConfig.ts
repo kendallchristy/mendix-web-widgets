@@ -14,7 +14,7 @@ export function getProperties(values: PieChartProPreviewProps, defaultProperties
     hideCategoryDataProperties(values, defaultProperties);
 
     if (values.shape === "pie") {
-        hideProperties(defaultProperties, ["innerRadius", "centerContent", "centerCaption"]);
+        hideProperties(defaultProperties, ["innerRadius", "holeUnit", "centerContent", "centerCaption"]);
     } else if (values.centerContent === "none") {
         hideProperties(defaultProperties, ["centerCaption"]);
     }

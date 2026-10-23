@@ -158,7 +158,15 @@
                 </property>
                 <property key="innerRadius" type="integer" defaultValue="62">
                     <caption>Hole size</caption>
-                    <description>Percent of the radius, for donuts.</description>
+                    <description>For donuts, in the unit below.</description>
+                </property>
+                <property key="holeUnit" type="enumeration" defaultValue="percent">
+                    <caption>Hole size unit</caption>
+                    <description>Pixels keep the hole the same size however big the chart gets.</description>
+                    <enumerationValues>
+                        <enumerationValue key="percent">Percent of the radius</enumerationValue>
+                        <enumerationValue key="pixels">Pixels</enumerationValue>
+                    </enumerationValues>
                 </property>
                 <property key="rose" type="enumeration" defaultValue="off">
                     <caption>Rose</caption>
