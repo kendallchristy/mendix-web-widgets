@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, type RenderResult } from "@testing-library/react";
 import type { ObjectItem } from "mendix";
+import type { ReactElement } from "react";
 
 import { Grid, type GridProps } from "../components/Grid";
 import { column, gridData, items, noSelection } from "./fixtures";
@@ -14,7 +15,7 @@ beforeAll(() => {
 
 afterAll(() => jest.restoreAllMocks());
 
-function grid(overrides: Partial<GridProps> = {}): JSX.Element {
+function grid(overrides: Partial<GridProps> = {}): ReactElement {
     return (
         <Grid
             columns={[column()]}
