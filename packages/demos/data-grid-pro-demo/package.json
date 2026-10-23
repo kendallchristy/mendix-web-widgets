@@ -1,0 +1,27 @@
+{
+    "name": "@kendallchristy/data-grid-pro-demo",
+    "version": "0.0.1",
+    "private": true,
+    "description": "Runs Data Grid Pro in the browser on generated data, with a mocked Mendix API, for development and performance checks.",
+    "type": "module",
+    "scripts": {
+        "bench": "vite build && node bench.mjs",
+        "build": "vite build",
+        "dev": "vite",
+        "typecheck": "tsc --noEmit"
+    },
+    "dependencies": {
+        "@kendallchristy/data-grid-pro": "workspace:*",
+        "react": "^18.3.1",
+        "react-dom": "^18.3.1"
+    },
+    "devDependencies": {
+        "@types/react": "^19.2.18",
+        "@types/react-dom": "^19.2.3",
+        "@vitejs/plugin-react": "^6.1.2",
+        "playwright-core": "^1.56.1",
+        "sass": "^1.106.1",
+        "typescript": "catalog:",
+        "vite": "^8.3.5"
+    }
+}

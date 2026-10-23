@@ -2,6 +2,7 @@ packages:
     - "packages/widgets/*"
     - "packages/shared/*"
     - "packages/templates/*"
+    - "packages/demos/*"
 
 # One version of each shared dependency for every widget. Reference these
 # from a package.json with "catalog:" instead of a version number.
@@ -17,3 +18,9 @@ catalog:
     mendix: "11.15.0"
     # The Mendix widget tooling targets TypeScript 5.x
     typescript: "~5.9.3"
+
+# The widget tooling brings React 19 types. Keep a single copy so React types from
+# different packages stay compatible with each other.
+overrides:
+    "@types/react": "^19.2.18"
+    "@types/react-dom": "^19.2.3"
