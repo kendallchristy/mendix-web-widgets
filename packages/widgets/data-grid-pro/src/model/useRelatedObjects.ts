@@ -1,6 +1,6 @@
 import type { ObjectItem } from "mendix";
 import { association, contains, equals, literal, or } from "mendix/filters/builders";
-import { useEffect, useMemo } from "react";
+import { useLayoutEffect, useMemo } from "react";
 
 import type { ColumnsType } from "../../typings/DataGridProProps";
 import type { Pill } from "../components/cells";
@@ -16,25 +16,25 @@ export function useRelatedObjects(columns: ColumnsType[], rows: ObjectItem[]): R
     // Changes only when the set of loaded rows changes, not on every re-render.
     const rowKey = rows.map(row => row.id).join(",");
 
-    useEffect(() => {
+    // Filter as soon as the loaded rows change, with the rows of this render. The filter holds the row objects
+    // themselves, and Mendix releases rows that scroll out of the loaded window, so a filter built from rows
+    // that were current a moment ago can point at objects Mendix no longer has. Window moves are already
+    // debounced when the rows load, so this runs once per window.
+    useLayoutEffect(() => {
         if (rows.length === 0) {
             return;
         }
-        // Let a burst of scroll-driven window moves settle before refiltering.
-        const timer = setTimeout(() => {
-            for (const column of columns) {
-                const source = column.relatedSource;
-                const parent = column.relatedParent;
-                if (column.showContentAs !== "related" || !source || !parent?.filterable) {
-                    continue;
-                }
-                const id = association(parent.id);
-                const matchesRow = (row: ObjectItem) =>
-                    parent.type === "Reference" ? equals(id, literal(row)) : contains(id, literal(row));
-                source.setFilter(rows.length === 1 ? matchesRow(rows[0]) : or(...rows.map(matchesRow)));
+        for (const column of columns) {
+            const source = column.relatedSource;
+            const parent = column.relatedParent;
+            if (column.showContentAs !== "related" || !source || !parent?.filterable) {
+                continue;
             }
-        }, 100);
-        return () => clearTimeout(timer);
+            const id = association(parent.id);
+            const matchesRow = (row: ObjectItem) =>
+                parent.type === "Reference" ? equals(id, literal(row)) : contains(id, literal(row));
+            source.setFilter(rows.length === 1 ? matchesRow(rows[0]) : or(...rows.map(matchesRow)));
+        }
         // rowKey stands in for rows; columns change identity on every Mendix update.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [rowKey]);
