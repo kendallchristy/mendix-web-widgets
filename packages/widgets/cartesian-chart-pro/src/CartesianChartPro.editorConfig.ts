@@ -6,9 +6,9 @@ import {
 } from "@kendallchristy/chart-core/dist/editor/properties";
 import type { Problem, Properties } from "@mendix/pluggable-widgets-tools";
 
-import type { ChartPreviewProps } from "../typings/ChartProps";
+import type { CartesianChartProPreviewProps } from "../typings/CartesianChartProProps";
 
-export function getProperties(values: ChartPreviewProps, defaultProperties: Properties): Properties {
+export function getProperties(values: CartesianChartProPreviewProps, defaultProperties: Properties): Properties {
     hideSharedStyleProperties(values, defaultProperties);
 
     values.series.forEach((series, index) => {
@@ -37,7 +37,7 @@ export function getProperties(values: ChartPreviewProps, defaultProperties: Prop
     return defaultProperties;
 }
 
-export function check(values: ChartPreviewProps): Problem[] {
+export function check(values: CartesianChartProPreviewProps): Problem[] {
     const problems = checkSharedStyleProperties(values);
     values.series.forEach((series, index) => {
         const where = `Series ${index + 1}`;

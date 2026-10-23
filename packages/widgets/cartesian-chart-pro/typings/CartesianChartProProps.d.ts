@@ -1,5 +1,5 @@
 /**
- * This file was generated from Chart.xml
+ * This file was generated from CartesianChartPro.xml
  * WARNING: All changes made to this file will be overwritten
  * @author Mendix Widgets Framework Team
  */
@@ -97,7 +97,7 @@ export interface SeriesPreviewType {
     yAxisSide: YAxisSideEnum;
 }
 
-export interface ChartContainerProps {
+export interface CartesianChartProContainerProps {
     name: string;
     class: string;
     style?: CSSProperties;
@@ -158,7 +158,7 @@ export interface ChartContainerProps {
     optionOverrideExpression?: DynamicValue<string>;
 }
 
-export interface ChartPreviewProps {
+export interface CartesianChartProPreviewProps {
     /**
      * @deprecated Deprecated since version 9.18.0. Please use class property instead.
      */

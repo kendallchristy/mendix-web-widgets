@@ -1,12 +1,12 @@
 import type { ReactElement } from "react";
 import { useMemo } from "react";
 
-import type { ChartContainerProps } from "../typings/ChartProps";
+import type { CartesianChartProContainerProps } from "../typings/CartesianChartProProps";
 import { ChartView } from "./components/ChartView";
 import { isLoading, seriesFromProps, settingsFromProps } from "./model/fromProps";
-import "./ui/Chart.scss";
+import "./ui/CartesianChartPro.scss";
 
-export function Chart(props: ChartContainerProps): ReactElement {
+export function CartesianChartPro(props: CartesianChartProContainerProps): ReactElement {
     // Mendix hands over new props objects whenever data or expressions change, so these recompute only then.
     const series = useMemo(() => seriesFromProps(props), [props]);
     const settings = useMemo(() => settingsFromProps(props), [props]);

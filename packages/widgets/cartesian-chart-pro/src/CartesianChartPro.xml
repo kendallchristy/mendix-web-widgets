@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<widget id="com.kendallchristy.widget.web.chart.Chart" pluginWidget="true" offlineCapable="true" supportedPlatform="Web" xmlns="http://www.mendix.com/widget/1.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mendix.com/widget/1.0/ ../node_modules/mendix/custom_widget.xsd">
-    <name>Chart</name>
+<widget id="com.kendallchristy.widget.web.cartesianchartpro.CartesianChartPro" pluginWidget="true" offlineCapable="true" supportedPlatform="Web" xmlns="http://www.mendix.com/widget/1.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mendix.com/widget/1.0/ ../node_modules/mendix/custom_widget.xsd">
+    <name>Cartesian Chart Pro</name>
     <description>Line, area, bar, column, scatter and bubble charts, alone or combined.</description>
     <studioProCategory>Charts</studioProCategory>
     <studioCategory>Charts</studioCategory>

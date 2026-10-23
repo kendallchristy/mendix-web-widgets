@@ -1,7 +1,7 @@
 import type { Properties } from "@mendix/pluggable-widgets-tools";
 
-import type { ChartPreviewProps } from "../../typings/ChartProps";
-import { check, getProperties } from "../Chart.editorConfig";
+import type { CartesianChartProPreviewProps } from "../../typings/CartesianChartProProps";
+import { check, getProperties } from "../CartesianChartPro.editorConfig";
 
 function seriesValues(overrides: Record<string, unknown> = {}) {
     return {
@@ -14,7 +14,7 @@ function seriesValues(overrides: Record<string, unknown> = {}) {
     };
 }
 
-function values(overrides: Record<string, unknown> = {}): ChartPreviewProps {
+function values(overrides: Record<string, unknown> = {}): CartesianChartProPreviewProps {
     return {
         series: [seriesValues()],
         drilldown: "none",
@@ -27,7 +27,7 @@ function values(overrides: Record<string, unknown> = {}): ChartPreviewProps {
         optionOverride: "",
         title: "",
         ...overrides
-    } as unknown as ChartPreviewProps;
+    } as unknown as CartesianChartProPreviewProps;
 }
 
 function properties(): Properties {

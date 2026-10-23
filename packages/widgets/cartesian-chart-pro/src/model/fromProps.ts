@@ -2,7 +2,7 @@ import type { ChartStyle } from "@kendallchristy/chart-core";
 import { readNumber, readText, readXValue, toNumber } from "@kendallchristy/chart-core";
 import type { ObjectItem } from "mendix";
 
-import type { ChartContainerProps, SeriesType } from "../../typings/ChartProps";
+import type { CartesianChartProContainerProps, SeriesType } from "../../typings/CartesianChartProProps";
 import type { ChartSettings, InputPoint, SeriesInput } from "./types";
 
 /** The shared Chart style properties, as plain values. Also used by the design-mode preview. */
@@ -85,15 +85,15 @@ function readSeries(config: SeriesType, index: number): SeriesInput[] {
     return Array.from(groups, ([name, points]) => ({ ...shared, key: `${index}:${name}`, name, points }));
 }
 
-export function seriesFromProps(props: ChartContainerProps): SeriesInput[] {
+export function seriesFromProps(props: CartesianChartProContainerProps): SeriesInput[] {
     return props.series.flatMap(readSeries);
 }
 
-export function isLoading(props: ChartContainerProps): boolean {
+export function isLoading(props: CartesianChartProContainerProps): boolean {
     return props.series.some(s => s.dataSource.status === "loading" && (s.dataSource.items ?? []).length === 0);
 }
 
-export function settingsFromProps(props: ChartContainerProps): ChartSettings {
+export function settingsFromProps(props: CartesianChartProContainerProps): ChartSettings {
     const drill: ChartSettings["drill"] =
         props.drilldown === "date"
             ? { kind: "date", from: props.drillDateFrom, to: props.drillDateTo }

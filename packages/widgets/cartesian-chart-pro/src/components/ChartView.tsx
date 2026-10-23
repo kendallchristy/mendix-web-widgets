@@ -119,7 +119,7 @@ export function ChartView(props: ChartViewProps): ReactElement {
     return (
         <ChartContainer
             ref={containerRef}
-            widgetClass="widget-chart"
+            widgetClass="widget-cartesian-chart-pro"
             className={props.className}
             style={props.style}
             heightUnit={props.heightUnit}

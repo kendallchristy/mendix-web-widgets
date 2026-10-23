@@ -1,6 +1,6 @@
 {
-    "name": "@kendallchristy/chart",
-    "widgetName": "Chart",
+    "name": "@kendallchristy/cartesian-chart-pro",
+    "widgetName": "CartesianChartPro",
     "version": "0.1.0",
     "private": true,
     "description": "Line, area, bar, column, scatter and bubble charts built on Apache ECharts.",

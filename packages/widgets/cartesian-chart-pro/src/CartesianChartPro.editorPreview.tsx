@@ -1,7 +1,7 @@
 import { ChartStatus, THEME_BUILDER_URL } from "@kendallchristy/chart-core";
 import type { ReactElement } from "react";
 
-import type { ChartPreviewProps } from "../typings/ChartProps";
+import type { CartesianChartProPreviewProps } from "../typings/CartesianChartProProps";
 import { ChartView } from "./components/ChartView";
 import { styleFromProps } from "./model/fromProps";
 import { sampleSeries } from "./model/sampleData";
@@ -13,10 +13,10 @@ function literal(text: string): string | undefined {
     return match ? match[1] : undefined;
 }
 
-export function preview(props: ChartPreviewProps): ReactElement {
+export function preview(props: CartesianChartProPreviewProps): ReactElement {
     if (props.theme === "custom" && !props.themeJson.trim() && !props.themeJsonExpression.trim()) {
         return (
-            <div className="hc-chart widget-chart" style={{ height: `${props.height ?? 240}px` }}>
+            <div className="hc-chart widget-cartesian-chart-pro" style={{ height: `${props.height ?? 240}px` }}>
                 <ChartStatus
                     kind="empty"
                     message={`Paste a theme from ${THEME_BUILDER_URL.replace("https://", "")} into Theme JSON`}
@@ -94,5 +94,5 @@ export function preview(props: ChartPreviewProps): ReactElement {
 export function getPreviewCss(): string {
     // Studio Pro expects the compiled stylesheet as a string, which the widget build provides for require()
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    return require("./ui/Chart.scss");
+    return require("./ui/CartesianChartPro.scss");
 }

@@ -1,6 +1,6 @@
 import type { ObjectItem } from "mendix";
 
-import type { ChartContainerProps, SeriesType } from "../../typings/ChartProps";
+import type { CartesianChartProContainerProps, SeriesType } from "../../typings/CartesianChartProProps";
 import { isLoading, seriesFromProps, settingsFromProps } from "../model/fromProps";
 
 type Row = Record<string, unknown>;
@@ -32,7 +32,10 @@ function seriesConfig(rows: Row[], overrides: Partial<SeriesType> = {}): SeriesT
     } as unknown as SeriesType;
 }
 
-function props(series: SeriesType[], overrides: Partial<ChartContainerProps> = {}): ChartContainerProps {
+function props(
+    series: SeriesType[],
+    overrides: Partial<CartesianChartProContainerProps> = {}
+): CartesianChartProContainerProps {
     return {
         series,
         drilldown: "none",
@@ -46,7 +49,7 @@ function props(series: SeriesType[], overrides: Partial<ChartContainerProps> = {
         compactNumbers: false,
         xDateFormat: "",
         ...overrides
-    } as unknown as ChartContainerProps;
+    } as unknown as CartesianChartProContainerProps;
 }
 
 describe("seriesFromProps", () => {

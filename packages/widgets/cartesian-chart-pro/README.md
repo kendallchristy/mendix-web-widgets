@@ -1,10 +1,10 @@
-# Chart
+# Cartesian Chart Pro
 
 Line, area, bar, column, scatter and bubble charts, alone or combined, built on [Apache ECharts](https://echarts.apache.org) with the Hyper look by default. The widget draws only the chart: build cards, headline figures and lists around it with ordinary Studio Pro widgets.
 
 ## Usage
 
-1. Add the **Chart** widget from the Charts category in the toolbox.
+1. Add the **Cartesian Chart Pro** widget from the Charts category in the toolbox.
 2. Add a series: pick a data source, the **X value** and **Y value** attributes, and a **Type**. Dates give a time axis, numbers a number axis, and anything else a category axis.
 3. Add more series to compare or combine them. Series with the same **Stack** name stack; **Group by** splits one data source into a series per value.
 
