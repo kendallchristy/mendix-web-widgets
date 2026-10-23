@@ -32,11 +32,11 @@ jobs:
             # .mpk for each widget whose new version has no release yet.
             - uses: changesets/action@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
               with:
-                  version: pnpm version-packages
-                  publish: pnpm github-release
-                  title: Version widgets
-                  commit: Version widgets
-                  createGithubReleases: false
+                  version-script: pnpm version-packages
+                  publish-script: pnpm github-release
+                  pr-title: Version widgets
+                  commit-message: Version widgets
+                  create-github-releases: false
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
                   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
