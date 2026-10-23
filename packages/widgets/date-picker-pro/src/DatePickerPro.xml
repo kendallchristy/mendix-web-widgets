@@ -737,16 +737,16 @@
                 </property>
                 <property key="rangeTooShortMessage" type="textTemplate" required="true">
                     <caption>Range too short message</caption>
-                    <description>{count} is replaced with the shortest length.</description>
+                    <description>[count] is replaced with the shortest length. Studio Pro reserves braces for text template parameters.</description>
                     <translations>
-                        <translation lang="en_US">Choose a longer range (at least {count}).</translation>
+                        <translation lang="en_US">Choose a longer range (at least [count]).</translation>
                     </translations>
                 </property>
                 <property key="rangeTooLongMessage" type="textTemplate" required="true">
                     <caption>Range too long message</caption>
-                    <description>{count} is replaced with the longest length.</description>
+                    <description>[count] is replaced with the longest length. Studio Pro reserves braces for text template parameters.</description>
                     <translations>
-                        <translation lang="en_US">Choose a shorter range (at most {count}).</translation>
+                        <translation lang="en_US">Choose a shorter range (at most [count]).</translation>
                     </translations>
                 </property>
                 <property key="rangeCrossesDisabledMessage" type="textTemplate" required="true">

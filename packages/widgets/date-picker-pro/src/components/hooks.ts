@@ -17,6 +17,7 @@ export function useMediaQuery(query: string): boolean {
     );
 }
 
+/** Puts the number into a message's [count]. Not {count}: Studio Pro reads braces in a text template as parameters. */
 export function fillCount(text: string, count: number | undefined): string {
-    return text.replace(/\{count\}/g, String(count ?? ""));
+    return text.replace(/\[count\]/g, String(count ?? ""));
 }
