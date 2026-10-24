@@ -57,10 +57,15 @@
                 </property>
                 <property key="colorAttribute" type="attribute" dataSource="dataSource" required="false">
                     <caption>Colour</caption>
-                    <description>Optional. A colour per stage, for example #8038D0, so a category keeps its colour whatever the data.</description>
+                    <description>Optional. A colour per stage, for example #8038D0, so a stage keeps its colour whatever the data. Stages without one follow the colour mode.</description>
                     <attributeTypes>
                         <attributeType name="String" />
                     </attributeTypes>
+                </property>
+                <property key="colorExpression" type="expression" dataSource="dataSource" required="false">
+                    <caption>Colour expression</caption>
+                    <description>Optional. Works out a stage's colour instead of the Colour attribute, for example if $currentObject/Lost then '#E5466F' else '#8038D0'. Empty results follow the colour mode.</description>
+                    <returnType type="String" />
                 </property>
             </propertyGroup>
             <propertyGroup caption="Interaction">

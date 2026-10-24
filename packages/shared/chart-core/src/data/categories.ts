@@ -1,4 +1,10 @@
-import type { ListActionValue, ListAttributeValue, ListExpressionValue, ListValue, ObjectItem } from "mendix";
+import type {
+    ListActionValue,
+    ListAttributeValue,
+    ListExpressionValue,
+    ListValue,
+    ObjectItem,
+} from "mendix";
 
 import type { ClickAction, ClickTarget } from "../components/ChartFrame";
 import type { DrillStep } from "../hooks/useDrillPath";
@@ -66,12 +72,19 @@ function sortItems(items: CategoryItem[], sort: CategorySort): CategoryItem[] {
         case "valueAsc":
             return [...items].sort((a, b) => a.value - b.value);
         case "name":
-            return [...items].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+            return [...items].sort((a, b) =>
+                a.name.localeCompare(b.name, undefined, { numeric: true })
+            );
     }
 }
 
-function combine(points: CategoryPoint[], aggregation: CategoryAggregation): number | undefined {
-    const values = points.map(p => p.value).filter((v): v is number => v !== undefined);
+function combine(
+    points: CategoryPoint[],
+    aggregation: CategoryAggregation
+): number | undefined {
+    const values = points
+        .map((p) => p.value)
+        .filter((v): v is number => v !== undefined);
     return combineValues(values, aggregation, points.length);
 }
 
@@ -86,7 +99,9 @@ export function categoryLevel(
 ): CategoryLevel {
     const depth = options.drilldown ? Math.min(path.length, 2) : 0;
     const steps = path.slice(0, depth);
-    const inPath = points.filter(p => steps.every((step, i) => valueAt(p, i) === step.value));
+    const inPath = points.filter((p) =>
+        steps.every((step, i) => valueAt(p, i) === step.value)
+    );
 
     const groups = new Map<string, CategoryPoint[]>();
     for (const point of inPath) {
@@ -109,37 +124,50 @@ export function categoryLevel(
         if (value === undefined) {
             continue;
         }
-        const deeper = options.drilldown && depth < 2 && group.some(p => p.drill[depth] !== undefined);
+        const deeper =
+            options.drilldown &&
+            depth < 2 &&
+            group.some((p) => p.drill[depth] !== undefined);
         anyDeeper ||= deeper;
         items.push({
             name,
             value,
-            color: group.find(p => p.color)?.color,
+            color: group.find((p) => p.color)?.color,
             tooltip: group.length === 1 ? group[0].tooltip : undefined,
             other: false,
-            target: deeper ? { drill: { label: name, value: name } } : { action: group[0].action }
+            target: deeper
+                ? { drill: { label: name, value: name } }
+                : { action: group[0].action },
         });
     }
 
     let shown = sortItems(items, options.sort);
     if (options.limit > 0 && shown.length > options.limit) {
-        const keepCount = options.otherLabel ? Math.max(1, options.limit - 1) : options.limit;
-        const kept = new Set([...items].sort((a, b) => b.value - a.value).slice(0, keepCount));
-        const rest = shown.filter(item => !kept.has(item));
-        shown = shown.filter(item => kept.has(item));
+        const keepCount = options.otherLabel
+            ? Math.max(1, options.limit - 1)
+            : options.limit;
+        const kept = new Set(
+            [...items].sort((a, b) => b.value - a.value).slice(0, keepCount)
+        );
+        const rest = shown.filter((item) => !kept.has(item));
+        shown = shown.filter((item) => kept.has(item));
         if (options.otherLabel) {
-            const restPoints = rest.flatMap(item => groups.get(item.name) ?? []);
+            const restPoints = rest.flatMap(
+                (item) => groups.get(item.name) ?? []
+            );
             shown.push({
                 name: options.otherLabel,
                 value: combine(restPoints, options.aggregation) ?? 0,
                 other: true,
-                target: {}
+                target: {},
             });
         }
     }
 
     const breadcrumb =
-        options.drilldown && (anyDeeper || depth > 0) ? [options.topLabel, ...steps.map(s => s.label)] : [];
+        options.drilldown && (anyDeeper || depth > 0)
+            ? [options.topLabel, ...steps.map((s) => s.label)]
+            : [];
     return { items: shown, breadcrumb, pointCount: inPath.length };
 }
 
@@ -149,6 +177,7 @@ export interface CategoryDataProps {
     categoryAttribute: ListAttributeValue;
     valueAttribute?: ListAttributeValue;
     colorAttribute?: ListAttributeValue<string>;
+    colorExpression?: ListExpressionValue<string>;
     tooltipText?: ListExpressionValue<string>;
     onClick?: ListActionValue;
     drillAttribute1?: ListAttributeValue;
@@ -164,11 +193,18 @@ export function readCategoryPoints(props: CategoryDataProps): CategoryPoint[] {
         if (category === undefined) {
             continue;
         }
-        const { tooltipText, onClick } = props;
+        const { tooltipText, onClick, colorAttribute, colorExpression } = props;
         points.push({
             category,
             value: readNumber(props.valueAttribute, item),
-            color: props.colorAttribute?.get(item).value?.trim() || undefined,
+            // Read when a category's colour is first needed, which for most is its first object only.
+            get color() {
+                return (
+                    (colorExpression ?? colorAttribute)
+                        ?.get(item)
+                        .value?.trim() || undefined
+                );
+            },
             // Read only for the slices that need them: with thousands of objects, evaluating these up front is slow.
             get tooltip() {
                 return tooltipText?.get(item).value || undefined;
@@ -176,14 +212,19 @@ export function readCategoryPoints(props: CategoryDataProps): CategoryPoint[] {
             get action() {
                 return onClick?.get(item);
             },
-            drill: [readText(props.drillAttribute1, item), readText(props.drillAttribute2, item)]
+            drill: [
+                readText(props.drillAttribute1, item),
+                readText(props.drillAttribute2, item),
+            ],
         });
     }
     return points;
 }
 
 /** True until the data source has loaded completely, including while it reloads. */
-export function isCategoryDataLoading(props: Pick<CategoryDataProps, "dataSource">): boolean {
+export function isCategoryDataLoading(
+    props: Pick<CategoryDataProps, "dataSource">
+): boolean {
     return isAnyLoading([props.dataSource]);
 }
 
@@ -193,18 +234,28 @@ const SAMPLE = [
     ["Social", 240],
     ["Email", 180],
     ["Referral", 120],
-    ["Partners", 80]
+    ["Partners", 80],
 ] as const;
 
 /** Believable sample data for Studio Pro's design mode. */
-export function sampleCategoryPoints(count: number = SAMPLE.length): CategoryPoint[] {
-    return SAMPLE.slice(0, count).map(([category, value]) => ({ category, value, drill: [] }));
+export function sampleCategoryPoints(
+    count: number = SAMPLE.length
+): CategoryPoint[] {
+    return SAMPLE.slice(0, count).map(([category, value]) => ({
+        category,
+        value,
+        drill: [],
+    }));
 }
 
 /** The colour of each item: its own, the palette in order, and the muted colour for Other. */
-export function categoryColors(items: CategoryItem[], palette: string[], muted: string): string[] {
+export function categoryColors(
+    items: CategoryItem[],
+    palette: string[],
+    muted: string
+): string[] {
     let next = 0;
-    return items.map(item => {
+    return items.map((item) => {
         if (item.other) {
             return muted;
         }
