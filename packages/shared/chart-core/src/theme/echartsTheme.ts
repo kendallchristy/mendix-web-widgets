@@ -57,9 +57,9 @@ export function buildHyperTheme(tokens: ChartTokens): EChartsTheme {
         bar: { itemStyle: { borderRadius: 4 } },
         candlestick: {
             itemStyle: {
-                color: tokens.palette[2] ?? tokens.up,
+                color: tokens.up,
                 color0: tokens.down,
-                borderColor: tokens.palette[2] ?? tokens.up,
+                borderColor: tokens.up,
                 borderColor0: tokens.down
             }
         },

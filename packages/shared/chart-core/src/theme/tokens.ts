@@ -23,7 +23,9 @@ export interface ChartTokens {
     pillText: string;
     lightPillBackground: string;
     lightPillText: string;
+    /** Rising values, such as a candle that closed higher. */
     up: string;
+    /** Falling values. */
     down: string;
     /** Opacity of the glow under marks and the top of a gradient area fill. */
     glowOpacity: number;
@@ -66,8 +68,8 @@ export const HYPER_LIGHT: ChartTokens = {
     pillText: "#FFFFFF",
     lightPillBackground: "#FFFFFF",
     lightPillText: "#111318",
-    up: "#20A33A",
-    down: "#E5484D",
+    up: "#0860F8",
+    down: "#F84038",
     glowOpacity: 0.25
 };
 
@@ -88,8 +90,8 @@ export const HYPER_DARK: ChartTokens = {
     pillText: "#111318",
     lightPillBackground: "#1E2338",
     lightPillText: "#F2F4F8",
-    up: "#47CD89",
-    down: "#F97066",
+    up: "#3D7DF5",
+    down: "#F0605A",
     glowOpacity: 0.4
 };
 
@@ -103,7 +105,9 @@ const CSS_TOKEN_NAMES: Array<[Exclude<keyof CssTokens, "palette" | "mode">, stri
     ["label", "--hc-label-color"],
     ["grid", "--hc-grid-color"],
     ["muted", "--hc-muted-color"],
-    ["surface", "--hc-surface"]
+    ["surface", "--hc-surface"],
+    ["up", "--hc-up-color"],
+    ["down", "--hc-down-color"]
 ];
 
 /** Reads the `--hc-*` custom properties that apply to an element. */

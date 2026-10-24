@@ -10,36 +10,13 @@ import {
     fitArc,
     glowStyle,
     legendPlacement,
+    pillStyle,
     tooltipOption,
     withAlpha,
     wrappingLegend
 } from "@kendallchristy/chart-core";
 
 import type { RadialBarSettings } from "./types";
-
-/** Rich text styles for a value shown as a pill. */
-function labelPill(tokens: ChartTokens, labelStyle: RadialBarSettings["labelStyle"]): Record<string, unknown> {
-    switch (labelStyle) {
-        case "plain":
-            return {};
-        case "darkPill":
-            return {
-                color: tokens.pillText,
-                backgroundColor: tokens.pillBackground,
-                borderRadius: 999,
-                padding: [2, 6]
-            };
-        case "lightPill":
-            return {
-                color: tokens.lightPillText,
-                backgroundColor: tokens.lightPillBackground,
-                borderRadius: 999,
-                padding: [2, 6],
-                shadowBlur: 6,
-                shadowColor: "rgba(16, 24, 40, 0.16)"
-            };
-    }
-}
 
 export function buildRadialBar(
     points: CategoryPoint[],
@@ -102,7 +79,7 @@ export function buildRadialBar(
     }
 
     const gap = `${Math.max(0, Math.min(95, 100 - settings.ringWidth))}%`;
-    const pill = labelPill(tokens, settings.labelStyle);
+    const pill = pillStyle(tokens, settings.labelStyle);
 
     const series: Array<Record<string, unknown>> = [
         {

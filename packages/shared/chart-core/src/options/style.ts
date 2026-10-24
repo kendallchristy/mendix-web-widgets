@@ -123,6 +123,33 @@ export function valueLabelStyle(
     }
 }
 
+/** Rich text styles for a short value shown as plain text or a pill, for labels beside names or marks. */
+export function pillStyle(
+    tokens: ChartTokens,
+    labelStyle: "plain" | "darkPill" | "lightPill"
+): Record<string, unknown> {
+    switch (labelStyle) {
+        case "plain":
+            return {};
+        case "darkPill":
+            return {
+                color: tokens.pillText,
+                backgroundColor: tokens.pillBackground,
+                borderRadius: 999,
+                padding: [2, 6]
+            };
+        case "lightPill":
+            return {
+                color: tokens.lightPillText,
+                backgroundColor: tokens.lightPillBackground,
+                borderRadius: 999,
+                padding: [2, 6],
+                shadowBlur: 6,
+                shadowColor: "rgba(16, 24, 40, 0.16)"
+            };
+    }
+}
+
 /** ECharts hands labels either a number or an [x, y] pair. */
 function labelValue(value: unknown): number {
     if (Array.isArray(value)) {
