@@ -35,6 +35,7 @@ describe("PieView", () => {
                     background: "transparent",
                     maxSlices: 6,
                     innerRadius: 60,
+                    holeUnit: "percent",
                     cornerRadius: 4,
                     sliceGap: 2,
                     startAngle: 90,

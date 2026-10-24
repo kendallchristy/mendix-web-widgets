@@ -6,6 +6,7 @@ import type {
     DateBucket,
     DateLevel,
     DrillStep,
+    ElementSize,
     Point,
     XKind,
     XValue
@@ -44,6 +45,18 @@ export type BuiltChart = CoreBuiltChart<DrillValue>;
  * lines only mark highlighted points.
  */
 export const LARGE_SERIES = 2000;
+
+// Date axis labels per level: a day reads as "Mar 5" rather than a bare 5, and the first of a month or year says so.
+const TIME_LABELS = {
+    year: "{yyyy}",
+    month: "{MMM}",
+    day: "{MMM} {d}",
+    hour: "{HH}:{mm}",
+    minute: "{HH}:{mm}",
+    second: "{HH}:{mm}:{ss}",
+    millisecond: "{HH}:{mm}:{ss}",
+    none: "{MMM} {d}"
+};
 
 interface WorkingPoint extends Point<InputPoint> {
     /** The label shown on a category axis. */
@@ -153,7 +166,10 @@ function drillContext(
                 return key === undefined ? undefined : { x: key, label: key };
             },
             nextStep: deeper
-                ? point => ({ label: point.label, value: { kind: "category", value: point.label } })
+                ? point => ({
+                      label: point.label,
+                      value: { kind: "category", value: point.label }
+                  })
                 : undefined,
             forceAggregation: depth > 0,
             sortCategories: false
@@ -231,10 +247,14 @@ export function buildChart(
     settings: ChartSettings,
     tokens: ChartTokens,
     path: Array<DrillStep<DrillValue>>,
+    size: ElementSize = { width: 0, height: 0 },
     locale?: string
 ): BuiltChart {
     const { style } = settings;
-    const formatNumber = createNumberFormatter({ ...settings.numberFormat, locale });
+    const formatNumber = createNumberFormatter({
+        ...settings.numberFormat,
+        locale
+    });
     const label = (x: XValue): string => plainLabel(x, formatNumber, locale);
     const drill = drillContext(series, settings, path, label, locale);
     const horizontal = settings.orientation === "horizontal";
@@ -245,7 +265,12 @@ export function buildChart(
         for (const point of s.points) {
             const at = drill.project(point);
             if (at) {
-                points.push({ ...at, y: point.y, size: point.size, source: point });
+                points.push({
+                    ...at,
+                    y: point.y,
+                    size: point.size,
+                    source: point
+                });
             }
         }
         const aggregation = s.aggregation === "none" && drill.forceAggregation ? "sum" : s.aggregation;
@@ -312,6 +337,16 @@ export function buildChart(
     const tableRows: string[][] = [];
     const colors: string[] = [];
     const visualMaps: Array<Record<string, unknown>> = [];
+
+    // A bar's width in pixels for its share of each slot, or 9 when the chart isn't measured.
+    const slots = Math.max(
+        1,
+        kind === "category" ? categories.length : Math.max(0, ...projected.map(s => s.points.length))
+    );
+    const barPixels = (share: number): number => {
+        const along = horizontal ? size.height - 60 : size.width - 70;
+        return along > 0 ? ((along / slots) * share) / 100 : 9;
+    };
 
     const echartsSeries = projected.map((s, seriesIndex) => {
         const color = s.input.color || tokens.palette[seriesIndex % tokens.palette.length];
@@ -414,7 +449,9 @@ export function buildChart(
                 highlight && seriesIndex === firstLine && firstIn >= 0
                     ? {
                           silent: true,
-                          itemStyle: { color: verticalGradient(color, 0.14, 0.02) },
+                          itemStyle: {
+                              color: verticalGradient(color, 0.14, 0.02)
+                          },
                           data: [[{ xAxis: xOuts[firstIn] }, { xAxis: xOuts[lastIn] }]]
                       }
                     : undefined;
@@ -433,7 +470,10 @@ export function buildChart(
                 symbolSize: 9,
                 showSymbol: style.markers !== "hover",
                 sampling: "lttb",
-                lineStyle: { width: style.lineWidth, ...glowStyle(color, tokens, style) },
+                lineStyle: {
+                    width: style.lineWidth,
+                    ...glowStyle(color, tokens, style)
+                },
                 areaStyle: s.kind === "area" ? areaStyle(color, tokens, style) : undefined,
                 markArea: horizontal ? undefined : band,
                 connectNulls: true
@@ -447,15 +487,18 @@ export function buildChart(
             const barGlow =
                 style.barStyle === "striped" || large ? {} : { ...glowStyle(color, tokens, style), shadowOffsetY: 0 };
             const corners = horizontal ? [0, radius, radius, 0] : [radius, radius, 0, 0];
-            const width = `${Math.max(1, Math.min(100, style.barWidth)) / Math.max(1, barGroups)}%`;
-            if (style.barStyle === "dots" && !large) {
+            const share = Math.max(1, Math.min(100, style.barWidth)) / Math.max(1, barGroups);
+            const width = `${share}%`;
+            // Dots as wide as the bar, up to 9 px. On bars thinner than 4 px they'd run together, so those stay solid.
+            const dot = Math.min(9, barPixels(share));
+            if (style.barStyle === "dots" && !large && dot >= 4) {
                 return {
                     ...base,
                     type: "pictorialBar",
                     symbol: "circle",
                     symbolRepeat: true,
-                    symbolSize: [9, 9],
-                    symbolMargin: 3,
+                    symbolSize: [dot, dot],
+                    symbolMargin: Math.max(1, Math.round(dot / 3)),
                     barWidth: width,
                     itemStyle: { ...barGlow }
                 };
@@ -491,6 +534,8 @@ export function buildChart(
             type: "scatter",
             // Large mode draws every point in one batch; bubbles need their own sizes, so they stay normal.
             large: large && !bubble,
+            // Bubbles may reach past the plot; the grid leaves them room instead of cutting them off.
+            clip: !bubble,
             symbolSize: bubble ? (value: number[]) => scaleBubble(value[2]) : large ? 6 : 11,
             itemStyle: {
                 color: bubble
@@ -500,7 +545,10 @@ export function buildChart(
                           y: 0.3,
                           r: 0.85,
                           colorStops: [
-                              { offset: 0, color: mixColors(color, "#ffffff", 0.55) },
+                              {
+                                  offset: 0,
+                                  color: mixColors(color, "#ffffff", 0.55)
+                              },
                               { offset: 1, color }
                           ]
                       }
@@ -530,7 +578,8 @@ export function buildChart(
             // Long category names are cut short, so ECharts can still fit some of them instead of none.
             width: kind === "category" ? 120 : undefined,
             overflow: kind === "category" ? "truncate" : undefined,
-            formatter: kind === "time" ? settings.xDateFormat || undefined : kind === "value" ? formatNumber : undefined
+            formatter:
+                kind === "time" ? settings.xDateFormat || TIME_LABELS : kind === "value" ? formatNumber : undefined
         },
         splitLine: { show: horizontal ? horizontalLines : verticalLines }
     };
@@ -543,8 +592,14 @@ export function buildChart(
         nameLocation: "middle",
         nameGap: 10,
         nameMoveOverlap: true,
-        axisLabel: { show: settings.showYAxis, formatter: formatNumber, hideOverlap: true },
-        splitLine: { show: side === "left" && (horizontal ? verticalLines : horizontalLines) }
+        axisLabel: {
+            show: settings.showYAxis,
+            formatter: formatNumber,
+            hideOverlap: true
+        },
+        splitLine: {
+            show: side === "left" && (horizontal ? verticalLines : horizontalLines)
+        }
     });
     const valueAxes = usesRightAxis ? [valueAxis("left"), valueAxis("right")] : [valueAxis("left")];
 
@@ -554,6 +609,12 @@ export function buildChart(
     if (hasValueLabels) {
         grid.top = Number(grid.top) + 22;
         grid.right = Number(grid.right) + (horizontal ? 36 : 18);
+    }
+    // Room for half the largest bubble, so bubbles at the edges aren't cut off.
+    if (projected.some(s => s.kind === "bubble")) {
+        grid.top = Number(grid.top) + 24;
+        grid.right = Number(grid.right) + 24;
+        grid.left = Number(grid.left) + 12;
     }
     const slider = settings.zoom === "slider" || settings.zoom === "both";
     if (slider) {
@@ -566,7 +627,14 @@ export function buildChart(
     const dataZoom = [
         ...(settings.zoom === "inside" || settings.zoom === "both" ? [{ type: "inside", ...zoomAxis }] : []),
         ...(slider
-            ? [{ type: "slider", ...zoomAxis, height: horizontal ? undefined : 24, bottom: horizontal ? undefined : 8 }]
+            ? [
+                  {
+                      type: "slider",
+                      ...zoomAxis,
+                      height: horizontal ? undefined : 24,
+                      bottom: horizontal ? undefined : 8
+                  }
+              ]
             : [])
     ];
 
@@ -618,7 +686,10 @@ export function buildChart(
         option,
         clickTargets,
         breadcrumb: crumbs,
-        table: { columns: ["Series", settings.xAxisTitle || "X", settings.yAxisTitle || "Value"], rows: tableRows },
+        table: {
+            columns: ["Series", settings.xAxisTitle || "X", settings.yAxisTitle || "Value"],
+            rows: tableRows
+        },
         pointCount: tableRows.length
     };
 }

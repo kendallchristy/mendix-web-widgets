@@ -72,7 +72,9 @@ describe("categoryLevel", () => {
         ];
         const top = categoryLevel(drill, options({ drilldown: true }), []);
         expect(top.breadcrumb).toEqual(["All"]);
-        expect(top.items[0].target).toEqual({ drill: { label: "Europe", value: "Europe" } });
+        expect(top.items[0].target).toEqual({
+            drill: { label: "Europe", value: "Europe" }
+        });
 
         const europe = categoryLevel(drill, options({ drilldown: true }), [{ label: "Europe", value: "Europe" }]);
         expect(europe.items.map(i => i.name)).toEqual(["France", "Spain"]);
@@ -98,12 +100,17 @@ describe("categoryLevel", () => {
 describe("readCategoryPoints", () => {
     it("reads attributes, colours, tooltips and actions", () => {
         const item = { id: "1" };
-        const attr = (value: unknown) => ({ get: () => ({ value, displayValue: String(value) }) });
+        const attr = (value: unknown) => ({
+            get: () => ({ value, displayValue: String(value) })
+        });
         const action = { canExecute: true, execute: jest.fn() };
         const points = readCategoryPoints({
             dataSource: { items: [item, { id: "2" }], status: "available" },
             categoryAttribute: {
-                get: (i: { id: string }) => ({ value: i.id === "1" ? "A" : undefined, displayValue: "A" })
+                get: (i: { id: string }) => ({
+                    value: i.id === "1" ? "A" : undefined,
+                    displayValue: "A"
+                })
             },
             valueAttribute: attr(5),
             colorAttribute: attr(" #123456 "),
@@ -112,8 +119,32 @@ describe("readCategoryPoints", () => {
             drillAttribute1: attr("x")
         } as never);
         expect(points).toEqual([
-            { category: "A", value: 5, color: "#123456", tooltip: "tip", action, drill: ["x", undefined] }
+            {
+                category: "A",
+                value: 5,
+                color: "#123456",
+                tooltip: "tip",
+                action,
+                drill: ["x", undefined]
+            }
         ]);
+    });
+
+    it("takes a colour expression over the colour attribute", () => {
+        const item = { id: "1" };
+        const attr = (value: unknown) => ({
+            get: () => ({ value, displayValue: String(value) })
+        });
+        const read = (colorExpression?: unknown) =>
+            readCategoryPoints({
+                dataSource: { items: [item], status: "available" },
+                categoryAttribute: attr("A"),
+                colorAttribute: attr("#123456"),
+                colorExpression
+            } as never)[0].color;
+        expect(read({ get: () => ({ value: "#E5466F" }) })).toBe("#E5466F");
+        expect(read()).toBe("#123456");
+        expect(read({ get: () => ({ value: "" }) })).toBeUndefined();
     });
 });
 

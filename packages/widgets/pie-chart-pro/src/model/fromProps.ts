@@ -11,6 +11,7 @@ type SharedProps = Pick<
     | "drilldown"
     | "titleAlign"
     | "shape"
+    | "holeUnit"
     | "rose"
     | "labelPosition"
     | "labelContent"
@@ -69,6 +70,7 @@ export function pieSettings(values: Values): PieSettings {
         },
         shape: values.shape,
         innerRadius: values.innerRadius ?? 62,
+        holeUnit: values.holeUnit,
         rose: values.rose,
         cornerRadius: values.cornerRadius ?? 4,
         sliceGap: values.sliceGap ?? 2,

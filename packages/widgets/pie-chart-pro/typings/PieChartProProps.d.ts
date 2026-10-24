@@ -15,6 +15,8 @@ export type TitleAlignEnum = "left" | "center";
 
 export type ShapeEnum = "donut" | "pie" | "halfDonut";
 
+export type HoleUnitEnum = "percent" | "pixels";
+
 export type RoseEnum = "off" | "radius" | "area";
 
 export type LabelPositionEnum = "outside" | "inside" | "hidden";
@@ -66,6 +68,7 @@ export interface PieChartProContainerProps {
     emptyMessage?: DynamicValue<string>;
     shape: ShapeEnum;
     innerRadius: number;
+    holeUnit: HoleUnitEnum;
     rose: RoseEnum;
     cornerRadius: number;
     sliceGap: number;
@@ -130,6 +133,7 @@ export interface PieChartProPreviewProps {
     emptyMessage: string;
     shape: ShapeEnum;
     innerRadius: number | null;
+    holeUnit: HoleUnitEnum;
     rose: RoseEnum;
     cornerRadius: number | null;
     sliceGap: number | null;

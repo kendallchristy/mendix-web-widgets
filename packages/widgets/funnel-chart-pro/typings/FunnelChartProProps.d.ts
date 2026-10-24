@@ -52,6 +52,7 @@ export interface FunnelChartProContainerProps {
     aggregation: AggregationEnum;
     sortOrder: SortOrderEnum;
     colorAttribute?: ListAttributeValue<string>;
+    colorExpression?: ListExpressionValue<string>;
     tooltipText?: ListExpressionValue<string>;
     onClick?: ListActionValue;
     drilldown: boolean;
@@ -114,6 +115,7 @@ export interface FunnelChartProPreviewProps {
     aggregation: AggregationEnum;
     sortOrder: SortOrderEnum;
     colorAttribute: string;
+    colorExpression: string;
     tooltipText: string;
     onClick: {} | null;
     drilldown: boolean;

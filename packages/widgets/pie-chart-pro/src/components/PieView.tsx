@@ -38,7 +38,8 @@ export function PieView(props: PieViewProps): ReactElement {
         <ChartFrame
             widgetClass="widget-pie-chart-pro"
             build={build}
-            measure={settings.shape !== "pie"}
+            // Room for outside labels and a hole in pixels depend on the chart's size.
+            measure
             theme={props.theme}
             chartStyle={settings.style}
             title={settings.title}

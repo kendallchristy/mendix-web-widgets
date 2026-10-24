@@ -27,6 +27,7 @@ function values(overrides: Record<string, unknown> = {}): PieChartProPreviewProp
 
 const keys = [
     "innerRadius",
+    "holeUnit",
     "centerContent",
     "centerCaption",
     "startAngle",
@@ -44,6 +45,7 @@ describe("Pie editor config", () => {
         expect(visible(values({ shape: "pie" }))).toEqual(["startAngle", "labelContent", "otherLabel"]);
         expect(visible(values({ shape: "halfDonut", labelPosition: "hidden", maxSlices: 0 }))).toEqual([
             "innerRadius",
+            "holeUnit",
             "centerContent",
             "centerCaption"
         ]);

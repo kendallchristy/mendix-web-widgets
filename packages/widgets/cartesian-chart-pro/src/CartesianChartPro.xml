@@ -387,7 +387,7 @@
             <propertyGroup caption="Bars">
                 <property key="barStyle" type="enumeration" defaultValue="solid">
                     <caption>Bar style</caption>
-                    <description />
+                    <description>Dots need bars at least 4 px wide and series of up to 2,000 points. Thinner bars and larger series stay solid.</description>
                     <enumerationValues>
                         <enumerationValue key="solid">Solid</enumerationValue>
                         <enumerationValue key="striped">Striped</enumerationValue>
@@ -396,7 +396,7 @@
                 </property>
                 <property key="barRadius" type="integer" defaultValue="4">
                     <caption>Corner radius</caption>
-                    <description>In pixels, on the end of each bar.</description>
+                    <description>In pixels, on the end of each bar. A bar gets at most half its width, and series over 2,000 points get none.</description>
                 </property>
                 <property key="barWidth" type="integer" defaultValue="60">
                     <caption>Bar width</caption>

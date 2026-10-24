@@ -38,7 +38,7 @@ export function FunnelView(props: FunnelViewProps): ReactElement {
         <ChartFrame
             widgetClass="widget-funnel-chart-pro"
             build={build}
-            measure={settings.orientation === "horizontal"}
+            measure
             theme={props.theme}
             chartStyle={settings.style}
             title={settings.title}

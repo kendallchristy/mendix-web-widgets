@@ -53,8 +53,7 @@ describe("buildGauge", () => {
         expect(gauge.pointer.show).toBe(false);
         expect(gauge.data).toEqual([{ value: 68, name: "Done" }]);
         expect(gauge.detail.formatter(68)).toBe("68%");
-        expect(gauge.axisLabel.formatter(0)).toBe("0%");
-        expect(gauge.axisLabel.formatter(50)).toBe("");
+        expect(gauge.axisLabel.show).toBe(false);
         expect(pointCount).toBe(1);
         expect(table.rows).toEqual([
             ["Value", "68%"],
@@ -75,7 +74,7 @@ describe("buildGauge", () => {
 
     it("adds a target marker and a needle", () => {
         const series = build({ target: 90, indicator: "both" }).option.series as any[];
-        expect(series).toHaveLength(2);
+        expect(series).toHaveLength(3);
         expect(series[1].data).toEqual([{ value: 90 }]);
         expect(series[0].pointer.show).toBe(true);
         expect(series[0].progress.show).toBe(true);
@@ -88,6 +87,51 @@ describe("buildGauge", () => {
         };
         expect(bottomOfText("progress")).toBeLessThanOrEqual(192);
         expect(bottomOfText("needle")).toBeLessThanOrEqual(192);
+    });
+
+    it("puts the minimum and maximum clear of the arc and of each other", () => {
+        const ends = (overrides: Record<string, unknown>) => {
+            const series = build(overrides).option.series as any[];
+            const range = series.find(item => item.name === "range");
+            return {
+                radius: series[0].radius,
+                centre: series[0].center,
+                labels: range.data.map((d: any) => [d.name, ...d.title.offsetCenter])
+            };
+        };
+        // Under an arc's ends, below the round caps, however wide the arc.
+        for (const arcWidth of [14, 40]) {
+            const { radius, labels } = ends({ arcWidth });
+            expect(labels.map((l: any[]) => l[0])).toEqual(["0%", "100%"]);
+            expect(labels[0][1]).toBeLessThan(0);
+            expect(labels[1][1]).toBeGreaterThan(0);
+            for (const [, , y] of labels) {
+                expect(y).toBeGreaterThan(radius * 0.5 + arcWidth / 4);
+            }
+        }
+        // Under a half circle's flat edge, past the round caps.
+        for (const [, , y] of ends({ shape: "half", arcWidth: 40 }).labels) {
+            expect(y).toBeGreaterThan(20);
+        }
+        // Either side of a ring's seam, above the ring.
+        const ring = ends({ shape: "ring" });
+        expect(ring.labels[0][1]).toBeGreaterThan(0);
+        expect(ring.labels[1][1]).toBeLessThan(0);
+        expect(ring.labels[0][2]).toBeLessThan(-ring.radius);
+        expect(ring.centre[1] + ring.labels[0][2]).toBeGreaterThan(0);
+        // Off, there is no range series.
+        expect((build({ showRange: false }).option.series as any[]).some(item => item.name === "range")).toBe(false);
+    });
+
+    it("keeps the end labels inside the chart under a needle", () => {
+        const { centre, labels } = (() => {
+            const series = build({ indicator: "needle", value: 4200, max: 6000, suffix: "" }).option.series as any[];
+            const range = series.find(item => item.name === "range");
+            return { centre: series[0].center, labels: range.data.map((d: any) => d.title.offsetCenter[1]) };
+        })();
+        for (const y of labels) {
+            expect(centre[1] + y + 7).toBeLessThanOrEqual(192);
+        }
     });
 
     it("shows a share of the range as a percentage", () => {

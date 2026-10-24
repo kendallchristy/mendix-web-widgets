@@ -24,8 +24,16 @@ const itemsOf = (s: AnyRecord): AnyRecord[] => s.data.map((d: unknown) => (Array
 describe("buildChart", () => {
     it("draws text X values on a category axis in first-seen order", () => {
         const { option, pointCount } = buildChart([series("Sales", monthly([1, 2, 3]))], settings(), HYPER_LIGHT, []);
-        expect(axisOf(option)).toMatchObject({ type: "category", data: ["Jan", "Feb", "Mar"], boundaryGap: false });
-        expect(seriesOf(option)[0]).toMatchObject({ type: "line", name: "Sales", color: HYPER_LIGHT.palette[0] });
+        expect(axisOf(option)).toMatchObject({
+            type: "category",
+            data: ["Jan", "Feb", "Mar"],
+            boundaryGap: false
+        });
+        expect(seriesOf(option)[0]).toMatchObject({
+            type: "line",
+            name: "Sales",
+            color: HYPER_LIGHT.palette[0]
+        });
         expect(valuesOf(seriesOf(option)[0])).toEqual([
             ["Jan", 1],
             ["Feb", 2],
@@ -108,7 +116,10 @@ describe("buildChart", () => {
         const { option } = buildChart(
             [
                 series("A", monthly([1, 2]), { kind: "bar" }),
-                series("B", monthly([3, 4]), { kind: "bar", yAxisSide: "right" })
+                series("B", monthly([3, 4]), {
+                    kind: "bar",
+                    yAxisSide: "right"
+                })
             ],
             settings({ orientation: "horizontal" }),
             HYPER_LIGHT,
@@ -157,6 +168,50 @@ describe("buildChart", () => {
         const bubbles = seriesOf(option)[1];
         expect(bubbles.type).toBe("scatter");
         expect(bubbles.symbolSize([1, 1, 10])).toBeLessThan(bubbles.symbolSize([2, 2, 40]));
+        // Bubbles draw past the plot's edge, into room the grid leaves for them.
+        expect(bubbles.clip).toBe(false);
+        expect((option.grid as AnyRecord).top).toBeGreaterThanOrEqual(36);
+    });
+
+    it("sizes dots to the bars, and keeps bars too thin for dots solid", () => {
+        const days = (n: number) =>
+            Array.from({ length: n }, (_, i) => ({
+                x: new Date(2026, 0, 1 + i),
+                y: i + 1
+            }));
+        const dots = (n: number, width: number) =>
+            seriesOf(
+                buildChart(
+                    [series("Daily", days(n), { kind: "bar" })],
+                    settings({ style: { barStyle: "dots" } as never }),
+                    HYPER_LIGHT,
+                    [],
+                    { width, height: 200 }
+                ).option
+            )[0];
+        expect(dots(10, 600)).toMatchObject({
+            type: "pictorialBar",
+            symbolSize: [9, 9]
+        });
+        const smaller = dots(40, 600);
+        expect(smaller.type).toBe("pictorialBar");
+        expect(smaller.symbolSize[0]).toBeLessThan(9);
+        expect(dots(200, 600).type).toBe("bar");
+    });
+
+    it("names the month on a daily date axis", () => {
+        const { option } = buildChart(
+            [
+                series("S", [
+                    { x: new Date(2026, 0, 1), y: 1 },
+                    { x: new Date(2026, 0, 9), y: 2 }
+                ])
+            ],
+            settings(),
+            HYPER_LIGHT,
+            []
+        );
+        expect(axisOf(option).axisLabel.formatter.day).toBe("{MMM} {d}");
     });
 
     it("hides the legend for one series and shows it for more", () => {
@@ -189,7 +244,9 @@ describe("buildChart", () => {
             { x: new Date(2026, 1, 20), y: 3 },
             { x: new Date(2026, 7, 1), y: 4 }
         ];
-        const drill = settings({ drill: { kind: "date", from: "year", to: "month" } });
+        const drill = settings({
+            drill: { kind: "date", from: "year", to: "month" }
+        });
 
         it("starts with yearly totals and offers the next level", () => {
             const built = buildChart([series("S", points)], drill, HYPER_LIGHT, []);
@@ -198,7 +255,11 @@ describe("buildChart", () => {
             expect(built.breadcrumb).toEqual(["All"]);
             expect(built.clickTargets[0][1].drill).toEqual({
                 label: "2026",
-                value: { kind: "date", start: new Date(2026, 0, 1).getTime(), end: new Date(2027, 0, 1).getTime() }
+                value: {
+                    kind: "date",
+                    start: new Date(2026, 0, 1).getTime(),
+                    end: new Date(2027, 0, 1).getTime()
+                }
             });
         });
 

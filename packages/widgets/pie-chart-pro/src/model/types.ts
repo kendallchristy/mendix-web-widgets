@@ -8,6 +8,7 @@ export interface PieSettings {
     shape: "donut" | "pie" | "halfDonut";
     /** Percent of the radius. */
     innerRadius: number;
+    holeUnit: "percent" | "pixels";
     rose: "off" | "radius" | "area";
     cornerRadius: number;
     sliceGap: number;

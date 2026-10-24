@@ -149,6 +149,7 @@ export interface CategoryDataProps {
     categoryAttribute: ListAttributeValue;
     valueAttribute?: ListAttributeValue;
     colorAttribute?: ListAttributeValue<string>;
+    colorExpression?: ListExpressionValue<string>;
     tooltipText?: ListExpressionValue<string>;
     onClick?: ListActionValue;
     drillAttribute1?: ListAttributeValue;
@@ -164,11 +165,14 @@ export function readCategoryPoints(props: CategoryDataProps): CategoryPoint[] {
         if (category === undefined) {
             continue;
         }
-        const { tooltipText, onClick } = props;
+        const { tooltipText, onClick, colorAttribute, colorExpression } = props;
         points.push({
             category,
             value: readNumber(props.valueAttribute, item),
-            color: props.colorAttribute?.get(item).value?.trim() || undefined,
+            // Read when a category's colour is first needed, which for most is its first object only.
+            get color() {
+                return (colorExpression ?? colorAttribute)?.get(item).value?.trim() || undefined;
+            },
             // Read only for the slices that need them: with thousands of objects, evaluating these up front is slow.
             get tooltip() {
                 return tooltipText?.get(item).value || undefined;
@@ -198,7 +202,11 @@ const SAMPLE = [
 
 /** Believable sample data for Studio Pro's design mode. */
 export function sampleCategoryPoints(count: number = SAMPLE.length): CategoryPoint[] {
-    return SAMPLE.slice(0, count).map(([category, value]) => ({ category, value, drill: [] }));
+    return SAMPLE.slice(0, count).map(([category, value]) => ({
+        category,
+        value,
+        drill: []
+    }));
 }
 
 /** The colour of each item: its own, the palette in order, and the muted colour for Other. */
