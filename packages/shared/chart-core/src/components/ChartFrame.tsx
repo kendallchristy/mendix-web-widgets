@@ -42,6 +42,8 @@ export interface BuiltChart<D> {
     breadcrumb: string[];
     table: { columns: string[]; rows: string[][] };
     pointCount: number;
+    /** Problems with the widget's own settings, shown instead of the chart. */
+    errors?: string[];
 }
 
 export interface ThemeSettings {
@@ -172,7 +174,8 @@ export function ChartFrame<D>(props: ChartFrameProps<D>): ReactElement {
 
     const errors = [
         ...customTheme.errors.map(e => `Theme JSON: ${e}`),
-        ...override.errors.map(e => `Option override: ${e}`)
+        ...override.errors.map(e => `Option override: ${e}`),
+        ...(built?.errors ?? [])
     ];
 
     let body: ReactElement;

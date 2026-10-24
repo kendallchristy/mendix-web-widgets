@@ -2,7 +2,7 @@
 
 Every chart widget in this repo shares one styling system. It starts from the Hyper look, follows your app's light and dark mode, and lets you restyle charts app-wide, per chart, or with a theme you design in the [ECharts theme builder](https://echarts.apache.org/en/theme-builder.html).
 
-This is the page Studio Pro opens from a chart widget's help link. It applies to all the chart widgets: Cartesian, Pie, Radial Bar, Gauge, Funnel, Range, Candlestick, Heatmap, Stream and Radar Chart Pro.
+This is the page Studio Pro opens from a chart widget's help link. It applies to all the chart widgets: Cartesian, Pie, Radial Bar, Gauge, Funnel, Range, Candlestick, Heatmap, Stream, Radar, Bubble Cluster and Custom Chart Pro. Custom Chart Pro has no option override, since its Option JSON is the whole option; see [Custom Chart Pro](custom-chart.md) for how it takes Mendix data.
 
 ## How the layers combine
 

@@ -42,3 +42,13 @@ export function init(_element: unknown, theme: unknown): FakeChart {
 export function use(): void {
     // Nothing to register in tests.
 }
+
+const maps = new Map<string, unknown>();
+
+export function registerMap(name: string, geoJson: unknown): void {
+    maps.set(name, geoJson);
+}
+
+export function getMap(name: string): unknown {
+    return maps.get(name);
+}
