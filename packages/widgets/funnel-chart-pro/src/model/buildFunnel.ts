@@ -1,10 +1,4 @@
-import type {
-    BuiltChart,
-    CategoryPoint,
-    ChartTokens,
-    DrillStep,
-    ElementSize,
-} from "@kendallchristy/chart-core";
+import type { BuiltChart, CategoryPoint, ChartTokens, DrillStep, ElementSize } from "@kendallchristy/chart-core";
 import {
     baseOption,
     categoryColors,
@@ -18,17 +12,13 @@ import {
     mixColors,
     readableInk,
     tooltipOption,
-    wrappingLegend,
+    wrappingLegend
 } from "@kendallchristy/chart-core";
 
 import type { FunnelSettings } from "./types";
 
 /** Steps of one colour, lightening towards the surface: stages are steps of one thing, not different things. */
-export function shades(
-    color: string,
-    surface: string,
-    count: number
-): string[] {
+export function shades(color: string, surface: string, count: number): string[] {
     return Array.from({ length: count }, (_, i) =>
         count < 2 ? color : mixColors(color, surface, (i / (count - 1)) * 0.6)
     );
@@ -50,17 +40,10 @@ export function buildFunnel(
     const { style } = settings;
     const formatNumber = createNumberFormatter({
         ...settings.numberFormat,
-        locale,
-    });
-    const formatPercent = createPercentFormatter(
-        settings.percentDecimals,
         locale
-    );
-    const level = categoryLevel(
-        points,
-        { ...settings.categories, limit: 0 },
-        path
-    );
+    });
+    const formatPercent = createPercentFormatter(settings.percentDecimals, locale);
+    const level = categoryLevel(points, { ...settings.categories, limit: 0 }, path);
     const items = level.items;
     // A stage's own colour, from the Colour attribute or expression, wins; the rest follow the colour mode.
     const modeColors =
@@ -71,41 +54,27 @@ export function buildFunnel(
     const figures = figuresFontFamily(tokens, style);
 
     const conversion = items.map((item, i) => {
-        const base =
-            settings.conversion === "previous"
-                ? items[i - 1]?.value
-                : items[0]?.value;
+        const base = settings.conversion === "previous" ? items[i - 1]?.value : items[0]?.value;
         return settings.conversion === "off" || base === undefined || base === 0
             ? undefined
             : i === 0 && settings.conversion === "previous"
-            ? undefined
-            : item.value / base;
+              ? undefined
+              : item.value / base;
     });
 
-    const names = items.map((item) => item.name);
+    const names = items.map(item => item.name);
     const vertical = settings.orientation === "vertical";
     const outside = settings.labelPosition === "outside";
     const measured = size.width > 0 && size.height > 0;
     // Side by side stages narrower than this can't hold a name below them, so the legend names them instead.
     const slotGuess = (size.width - 16) / Math.max(1, items.length);
     const cramped =
-        outside &&
-        !vertical &&
-        measured &&
-        style.legend === "auto" &&
-        settings.showName &&
-        slotGuess < NARROWEST_SLOT;
+        outside && !vertical && measured && style.legend === "auto" && settings.showName && slotGuess < NARROWEST_SLOT;
     const showName = settings.showName && !cramped;
     // Values don't fit under such narrow stages either, so they keep only the share when there is one.
-    const showValue =
-        settings.showValue && !(cramped && settings.conversion !== "off");
+    const showValue = settings.showValue && !(cramped && settings.conversion !== "off");
     const showsNames = settings.labelPosition !== "hidden" && showName;
-    const placement =
-        style.legend === "auto"
-            ? showsNames
-                ? "hidden"
-                : "bottom"
-            : legendPlacement(style, 2);
+    const placement = style.legend === "auto" ? (showsNames ? "hidden" : "bottom") : legendPlacement(style, 2);
     const legend = wrappingLegend(placement, names, size.width);
 
     const labelText = (index: number): string => {
@@ -116,9 +85,7 @@ export function buildFunnel(
         }
         const figuresLine = [
             showValue ? `{value|${formatNumber(item.value)}}` : "",
-            conversion[index] !== undefined
-                ? `{rate|${formatPercent(conversion[index])}}`
-                : "",
+            conversion[index] !== undefined ? `{rate|${formatPercent(conversion[index])}}` : ""
         ]
             .filter(Boolean)
             // Side by side stages are narrow, so their value and rate stack.
@@ -134,19 +101,13 @@ export function buildFunnel(
             ? settings.showValue || settings.conversion !== "off"
                 ? 1
                 : 0
-            : (settings.showValue ? 1 : 0) +
-              (settings.conversion === "off" ? 0 : 1));
+            : (settings.showValue ? 1 : 0) + (settings.conversion === "off" ? 0 : 1));
     const labelHeight = lineCount * 16;
     // The widest label beside the stages, estimated from its text.
     const widestLabel = items.reduce((most, item, i) => {
         const name = showName ? item.name.length * 6.2 : 0;
-        const value = settings.showValue
-            ? formatNumber(item.value).length * 7.4
-            : 0;
-        const rate =
-            conversion[i] !== undefined
-                ? formatPercent(conversion[i]).length * 6.8 + 6
-                : 0;
+        const value = settings.showValue ? formatNumber(item.value).length * 7.4 : 0;
+        const rate = conversion[i] !== undefined ? formatPercent(conversion[i]).length * 6.8 + 6 : 0;
         return Math.max(most, name, value + rate);
     }, 0);
 
@@ -154,13 +115,11 @@ export function buildFunnel(
         top: placement === "top" ? legend.height + 8 : 8,
         bottom: placement === "bottom" ? legend.height : 8,
         left: 8,
-        right: placement === "right" ? 140 : 8,
+        right: placement === "right" ? 140 : 8
     };
     // Room for labels beside or below the stages: beside, as much as the widest label needs, up to 45% of the chart.
     const besideRoom = Math.round(
-        measured
-            ? Math.min(size.width * 0.45, LABEL_GAP + widestLabel + 4)
-            : Math.max(90, size.width * 0.3)
+        measured ? Math.min(size.width * 0.45, LABEL_GAP + widestLabel + 4) : Math.max(90, size.width * 0.3)
     );
     if (outside && vertical) {
         box.right += besideRoom;
@@ -174,9 +133,7 @@ export function buildFunnel(
     const viewWidth = size.width - box.left - box.right;
     const viewHeight = size.height - box.top - box.bottom;
     const stageSize =
-        ((vertical ? viewHeight : viewWidth) -
-            settings.stageGap * (items.length - 1)) /
-        Math.max(1, items.length);
+        ((vertical ? viewHeight : viewWidth) - settings.stageGap * (items.length - 1)) / Math.max(1, items.length);
     const radius = Math.max(
         0,
         Math.min(
@@ -192,34 +149,26 @@ export function buildFunnel(
 
     // A stage's size across the funnel, in pixels, as ECharts lays it out.
     const across = (vertical ? viewWidth : viewHeight) - 2 * radius;
-    const largest = Math.max(...items.map((it) => it.value), 0) || 1;
+    const largest = Math.max(...items.map(it => it.value), 0) || 1;
     const neck = Math.max(0, Math.min(100, settings.neckWidth)) / 100;
-    const sizeOf = (value: number): number =>
-        across * (neck + ((1 - neck) * Math.max(0, value)) / largest);
+    const sizeOf = (value: number): number => across * (neck + ((1 - neck) * Math.max(0, value)) / largest);
     // How far the middle of each stage's outer edge is from the far side of the widest stage.
     const edgeGap = (i: number): number => {
-        const middle =
-            (sizeOf(items[i].value) + sizeOf(items[i + 1]?.value ?? 0)) / 2;
-        return settings.align === "center"
-            ? (across - middle) / 2
-            : across - middle;
+        const middle = (sizeOf(items[i].value) + sizeOf(items[i + 1]?.value ?? 0)) / 2;
+        return settings.align === "center" ? (across - middle) / 2 : across - middle;
     };
     // Each label's leader reaches past the widest stage, so labels line up clear of every stage: in a column beside
     // the stages, or in a row under side by side ones.
     const leaders = items.map((_item, i) =>
-        !outside || !measured
-            ? undefined
-            : Math.round(
-                  edgeGap(i) + radius + (vertical ? 8 : 6 + labelHeight / 2)
-              )
+        !outside || !measured ? undefined : Math.round(edgeGap(i) + radius + (vertical ? 8 : 6 + labelHeight / 2))
     );
     // Labels are cut short with an ellipsis where they'd run past their room.
     const labelWidth =
         !outside || !measured
             ? undefined
             : vertical
-            ? Math.max(30, besideRoom - LABEL_GAP)
-            : Math.max(20, stageSize + settings.stageGap - 6);
+              ? Math.max(30, besideRoom - LABEL_GAP)
+              : Math.max(20, stageSize + settings.stageGap - 6);
     const inside = settings.labelPosition === "inside";
     const insideRich = (ink: string): Record<string, unknown> => ({
         name: { color: ink, fontSize: 11, lineHeight: 15 },
@@ -228,15 +177,15 @@ export function buildFunnel(
             fontFamily: figures,
             fontSize: 12,
             fontWeight: 600,
-            lineHeight: 16,
+            lineHeight: 16
         },
         rate: {
             color: ink,
             opacity: 0.8,
             fontFamily: figures,
             fontSize: 11,
-            lineHeight: 16,
-        },
+            lineHeight: 16
+        }
     });
 
     const series = [
@@ -246,12 +195,7 @@ export function buildFunnel(
             ...box,
             orient: settings.orientation,
             sort: "none",
-            funnelAlign:
-                settings.align === "center"
-                    ? "center"
-                    : vertical
-                    ? "left"
-                    : "top",
+            funnelAlign: settings.align === "center" ? "center" : vertical ? "left" : "top",
             minSize: `${Math.max(0, Math.min(100, settings.neckWidth))}%`,
             maxSize: "100%",
             gap: Math.max(0, settings.stageGap) + 2 * radius,
@@ -260,43 +204,36 @@ export function buildFunnel(
                     ? { show: false }
                     : {
                           show: true,
-                          position: inside
-                              ? "inside"
-                              : vertical
-                              ? "right"
-                              : "bottom",
-                          formatter: (params: { dataIndex: number }) =>
-                              labelText(params.dataIndex),
-                          ...(labelWidth !== undefined
-                              ? { width: labelWidth, overflow: "truncate" }
-                              : {}),
+                          position: inside ? "inside" : vertical ? "right" : "bottom",
+                          formatter: (params: { dataIndex: number }) => labelText(params.dataIndex),
+                          ...(labelWidth !== undefined ? { width: labelWidth, overflow: "truncate" } : {}),
                           rich: inside
                               ? insideRich("#FFFFFF")
                               : {
                                     name: {
                                         color: tokens.label,
                                         fontSize: 11,
-                                        lineHeight: 15,
+                                        lineHeight: 15
                                     },
                                     value: {
                                         color: tokens.text,
                                         fontFamily: figures,
                                         fontSize: 12,
                                         fontWeight: 600,
-                                        lineHeight: 16,
+                                        lineHeight: 16
                                     },
                                     rate: {
                                         color: tokens.label,
                                         fontFamily: figures,
                                         fontSize: 11,
-                                        lineHeight: 16,
-                                    },
-                                },
+                                        lineHeight: 16
+                                    }
+                                }
                       },
             labelLine: {
                 show: outside && vertical,
                 length: 12,
-                lineStyle: { color: tokens.grid, width: 1 },
+                lineStyle: { color: tokens.grid, width: 1 }
             },
             emphasis: { label: { show: settings.labelPosition !== "hidden" } },
             data: items.map((item, i) => ({
@@ -307,68 +244,54 @@ export function buildFunnel(
                 ...(inside
                     ? {
                           label: {
-                              rich: insideRich(
-                                  readableInk(colors[i], "#111318", "#FFFFFF")
-                              ),
-                          },
+                              rich: insideRich(readableInk(colors[i], "#111318", "#FFFFFF"))
+                          }
                       }
                     : {}),
-                ...(leaders[i] !== undefined
-                    ? { labelLine: { length: leaders[i] } }
-                    : {}),
+                ...(leaders[i] !== undefined ? { labelLine: { length: leaders[i] } } : {}),
                 itemStyle: {
                     color: colors[i],
                     borderColor: colors[i],
                     borderWidth: 2 * radius,
                     ...glowStyle(colors[i], tokens, style),
-                    shadowOffsetY: 3,
-                },
-            })),
-        },
+                    shadowOffsetY: 3
+                }
+            }))
+        }
     ];
 
     const tooltipFormatter = createTooltipFormatter({
         tokens,
         style,
-        formatValue: (value) => formatNumber(value),
+        formatValue: value => formatNumber(value),
         headerOf: () => "",
-        nameOf: (param) => {
+        nameOf: param => {
             const index = names.indexOf(param.name ?? "");
             const rate = conversion[index];
-            return rate === undefined
-                ? param.name ?? ""
-                : `${param.name ?? ""} · ${formatPercent(rate)}`;
+            return rate === undefined ? (param.name ?? "") : `${param.name ?? ""} · ${formatPercent(rate)}`;
         },
-        colorOf: (param) => colors[names.indexOf(param.name ?? "")],
+        colorOf: param => colors[names.indexOf(param.name ?? "")]
     });
 
     const option: Record<string, unknown> = {
         ...baseOption(tokens, style),
         legend: legend.option,
         tooltip: tooltipOption(tokens, style, "item", tooltipFormatter),
-        series,
+        series
     };
 
-    const rateColumn =
-        settings.conversion === "previous"
-            ? "Share of the previous stage"
-            : "Share of the first stage";
+    const rateColumn = settings.conversion === "previous" ? "Share of the previous stage" : "Share of the first stage";
     return {
         option,
-        clickTargets: [items.map((item) => item.target)],
+        clickTargets: [items.map(item => item.target)],
         breadcrumb: level.breadcrumb,
         table: {
-            columns:
-                settings.conversion === "off"
-                    ? ["Stage", "Value"]
-                    : ["Stage", "Value", rateColumn],
+            columns: settings.conversion === "off" ? ["Stage", "Value"] : ["Stage", "Value", rateColumn],
             rows: items.map((item, i) => {
                 const row = [item.name, formatNumber(item.value)];
-                return settings.conversion === "off"
-                    ? row
-                    : [...row, formatPercent(conversion[i])];
-            }),
+                return settings.conversion === "off" ? row : [...row, formatPercent(conversion[i])];
+            })
         },
-        pointCount: items.length,
+        pointCount: items.length
     };
 }

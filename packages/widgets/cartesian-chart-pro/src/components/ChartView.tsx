@@ -1,10 +1,4 @@
-import type {
-    ChartTokens,
-    DrillStep,
-    ElementSize,
-    HeightUnit,
-    ThemeSettings,
-} from "@kendallchristy/chart-core";
+import type { ChartTokens, DrillStep, ElementSize, HeightUnit, ThemeSettings } from "@kendallchristy/chart-core";
 import { ChartFrame } from "@kendallchristy/chart-core";
 import type { CSSProperties, ReactElement } from "react";
 import { useCallback } from "react";
@@ -29,11 +23,8 @@ export interface ChartViewProps {
 export function ChartView(props: ChartViewProps): ReactElement {
     const { series, settings } = props;
     const build = useCallback(
-        (
-            tokens: ChartTokens,
-            path: Array<DrillStep<DrillValue>>,
-            size: ElementSize
-        ) => buildChart(series, settings, tokens, path, size),
+        (tokens: ChartTokens, path: Array<DrillStep<DrillValue>>, size: ElementSize) =>
+            buildChart(series, settings, tokens, path, size),
         [series, settings]
     );
     return (
