@@ -13,6 +13,8 @@ export interface CategoryPoint {
     color?: string;
     tooltip?: string;
     action?: ClickAction;
+    /** The value of the Group attribute, for widgets that cluster or colour items by group. */
+    group?: string;
     /** Values of the Drilldown level 2 and 3 attributes. */
     drill: Array<string | undefined>;
 }
@@ -39,6 +41,8 @@ export interface CategoryItem {
     color?: string;
     /** From the Tooltip text template, when the item stands for a single object. */
     tooltip?: string;
+    /** The group of the item's first object that has one. */
+    group?: string;
     /** True for the item that holds everything past the limit. */
     other: boolean;
     target: ClickTarget<string>;
@@ -115,6 +119,7 @@ export function categoryLevel(
             name,
             value,
             color: group.find(p => p.color)?.color,
+            group: group.find(p => p.group !== undefined)?.group,
             tooltip: group.length === 1 ? group[0].tooltip : undefined,
             other: false,
             target: deeper ? { drill: { label: name, value: name } } : { action: group[0].action }
@@ -152,6 +157,7 @@ export interface CategoryDataProps {
     colorExpression?: ListExpressionValue<string>;
     tooltipText?: ListExpressionValue<string>;
     onClick?: ListActionValue;
+    groupAttribute?: ListAttributeValue;
     drillAttribute1?: ListAttributeValue;
     drillAttribute2?: ListAttributeValue;
 }
@@ -180,6 +186,7 @@ export function readCategoryPoints(props: CategoryDataProps): CategoryPoint[] {
             get action() {
                 return onClick?.get(item);
             },
+            group: readText(props.groupAttribute, item),
             drill: [readText(props.drillAttribute1, item), readText(props.drillAttribute2, item)]
         });
     }

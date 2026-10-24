@@ -165,4 +165,26 @@ describe("category helpers", () => {
     it("has sample data", () => {
         expect(sampleCategoryPoints(3).map(p => p.category)).toEqual(["Direct", "Search", "Social"]);
     });
+
+    it("reads the group, and gives each item its first object's group", () => {
+        const attr = (value: unknown) => ({
+            get: () => ({ value, displayValue: String(value) })
+        });
+        const points = readCategoryPoints({
+            dataSource: { items: [{ id: "1" }], status: "available" },
+            categoryAttribute: attr("A"),
+            groupAttribute: attr("Hardware")
+        } as never);
+        expect(points[0].group).toBe("Hardware");
+
+        const level = categoryLevel(
+            [point("A", 1), { ...point("A", 2), group: "Software" }, { ...point("B", 3), group: "Hardware" }],
+            options(),
+            []
+        );
+        expect(level.items.map(i => [i.name, i.group])).toEqual([
+            ["A", "Software"],
+            ["B", "Hardware"]
+        ]);
+    });
 });
