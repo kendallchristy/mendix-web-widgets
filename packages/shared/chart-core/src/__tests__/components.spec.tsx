@@ -6,7 +6,7 @@ import { ChartFrame, themeSettingsFromProps } from "../components/ChartFrame";
 import type { DrillStep } from "../hooks/useDrillPath";
 import { defaultChartStyle } from "../options/style";
 import { EChart } from "../components/EChart";
-import { charts } from "../__mocks__/echarts/core";
+import { charts, failures } from "../__mocks__/echarts/core";
 
 describe("Breadcrumb", () => {
     it("is hidden at the top level", () => {
@@ -37,6 +37,38 @@ describe("EChart", () => {
 
         chart.handlers.click({ componentType: "series", dataIndex: 0 });
         expect(onClick).toHaveBeenCalled();
+    });
+
+    it("starts a fresh chart when an update fails, and reports an option that fails even then", () => {
+        const onClick = jest.fn();
+        const onError = jest.fn();
+        const { rerender } = render(
+            <EChart option={{ a: 1 }} theme={{}} renderer="svg" onClick={onClick} onError={onError} />
+        );
+        const first = charts[charts.length - 1];
+
+        failures.count = 1;
+        rerender(<EChart option={{ a: 2 }} theme={{}} renderer="svg" onClick={onClick} onError={onError} />);
+        const fresh = charts[charts.length - 1];
+        expect(first.disposed).toBe(true);
+        expect(fresh).not.toBe(first);
+        expect(fresh.options).toEqual([{ a: 2 }]);
+        expect(onError).toHaveBeenLastCalledWith(undefined, { a: 2 });
+        fresh.handlers.click({ componentType: "series", dataIndex: 0 });
+        expect(onClick).toHaveBeenCalled();
+
+        failures.count = 2;
+        rerender(<EChart option={{ a: 3 }} theme={{}} renderer="svg" onClick={onClick} onError={onError} />);
+        expect(onError).toHaveBeenLastCalledWith("Cannot read properties of undefined (reading 'get')", { a: 3 });
+    });
+
+    it("puts the current option back after a theme change", () => {
+        const { rerender } = render(<EChart option={{ a: 1 }} theme={{ t: 1 }} renderer="svg" />);
+        const chart = charts[charts.length - 1];
+        rerender(<EChart option={{ a: 2 }} theme={{ t: 1 }} renderer="svg" />);
+        rerender(<EChart option={{ a: 2 }} theme={{ t: 2 }} renderer="svg" />);
+        expect(chart.theme).toEqual({ t: 2 });
+        expect(chart.options.at(-1)).toEqual({ a: 2 });
     });
 });
 
@@ -95,6 +127,15 @@ describe("ChartFrame", () => {
             />
         );
         expect(screen.getByRole("alert")).toHaveTextContent("Option override");
+    });
+
+    it("shows ECharts' error for an option it can't draw, and tries the next option afresh", () => {
+        failures.count = 1;
+        const { rerender } = render(<ChartFrame {...props()} />);
+        expect(screen.getByText(/The chart couldn't be drawn: Cannot read properties/)).toBeInTheDocument();
+        const other = jest.fn((): BuiltChart<string> => ({ ...build({}, []), option: { series: [] } }));
+        rerender(<ChartFrame {...props({ build: other })} />);
+        expect(screen.queryByText(/couldn't be drawn/)).not.toBeInTheDocument();
     });
 
     it("shows loading and empty states", () => {

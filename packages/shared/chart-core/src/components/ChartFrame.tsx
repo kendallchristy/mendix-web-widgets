@@ -155,6 +155,13 @@ export function ChartFrame<D>(props: ChartFrameProps<D>): ReactElement {
     // The placeholder stays up until the chart has actually drawn, not just until the data arrived.
     const [drawn, setDrawn] = useState(false);
     const onRendered = useCallback(() => setDrawn(true), []);
+    // ECharts' own error for an option it couldn't draw. It stays with that option, so the next one gets a fresh try.
+    const [drawError, setDrawError] = useState<{ message: string; option: unknown }>();
+    const onError = useCallback(
+        (message: string | undefined, failed: unknown) =>
+            setDrawError(message === undefined ? undefined : { message, option: failed }),
+        []
+    );
 
     const { push } = drillPath;
     const onClick = useCallback(
@@ -175,7 +182,8 @@ export function ChartFrame<D>(props: ChartFrameProps<D>): ReactElement {
     const errors = [
         ...customTheme.errors.map(e => `Theme JSON: ${e}`),
         ...override.errors.map(e => `Option override: ${e}`),
-        ...(built?.errors ?? [])
+        ...(built?.errors ?? []),
+        ...(drawError && drawError.option === option ? [`The chart couldn't be drawn: ${drawError.message}`] : [])
     ];
 
     let body: ReactElement;
@@ -195,6 +203,7 @@ export function ChartFrame<D>(props: ChartFrameProps<D>): ReactElement {
                     renderer={props.renderer}
                     onClick={onClick}
                     onRendered={onRendered}
+                    onError={onError}
                 />
                 {!drawn && <ChartStatus kind="loading" />}
             </>

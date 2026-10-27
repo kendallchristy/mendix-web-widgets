@@ -29,16 +29,26 @@ Every data set becomes an ECharts dataset whose `id` is its name, with one row p
 
 Series that don't take datasets, such as sankey and treemap, use placeholders instead. A placeholder is a string anywhere in the option that the widget replaces with data:
 
-| Placeholder             | Becomes                                                                                                 | For                                                                   |
-| ----------------------- | ------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| `"$rows:Sales"`         | The rows as objects, one key per field: `[{ "month": "Jan", "value": 2100 }, …]`                        | Sankey and graph links, scatter points, any `data` that takes objects |
-| `"$column:Sales.value"` | One field's values: `[2100, 2250, …]`                                                                   | `xAxis.data`, a simple series' `data`                                 |
-| `"$tree:Budget"`        | A tree built from the `name`, `parent` and `value` fields. Rows whose parent isn't found are top-level. | Treemap, sunburst, tree                                               |
-| `"$nodes:Flows"`        | The distinct names in the `source` and `target` fields, each in the next palette colour                 | Sankey and graph nodes                                                |
+| Placeholder             | Becomes                                                                                                                                                                                                                            | For                                                                   |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `"$rows:Sales"`         | The rows. Series on axes (line, bar, scatter and the like) get each row as a list of values, with the fields named so `encode` can use them. Other series get objects, one key per field: `[{ "month": "Jan", "value": 2100 }, …]` | Scatter points, sankey and graph links, pie slices, any series `data` |
+| `"$column:Sales.value"` | One field's values: `[2100, 2250, …]`                                                                                                                                                                                              | `xAxis.data`, a simple series' `data`                                 |
+| `"$tree:Budget"`        | A tree built from the `name`, `parent` and `value` fields. Rows whose parent isn't found are top-level.                                                                                                                            | Treemap, sunburst, tree                                               |
+| `"$nodes:Flows"`        | The distinct names in the `source` and `target` fields, each in the next palette colour                                                                                                                                            | Sankey and graph nodes                                                |
 
 Data set names may use letters, digits and underscores. A placeholder that names a data set or field that doesn't exist shows an error in place of the chart, so typos are caught straight away.
 
 ### Examples
+
+A scatter of two fields from a Sales data set with `Revenue` and `Target` fields:
+
+```json
+{
+    "xAxis": { "type": "value", "name": "Revenue" },
+    "yAxis": { "type": "value", "name": "Target" },
+    "series": [{ "type": "scatter", "data": "$rows:Sales", "encode": { "x": "Revenue", "y": "Target" } }]
+}
+```
 
 A sankey from a Flows data set with `source`, `target` and `value` fields:
 
@@ -84,7 +94,7 @@ Studio Pro can't load the app's files, so the design-mode preview shows a note i
 
 ## Empty data and errors
 
-When every data set is empty, the chart shows the **No data message**. A chart without data sets draws whatever its option holds. Invalid JSON, or a placeholder that names something missing, shows the problem in place of the chart, and Studio Pro flags invalid JSON, unnamed fields and duplicate data set names before you run the app.
+When every data set is empty, the chart shows the **No data message**. A chart without data sets draws whatever its option holds. Invalid JSON, a placeholder that names something missing, or a series on axes the option doesn't have (say `yAxisIndex: 1` with one `yAxis`) shows the problem in place of the chart. So does any other option ECharts can't draw, with ECharts' own message, and Studio Pro flags invalid JSON, unnamed fields and duplicate data set names before you run the app.
 
 ## Accessibility
 

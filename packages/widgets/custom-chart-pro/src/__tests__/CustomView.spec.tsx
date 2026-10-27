@@ -41,7 +41,10 @@ describe("CustomView", () => {
             ],
             actionOf: row => (row === 1 ? { canExecute: true, execute } : undefined)
         };
-        view([set], JSON.stringify({ series: { type: "bar", datasetId: "Sales" } }));
+        view(
+            [set],
+            JSON.stringify({ xAxis: { type: "category" }, yAxis: {}, series: { type: "bar", datasetId: "Sales" } })
+        );
         expect(screen.getByRole("table")).toHaveTextContent("Feb");
         const chart = charts[charts.length - 1];
         act(() => chart.handlers.click({ componentType: "series", seriesIndex: 0, dataIndex: 1 }));

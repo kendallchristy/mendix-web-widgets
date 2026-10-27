@@ -10,9 +10,13 @@ export interface FakeChart {
     off: (event: string) => void;
     resize: () => void;
     dispose: () => void;
+    disposed: boolean;
 }
 
 export const charts: FakeChart[] = [];
+
+/** Makes the next setOption calls throw, the way ECharts does when it can't draw an option. */
+export const failures = { count: 0, message: "Cannot read properties of undefined (reading 'get')" };
 
 export function init(_element: unknown, theme: unknown): FakeChart {
     const chart: FakeChart = {
@@ -20,6 +24,10 @@ export function init(_element: unknown, theme: unknown): FakeChart {
         theme,
         handlers: {},
         setOption: option => {
+            if (failures.count > 0) {
+                failures.count -= 1;
+                throw new TypeError(failures.message);
+            }
             chart.options.push(option);
             chart.handlers.rendered?.({});
         },
@@ -33,7 +41,10 @@ export function init(_element: unknown, theme: unknown): FakeChart {
             delete chart.handlers[event];
         },
         resize: () => undefined,
-        dispose: () => undefined
+        dispose: () => {
+            chart.disposed = true;
+        },
+        disposed: false
     };
     charts.push(chart);
     return chart;
