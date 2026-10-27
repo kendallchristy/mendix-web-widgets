@@ -77,7 +77,68 @@ describe("buildCustom", () => {
         ).option as any;
         expect(option.xAxis.data).toEqual(["Jan", "Feb"]);
         expect(option.series[0].data).toEqual([3, 5]);
-        expect(option.series[1].data).toEqual(SALES.rows);
+        // Series on axes read values by position, so each row becomes a list, with the fields named for encode.
+        expect(option.series[1].data).toEqual([
+            ["Jan", 3],
+            ["Feb", 5]
+        ]);
+        expect(option.series[1].dimensions).toEqual(["month", "value"]);
+    });
+
+    it("hands $rows to series that take objects as they are", () => {
+        const option = buildCustom([SALES], settings({ series: [{ type: "pie", data: "$rows:Sales" }] }), HYPER_LIGHT)
+            .option as any;
+        expect(option.series[0].data).toEqual(SALES.rows);
+        expect(option.series[0].dimensions).toBeUndefined();
+    });
+
+    it("plots a scatter of two fields by name", () => {
+        const targets = dataSet("Sales", [
+            { Revenue: 120, Target: 100 },
+            { Revenue: 80, Target: 90 }
+        ]);
+        const option = buildCustom(
+            [targets],
+            settings({
+                xAxis: { type: "value" },
+                yAxis: { type: "value" },
+                series: [{ type: "scatter", data: "$rows:Sales", encode: { x: "Revenue", y: "Target" } }]
+            }),
+            HYPER_LIGHT
+        ).option as any;
+        expect(option.series[0]).toMatchObject({
+            dimensions: ["Revenue", "Target"],
+            data: [
+                [120, 100],
+                [80, 90]
+            ],
+            encode: { x: "Revenue", y: "Target" }
+        });
+    });
+
+    it("reports series that name an axis the option doesn't have", () => {
+        const errors = (option: object): string[] | undefined => buildCustom([], settings(option), HYPER_LIGHT).errors;
+        expect(errors({ series: [{ type: "bar", data: [1] }] })).toEqual([
+            "Series 1 (bar) is drawn on x and y axes, but the option has no xAxis.",
+            "Series 1 (bar) is drawn on x and y axes, but the option has no yAxis."
+        ]);
+        expect(
+            errors({
+                xAxis: {},
+                yAxis: [{}],
+                series: [
+                    { type: "line", data: [1] },
+                    { type: "line", yAxisIndex: 1, data: [1] }
+                ]
+            })
+        ).toEqual(["Series 2 (line) uses yAxisIndex 1, but the option has only 1 yAxis."]);
+        expect(errors({ xAxis: {}, yAxis: {}, series: [{ type: "line", xAxisId: "time", data: [1] }] })).toEqual([
+            'Series 1 (line) uses xAxisId "time", but no xAxis has that id.'
+        ]);
+        expect(
+            errors({ polar: {}, angleAxis: {}, radiusAxis: {}, series: [{ type: "bar", coordinateSystem: "polar" }] })
+        ).toEqual([]);
+        expect(errors({ series: [{ type: "pie", data: [1] }] })).toEqual([]);
     });
 
     it("appends the data sets as datasets after the option's own", () => {
@@ -103,6 +164,8 @@ describe("buildCustom", () => {
         const built = buildCustom(
             [SALES],
             settings({
+                xAxis: {},
+                yAxis: {},
                 series: [
                     { type: "bar", data: "$rows:Orders" },
                     { type: "bar", data: "$column:Sales.cost" }

@@ -174,6 +174,37 @@ export function hyperSeriesDefaults(type: unknown, tokens: ChartTokens): Record<
     }
 }
 
+/**
+ * Series types whose data items are lists of values read by position, such as [x, y]. A row object means nothing to
+ * them, so "$rows:…" hands them each row as a list instead. Pie, graph, sankey and the like take row objects as they are.
+ */
+const ROW_ARRAY_TYPES = new Set([
+    "line",
+    "bar",
+    "scatter",
+    "effectScatter",
+    "pictorialBar",
+    "candlestick",
+    "boxplot",
+    "heatmap",
+    "parallel",
+    "themeRiver",
+    "custom"
+]);
+
+/** Series types that sit on an x and a y axis unless their coordinateSystem says otherwise. */
+const CARTESIAN_TYPES = new Set([
+    "line",
+    "bar",
+    "scatter",
+    "effectScatter",
+    "pictorialBar",
+    "candlestick",
+    "boxplot",
+    "heatmap",
+    "custom"
+]);
+
 const asList = (value: unknown): unknown[] => (Array.isArray(value) ? value : value === undefined ? [] : [value]);
 
 /** Builds the chart from the option JSON and the data sets. */
@@ -211,10 +242,28 @@ export function buildCustom(sets: DataSet[], settings: CustomSettings, tokens: C
             return { value: resolved };
         }
         const data = resolve(own, byName, tokens.palette, errors);
+        if (data.rows && ROW_ARRAY_TYPES.has(String(s.type)) && typeof own === "string" && own.startsWith("$rows:")) {
+            // Series on axes read values by position, so their rows become arrays, with the fields named for encode.
+            const { set } = data.rows;
+            return {
+                value: {
+                    dimensions: set.fields,
+                    ...resolved,
+                    data: set.rows.map(row => set.fields.map(field => row[field]))
+                },
+                rows: data.rows
+            };
+        }
         return { value: { ...resolved, data: data.value }, rows: data.rows };
     });
     const { series: _series, dataset: ownDatasets, ...others } = user;
     const option = resolve(others, byName, tokens.palette, errors).value as Record<string, unknown>;
+    errors.push(
+        ...axisProblems(
+            series.map(s => s.value),
+            option
+        )
+    );
     const userDatasets = asList(ownDatasets);
     const datasets = [...userDatasets, ...datasetsOf(sets)];
 
@@ -263,6 +312,38 @@ export function buildCustom(sets: DataSet[], settings: CustomSettings, tokens: C
         pointCount: sets.length === 0 ? 1 : rowCount,
         errors
     };
+}
+
+/**
+ * Series on x and y axes that name an axis the option doesn't have. ECharts fails on these with an unhelpful
+ * "Cannot read properties of undefined", so they are reported in words instead.
+ */
+function axisProblems(series: unknown[], option: Record<string, unknown>): string[] {
+    const problems: string[] = [];
+    series.forEach((s, i) => {
+        if (!isPlainObject(s) || !CARTESIAN_TYPES.has(String(s.type))) {
+            return;
+        }
+        if (s.coordinateSystem !== undefined && s.coordinateSystem !== "cartesian2d") {
+            return;
+        }
+        for (const axis of ["xAxis", "yAxis"]) {
+            const axes = asList(option[axis]);
+            const id = s[`${axis}Id`];
+            const index = s[`${axis}Index`] ?? 0;
+            const label = `Series ${i + 1} (${String(s.type)})`;
+            if (axes.length === 0) {
+                problems.push(`${label} is drawn on x and y axes, but the option has no ${axis}.`);
+            } else if (id !== undefined) {
+                if (!axes.some(a => isPlainObject(a) && a.id === id)) {
+                    problems.push(`${label} uses ${axis}Id "${String(id)}", but no ${axis} has that id.`);
+                }
+            } else if (typeof index === "number" && index >= axes.length) {
+                problems.push(`${label} uses ${axis}Index ${index}, but the option has only ${axes.length} ${axis}.`);
+            }
+        }
+    });
+    return problems;
 }
 
 function datasetRows(set: DataSet | undefined): { set: DataSet; order: number[] } | undefined {
