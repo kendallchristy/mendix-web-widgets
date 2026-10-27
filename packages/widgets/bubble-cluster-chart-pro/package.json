@@ -1,7 +1,7 @@
 {
     "name": "@kendallchristy/bubble-cluster-chart-pro",
     "widgetName": "BubbleClusterChartPro",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "private": true,
     "description": "Packed bubbles with value pills, built on Apache ECharts.",
     "license": "Apache-2.0",

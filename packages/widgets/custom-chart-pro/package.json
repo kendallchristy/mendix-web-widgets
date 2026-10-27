@@ -1,7 +1,7 @@
 {
     "name": "@kendallchristy/custom-chart-pro",
     "widgetName": "CustomChartPro",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "private": true,
     "description": "Any chart Apache ECharts can draw, from option JSON with Mendix data sources as datasets.",
     "license": "Apache-2.0",
