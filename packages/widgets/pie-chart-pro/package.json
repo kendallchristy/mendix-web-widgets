@@ -1,7 +1,7 @@
 {
     "name": "@kendallchristy/pie-chart-pro",
     "widgetName": "PieChartPro",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "private": true,
     "description": "Pie, donut, half donut and rose charts built on Apache ECharts.",
     "license": "Apache-2.0",

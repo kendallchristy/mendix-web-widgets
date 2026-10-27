@@ -1,7 +1,7 @@
 {
     "name": "@kendallchristy/toast-pro",
     "widgetName": "ToastPro",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "private": true,
     "description": "Toast notifications with expression timing, event actions, buttons and custom content.",
     "license": "Apache-2.0",
