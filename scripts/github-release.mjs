@@ -40,7 +40,8 @@ for (const dir of widgetDirs()) {
     }
 
     console.log(`Releasing ${tag}`);
-    run("pnpm", ["--filter", pkg.name, "run", "release"], { stdio: "inherit" });
+    // Through turbo, so shared packages the widget imports are built first.
+    run("pnpm", ["exec", "turbo", "run", "release", `--filter=${pkg.name}`], { stdio: "inherit" });
     const mpk = join(dir, "dist", pkg.version, `${pkg.packagePath}.${pkg.widgetName}.mpk`);
     if (!existsSync(mpk)) {
         throw new Error(`Expected ${mpk} after the release build`);
