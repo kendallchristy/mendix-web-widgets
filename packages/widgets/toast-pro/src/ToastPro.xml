@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<widget id="com.kendallchristy.widget.web.toastpro.ToastPro" pluginWidget="true" offlineCapable="true" supportedPlatform="Web" xmlns="http://www.mendix.com/widget/1.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mendix.com/widget/1.0/ ../node_modules/mendix/custom_widget.xsd">
+    <name>Toast Pro</name>
+    <description>Toast notifications with expression timing, event actions, buttons and custom content.</description>
+    <studioProCategory>Display</studioProCategory>
+    <studioCategory>Display</studioCategory>
+    <helpUrl>https://github.com/kendallchristy/mendix-web-widgets/blob/main/packages/widgets/toast-pro/README.md</helpUrl>
+    <properties>
+        <propertyGroup caption="General">
+            <propertyGroup caption="Show">
+                <property key="trigger" type="enumeration" defaultValue="LOAD">
+                    <caption>Show toast</caption>
+                    <description>On load shows the toast when the widget appears, so Studio Pro's visibility settings can control it. The other two show it each time the value turns true.</description>
+                    <enumerationValues>
+                        <enumerationValue key="LOAD">On load</enumerationValue>
+                        <enumerationValue key="EXPRESSION">When an expression is true</enumerationValue>
+                        <enumerationValue key="ATTRIBUTE">When a Boolean attribute is true</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="showWhen" type="expression" required="false">
+                    <caption>Show when</caption>
+                    <description>The toast shows each time this turns from false to true.</description>
+                    <returnType type="Boolean" />
+                </property>
+                <property key="showAttribute" type="attribute" required="false">
+                    <caption>Show attribute</caption>
+                    <description>Set this to true, for example in a microflow, to show the toast. The widget sets it back to false when the toast closes.</description>
+                    <attributeTypes>
+                        <attributeType name="Boolean" />
+                    </attributeTypes>
+                </property>
+                <property key="closeWhen" type="expression" required="false">
+                    <caption>Close when</caption>
+                    <description>Closes the toast as soon as this is true, for example when a background job is done.</description>
+                    <returnType type="Boolean" />
+                </property>
+                <property key="groupKey" type="expression" required="false">
+                    <caption>Group key</caption>
+                    <description>A new toast replaces an open toast with the same key instead of stacking on it. Leave empty to always stack.</description>
+                    <returnType type="String" />
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Content">
+                <property key="variant" type="enumeration" defaultValue="INFO">
+                    <caption>Variant</caption>
+                    <description>Sets the color, icon and how screen readers announce the toast.</description>
+                    <enumerationValues>
+                        <enumerationValue key="SUCCESS">Success</enumerationValue>
+                        <enumerationValue key="INFO">Info</enumerationValue>
+                        <enumerationValue key="WARNING">Warning</enumerationValue>
+                        <enumerationValue key="ERROR">Error</enumerationValue>
+                        <enumerationValue key="NEUTRAL">Neutral</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="variantExpression" type="expression" required="false">
+                    <caption>Variant from data</caption>
+                    <description>Optional. Returns 'success', 'info', 'warning', 'error' or 'neutral' and wins over Variant when it does.</description>
+                    <returnType type="String" />
+                </property>
+                <property key="title" type="textTemplate" required="false">
+                    <caption>Title</caption>
+                    <description>Bold first line. [seconds] shows the seconds left before the toast closes.</description>
+                </property>
+                <property key="message" type="textTemplate" required="false">
+                    <caption>Message</caption>
+                    <description>Text under the title. [seconds] shows the seconds left before the toast closes.</description>
+                </property>
+                <property key="showIcon" type="boolean" defaultValue="true">
+                    <caption>Show icon</caption>
+                    <description />
+                </property>
+                <property key="customIcon" type="icon" required="false">
+                    <caption>Custom icon</caption>
+                    <description>Replaces the variant's icon.</description>
+                </property>
+                <property key="useCustomContent" type="boolean" defaultValue="false">
+                    <caption>Custom content</caption>
+                    <description>Adds a drop zone for any widgets. A clicked element with the class toast-pro-close closes the toast.</description>
+                </property>
+                <property key="customContent" type="widgets" required="false">
+                    <caption>Content</caption>
+                    <description />
+                </property>
+                <property key="customContentPlacement" type="enumeration" defaultValue="BELOW">
+                    <caption>Custom content placement</caption>
+                    <description />
+                    <enumerationValues>
+                        <enumerationValue key="BELOW">Below the message</enumerationValue>
+                        <enumerationValue key="REPLACE">Instead of title and message</enumerationValue>
+                    </enumerationValues>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Buttons">
+                <property key="buttons" type="object" isList="true" required="false">
+                    <caption>Buttons</caption>
+                    <description>Buttons in the toast, for example Undo or View.</description>
+                    <properties>
+                        <propertyGroup caption="Button">
+                            <property key="caption" type="textTemplate">
+                                <caption>Caption</caption>
+                                <description>[seconds] shows the seconds left, for example Undo ([seconds]).</description>
+                            </property>
+                            <property key="buttonStyle" type="enumeration" defaultValue="PRIMARY">
+                                <caption>Style</caption>
+                                <description />
+                                <enumerationValues>
+                                    <enumerationValue key="PRIMARY">Primary</enumerationValue>
+                                    <enumerationValue key="SECONDARY">Secondary</enumerationValue>
+                                    <enumerationValue key="LINK">Link</enumerationValue>
+                                </enumerationValues>
+                            </property>
+                            <property key="action" type="action" required="false">
+                                <caption>On click</caption>
+                                <description />
+                            </property>
+                            <property key="closeOnClick" type="boolean" defaultValue="true">
+                                <caption>Close after click</caption>
+                                <description />
+                            </property>
+                            <property key="visible" type="expression" defaultValue="true">
+                                <caption>Visible</caption>
+                                <description />
+                                <returnType type="Boolean" />
+                            </property>
+                        </propertyGroup>
+                    </properties>
+                </property>
+                <property key="showCloseButton" type="boolean" defaultValue="true">
+                    <caption>Close button</caption>
+                    <description>Shows an X in the corner.</description>
+                </property>
+                <property key="closeButtonLabel" type="textTemplate" required="false">
+                    <caption>Close button label</caption>
+                    <description>Read by screen readers.</description>
+                    <translations>
+                        <translation lang="en_US">Close</translation>
+                    </translations>
+                </property>
+            </propertyGroup>
+        </propertyGroup>
+        <propertyGroup caption="Timing">
+            <propertyGroup caption="Closing">
+                <property key="duration" type="expression" required="false" defaultValue="5000">
+                    <caption>Close after (ms)</caption>
+                    <description>Milliseconds before the toast closes by itself. Empty or 0 keeps it open until it is closed.</description>
+                    <returnType type="Integer" />
+                </property>
+                <property key="pauseOnHover" type="boolean" defaultValue="true">
+                    <caption>Pause on hover and focus</caption>
+                    <description>Stops the countdown while the pointer is on the toasts or focus is inside one.</description>
+                </property>
+                <property key="pauseWhenHidden" type="boolean" defaultValue="true">
+                    <caption>Pause when the tab is hidden</caption>
+                    <description />
+                </property>
+                <property key="showProgress" type="boolean" defaultValue="true">
+                    <caption>Countdown bar</caption>
+                    <description>A thin bar that shows the time left.</description>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Loading">
+                <property key="busy" type="expression" required="false">
+                    <caption>Busy</caption>
+                    <description>While true the toast shows a spinner and doesn't count down. Use it with Variant from data to switch to success or error when the work is done.</description>
+                    <returnType type="Boolean" />
+                </property>
+            </propertyGroup>
+        </propertyGroup>
+        <propertyGroup caption="Events">
+            <propertyGroup caption="Showing">
+                <property key="onBeforeShow" type="action" required="false">
+                    <caption>On before show</caption>
+                    <description>Runs before the toast appears. The toast waits until it finishes (at most 10 seconds).</description>
+                </property>
+                <property key="onShow" type="action" required="false">
+                    <caption>On show</caption>
+                    <description>Runs when the toast appears.</description>
+                </property>
+                <property key="onClick" type="action" required="false">
+                    <caption>On click</caption>
+                    <description>Runs when the toast itself is clicked (not a button in it).</description>
+                </property>
+                <property key="closeOnToastClick" type="boolean" defaultValue="false">
+                    <caption>Close on click</caption>
+                    <description>Closes the toast when it is clicked.</description>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Closing">
+                <property key="onTimeout" type="action" required="false">
+                    <caption>On timeout</caption>
+                    <description>Runs when the toast closes because its time ran out.</description>
+                </property>
+                <property key="onDismiss" type="action" required="false">
+                    <caption>On dismiss</caption>
+                    <description>Runs when the user closes the toast with the X, a swipe or Escape.</description>
+                </property>
+                <property key="onBeforeClose" type="action" required="false">
+                    <caption>On before close</caption>
+                    <description>Runs before the toast leaves, whatever closed it. The toast waits until it finishes (at most 10 seconds).</description>
+                </property>
+                <property key="onClose" type="action" required="false">
+                    <caption>On close</caption>
+                    <description>Runs after the toast is gone, whatever closed it.</description>
+                </property>
+                <property key="closeReasonAttribute" type="attribute" required="false">
+                    <caption>Close reason attribute</caption>
+                    <description>Gets why the toast closed before On before close runs: Timeout, Dismissed, Button, Click, Content, Condition or Replaced. For an enumeration, use these as the keys.</description>
+                    <attributeTypes>
+                        <attributeType name="String" />
+                        <attributeType name="Enum" />
+                    </attributeTypes>
+                </property>
+            </propertyGroup>
+        </propertyGroup>
+        <propertyGroup caption="Appearance">
+            <propertyGroup caption="Placement">
+                <property key="position" type="enumeration" defaultValue="BOTTOM_RIGHT">
+                    <caption>Position</caption>
+                    <description>Toasts in the same position share one stack. On phones they always use the full width.</description>
+                    <enumerationValues>
+                        <enumerationValue key="TOP_LEFT">Top left</enumerationValue>
+                        <enumerationValue key="TOP_CENTER">Top center</enumerationValue>
+                        <enumerationValue key="TOP_RIGHT">Top right</enumerationValue>
+                        <enumerationValue key="BOTTOM_LEFT">Bottom left</enumerationValue>
+                        <enumerationValue key="BOTTOM_CENTER">Bottom center</enumerationValue>
+                        <enumerationValue key="BOTTOM_RIGHT">Bottom right</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="stackMode" type="enumeration" defaultValue="STACKED">
+                    <caption>Stacking</caption>
+                    <description>Stacked tucks older toasts behind the newest and fans them out on hover.</description>
+                    <enumerationValues>
+                        <enumerationValue key="STACKED">Stacked</enumerationValue>
+                        <enumerationValue key="EXPANDED">Always expanded</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="maxVisible" type="integer" defaultValue="3">
+                    <caption>Most visible</caption>
+                    <description>Toasts past this number wait, with their countdown paused, until there is room.</description>
+                </property>
+                <property key="width" type="integer" defaultValue="360">
+                    <caption>Width (px)</caption>
+                    <description />
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Style">
+                <property key="coloredBackground" type="boolean" defaultValue="false">
+                    <caption>Colored background</caption>
+                    <description>Tints the whole toast in the variant's color instead of only the icon.</description>
+                </property>
+                <property key="animation" type="enumeration" defaultValue="SLIDE">
+                    <caption>Animation</caption>
+                    <description>Users who turn on reduced motion get a fade.</description>
+                    <enumerationValues>
+                        <enumerationValue key="SLIDE">Slide</enumerationValue>
+                        <enumerationValue key="FADE">Fade</enumerationValue>
+                        <enumerationValue key="SCALE">Scale</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="swipeToDismiss" type="boolean" defaultValue="true">
+                    <caption>Swipe to dismiss</caption>
+                    <description>Drag the toast sideways to close it.</description>
+                </property>
+            </propertyGroup>
+        </propertyGroup>
+    </properties>
+</widget>
