@@ -1,0 +1,79 @@
+import type { FileKind } from "../core/fileTypes";
+import type { Labels } from "../core/labels";
+import type { PrintJob } from "../core/print";
+import type { Zoom } from "../core/zoom";
+
+export interface LoadedFile {
+    url: string;
+    name: string;
+    ext: string;
+    kind: FileKind;
+    /** The file's content; absent for audio and video, which stream from the URL. */
+    bytes?: ArrayBuffer;
+}
+
+export interface Thumbnails {
+    count: number;
+    /** Height divided by width, per page. */
+    aspect(index: number): number;
+    render(index: number, canvas: HTMLCanvasElement, width: number): Promise<void>;
+}
+
+export interface OutlineItem {
+    title: string;
+    /** 1-based, or null when the entry doesn't point at a page. */
+    page: number | null;
+    url?: string;
+    children: OutlineItem[];
+}
+
+export interface ViewInfo {
+    /** Set for views made of pages (PDF, Word, slides, TIFF). */
+    pageCount?: number;
+    zoomable: boolean;
+    /** Whether fit width and fit page mean anything for this view. */
+    fits: boolean;
+    rotatable: boolean;
+    searchable: boolean;
+    print?: () => Promise<PrintJob>;
+    thumbnails?: Thumbnails;
+    outline?: OutlineItem[];
+}
+
+export interface Attachment {
+    name: string;
+    bytes: Uint8Array;
+}
+
+export interface ViewCallbacks {
+    onReady(info: ViewInfo): void;
+    /** Later changes once the view knows more, for example the outline. */
+    onInfo(info: Partial<ViewInfo>): void;
+    onPage(page: number): void;
+    onScale(scale: number): void;
+    onMatches(count: number): void;
+    onError(message?: string): void;
+    onOpenAttachment(file: Attachment): void;
+    /** Moves to a page, for example to show a search match or follow a link. */
+    onGoTo(page: number): void;
+}
+
+export interface PageRequest {
+    page: number;
+    /** Changes on every request, so asking for the same page twice still scrolls. */
+    seq: number;
+}
+
+export interface ViewProps {
+    file: LoadedFile;
+    zoom: Zoom;
+    rotation: number;
+    layout: "continuous" | "single";
+    query: string;
+    activeMatch: number;
+    goTo: PageRequest | null;
+    allowCopy: boolean;
+    blockRemoteImages: boolean;
+    labels: Labels;
+    callbacks: ViewCallbacks;
+}

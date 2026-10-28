@@ -1,0 +1,56 @@
+// Square brackets because Studio Pro reads braces in text templates as parameter slots (CE0712).
+export function fillTemplate(text: string, values: Record<string, string | number>): string {
+    return text.replace(/\[(\w+)\]/g, (match, key: string) => (key in values ? String(values[key]) : match));
+}
+
+export const defaultLabels = {
+    loading: "Loading…",
+    error: "This file couldn't be displayed.",
+    unsupported: "This file type can't be previewed. You can still download it.",
+    noFile: "No file to show.",
+    fallback: "Showing a PDF copy of this file.",
+    password: "This PDF is password protected. Enter the password to open it.",
+    wrongPassword: "That password isn't correct.",
+    open: "Open",
+    previousPage: "Previous page",
+    nextPage: "Next page",
+    pageNumber: "Page number",
+    pageCount: "of [total]",
+    zoomIn: "Zoom in",
+    zoomOut: "Zoom out",
+    zoom: "Zoom",
+    fitWidth: "Fit width",
+    fitPage: "Fit page",
+    actualSize: "Actual size",
+    rotate: "Rotate",
+    search: "Search",
+    searchPlaceholder: "Search in document",
+    searchResults: "[current] of [total]",
+    noResults: "No results",
+    previousMatch: "Previous match",
+    nextMatch: "Next match",
+    closeSearch: "Close search",
+    print: "Print",
+    preparingPrint: "Preparing to print…",
+    download: "Download",
+    fullscreen: "Full screen",
+    exitFullscreen: "Exit full screen",
+    sidebar: "Show or hide the sidebar",
+    thumbnails: "Pages",
+    outline: "Outline",
+    previousFile: "Previous file",
+    nextFile: "Next file",
+    attachments: "Attachments",
+    back: "Back",
+    from: "From",
+    to: "To",
+    cc: "Cc",
+    date: "Date",
+    remoteBlocked: "Remote images are hidden to protect your privacy.",
+    showRemote: "Show images",
+    wrapLines: "Wrap lines",
+    showSource: "Show source",
+    slidesBeta: "PowerPoint preview is in beta, so some slides may look different from PowerPoint."
+};
+
+export type Labels = typeof defaultLabels;

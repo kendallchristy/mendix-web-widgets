@@ -1,0 +1,569 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<widget id="com.kendallchristy.widget.web.documentviewerpro.DocumentViewerPro" pluginWidget="true" offlineCapable="true" supportedPlatform="Web" xmlns="http://www.mendix.com/widget/1.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mendix.com/widget/1.0/ ../node_modules/mendix/custom_widget.xsd">
+    <name>Document Viewer Pro</name>
+    <description>View PDF, Office, image, code, email and media files in the browser, with thumbnails, search, print and app events.</description>
+    <studioProCategory>Display</studioProCategory>
+    <studioCategory>Display</studioCategory>
+    <helpUrl>https://github.com/kendallchristy/mendix-web-widgets/blob/main/packages/widgets/document-viewer-pro/README.md</helpUrl>
+    <properties>
+        <propertyGroup caption="General">
+            <propertyGroup caption="Data source">
+                <property key="source" type="enumeration" defaultValue="FILE">
+                    <caption>Show</caption>
+                    <description>A file from the surrounding data view, a web address, or a list of files the user can page through.</description>
+                    <enumerationValues>
+                        <enumerationValue key="FILE">A file</enumerationValue>
+                        <enumerationValue key="URL">A URL</enumerationValue>
+                        <enumerationValue key="LIST">A list of files</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="file" type="file" required="false">
+                    <caption>File</caption>
+                    <description>The file document to show, usually the data view's object.</description>
+                </property>
+                <property key="url" type="textTemplate" required="false">
+                    <caption>URL</caption>
+                    <description>Web address of the file. Files on another site load only if that site allows it (CORS).</description>
+                </property>
+                <property key="fileName" type="textTemplate" required="false">
+                    <caption>File name</caption>
+                    <description>Shown in the toolbar and used to tell the file type, for example report.pdf. Leave empty to use the file's own name.</description>
+                </property>
+                <property key="files" type="datasource" isList="true" required="false">
+                    <caption>Files</caption>
+                    <description>Objects of System.FileDocument or a specialization of it, for example a request's attachments.</description>
+                </property>
+                <property key="listFileName" type="textTemplate" dataSource="files" required="false">
+                    <caption>File name</caption>
+                    <description>Usually the Name attribute. Used to tell the file type.</description>
+                </property>
+                <property key="listCaption" type="textTemplate" dataSource="files" required="false">
+                    <caption>Caption</caption>
+                    <description>Text for each file in the file strip. Leave empty to show the file name.</description>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Preview file">
+                <property key="previewFile" type="file" required="false">
+                    <caption>Preview file</caption>
+                    <description>Optional PDF copy of the document, for example made by a conversion service. Use it for formats the browser can't show, such as .doc, .ppt and .odt. Download still gives the original.</description>
+                </property>
+                <property key="previewMode" type="enumeration" defaultValue="FALLBACK">
+                    <caption>Show preview file</caption>
+                    <description />
+                    <enumerationValues>
+                        <enumerationValue key="FALLBACK">When the original can't be shown</enumerationValue>
+                        <enumerationValue key="ALWAYS">Always</enumerationValue>
+                    </enumerationValues>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Display">
+                <property key="layout" type="enumeration" defaultValue="CONTINUOUS">
+                    <caption>Pages</caption>
+                    <description>How PDF, Word, TIFF and PowerPoint pages are laid out.</description>
+                    <enumerationValues>
+                        <enumerationValue key="CONTINUOUS">Continuous scrolling</enumerationValue>
+                        <enumerationValue key="SINGLE">One page at a time</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="initialZoom" type="enumeration" defaultValue="FIT_WIDTH">
+                    <caption>Start zoom</caption>
+                    <description />
+                    <enumerationValues>
+                        <enumerationValue key="FIT_WIDTH">Fit width</enumerationValue>
+                        <enumerationValue key="FIT_PAGE">Fit page</enumerationValue>
+                        <enumerationValue key="ACTUAL">Actual size</enumerationValue>
+                        <enumerationValue key="CUSTOM">Percentage</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="zoomPercent" type="integer" defaultValue="100">
+                    <caption>Zoom percentage</caption>
+                    <description>From 25 to 500.</description>
+                </property>
+                <property key="sidebar" type="enumeration" defaultValue="AUTO">
+                    <caption>Sidebar</caption>
+                    <description>Page thumbnails and the PDF outline. Automatic opens it when the viewer is wider than 900 pixels.</description>
+                    <enumerationValues>
+                        <enumerationValue key="AUTO">Automatic</enumerationValue>
+                        <enumerationValue key="OPEN">Open</enumerationValue>
+                        <enumerationValue key="CLOSED">Closed</enumerationValue>
+                        <enumerationValue key="HIDDEN">Hidden</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="heightUnit" type="enumeration" defaultValue="PIXELS">
+                    <caption>Height unit</caption>
+                    <description>Fill parent needs a parent with a set height.</description>
+                    <enumerationValues>
+                        <enumerationValue key="PIXELS">Pixels</enumerationValue>
+                        <enumerationValue key="VIEWPORT">Percentage of the screen</enumerationValue>
+                        <enumerationValue key="PARENT">Fill parent</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="height" type="integer" defaultValue="640">
+                    <caption>Height</caption>
+                    <description />
+                </property>
+            </propertyGroup>
+        </propertyGroup>
+        <propertyGroup caption="Toolbar">
+            <propertyGroup caption="Toolbar">
+                <property key="toolbarPosition" type="enumeration" defaultValue="TOP">
+                    <caption>Position</caption>
+                    <description />
+                    <enumerationValues>
+                        <enumerationValue key="TOP">Top</enumerationValue>
+                        <enumerationValue key="BOTTOM">Bottom</enumerationValue>
+                        <enumerationValue key="HIDDEN">Hidden</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="showFileName" type="boolean" defaultValue="true">
+                    <caption>File name</caption>
+                    <description />
+                </property>
+                <property key="showPageControls" type="boolean" defaultValue="true">
+                    <caption>Page controls</caption>
+                    <description>Previous, next and the page number.</description>
+                </property>
+                <property key="showZoom" type="boolean" defaultValue="true">
+                    <caption>Zoom</caption>
+                    <description />
+                </property>
+                <property key="showRotate" type="boolean" defaultValue="true">
+                    <caption>Rotate</caption>
+                    <description />
+                </property>
+                <property key="showSearch" type="boolean" defaultValue="true">
+                    <caption>Search</caption>
+                    <description />
+                </property>
+                <property key="showPrint" type="boolean" defaultValue="true">
+                    <caption>Print</caption>
+                    <description>Also needs Allow print.</description>
+                </property>
+                <property key="showDownload" type="boolean" defaultValue="true">
+                    <caption>Download</caption>
+                    <description>Also needs Allow download.</description>
+                </property>
+                <property key="showFullscreen" type="boolean" defaultValue="true">
+                    <caption>Full screen</caption>
+                    <description />
+                </property>
+                <property key="toolbarContent" type="widgets" required="false">
+                    <caption>Extra content</caption>
+                    <description>Widgets shown at the end of the toolbar, for example an Approve button.</description>
+                </property>
+            </propertyGroup>
+        </propertyGroup>
+        <propertyGroup caption="Access">
+            <propertyGroup caption="Access">
+                <property key="allowDownload" type="expression" defaultValue="true">
+                    <caption>Allow download</caption>
+                    <description>Hides the download button when false. Users who can open the file can still find ways to save it.</description>
+                    <returnType type="Boolean" />
+                </property>
+                <property key="allowPrint" type="expression" defaultValue="true">
+                    <caption>Allow print</caption>
+                    <description />
+                    <returnType type="Boolean" />
+                </property>
+                <property key="allowCopy" type="expression" defaultValue="true">
+                    <caption>Allow text selection</caption>
+                    <description>When false, text can't be selected or copied.</description>
+                    <returnType type="Boolean" />
+                </property>
+                <property key="watermark" type="textTemplate" required="false">
+                    <caption>Watermark</caption>
+                    <description>Text repeated across the document and its printouts, for example Confidential, followed by the user name.</description>
+                </property>
+                <property key="blockRemoteImages" type="boolean" defaultValue="true">
+                    <caption>Block remote images in emails</caption>
+                    <description>Remote images can tell the sender that the email was opened. Users can still choose to show them.</description>
+                </property>
+            </propertyGroup>
+        </propertyGroup>
+        <propertyGroup caption="Events">
+            <propertyGroup caption="Actions">
+                <property key="onLoad" type="action" required="false">
+                    <caption>On load</caption>
+                    <description>Runs when a file has been displayed.</description>
+                </property>
+                <property key="onError" type="action" required="false">
+                    <caption>On error</caption>
+                    <description>Runs when a file can't be displayed.</description>
+                </property>
+                <property key="onPageChange" type="action" required="false">
+                    <caption>On page change</caption>
+                    <description />
+                </property>
+                <property key="onDownload" type="action" required="false">
+                    <caption>On download</caption>
+                    <description>Replaces the built-in download, for example to log it or to download through a microflow.</description>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Attributes">
+                <property key="currentPage" type="attribute" required="false">
+                    <caption>Current page</caption>
+                    <description>Kept up to date as the user scrolls. Change it, for example from a button, to jump to that page.</description>
+                    <attributeTypes>
+                        <attributeType name="Integer" />
+                        <attributeType name="Long" />
+                    </attributeTypes>
+                </property>
+                <property key="pageCount" type="attribute" required="false">
+                    <caption>Page count</caption>
+                    <description>Set when a file loads.</description>
+                    <attributeTypes>
+                        <attributeType name="Integer" />
+                        <attributeType name="Long" />
+                    </attributeTypes>
+                </property>
+                <property key="errorMessage" type="attribute" required="false">
+                    <caption>Error message</caption>
+                    <description>Set when a file can't be displayed, and cleared when one loads.</description>
+                    <attributeTypes>
+                        <attributeType name="String" />
+                    </attributeTypes>
+                </property>
+            </propertyGroup>
+        </propertyGroup>
+        <propertyGroup caption="Labels">
+            <propertyGroup caption="Labels">
+                <property key="labelLoading" type="textTemplate" required="false">
+                    <caption>Loading</caption>
+                    <description>Shown while the file downloads.</description>
+                    <translations>
+                        <translation lang="en_US">Loading…</translation>
+                    </translations>
+                </property>
+                <property key="labelError" type="textTemplate" required="false">
+                    <caption>Error</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">This file couldn't be displayed.</translation>
+                    </translations>
+                </property>
+                <property key="labelUnsupported" type="textTemplate" required="false">
+                    <caption>Unsupported type</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">This file type can't be previewed. You can still download it.</translation>
+                    </translations>
+                </property>
+                <property key="labelNoFile" type="textTemplate" required="false">
+                    <caption>No file</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">No file to show.</translation>
+                    </translations>
+                </property>
+                <property key="labelFallback" type="textTemplate" required="false">
+                    <caption>Preview copy</caption>
+                    <description>Shown above the preview file when the original can't be displayed.</description>
+                    <translations>
+                        <translation lang="en_US">Showing a PDF copy of this file.</translation>
+                    </translations>
+                </property>
+                <property key="labelPassword" type="textTemplate" required="false">
+                    <caption>Password prompt</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">This PDF is password protected. Enter the password to open it.</translation>
+                    </translations>
+                </property>
+                <property key="labelWrongPassword" type="textTemplate" required="false">
+                    <caption>Wrong password</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">That password isn't correct.</translation>
+                    </translations>
+                </property>
+                <property key="labelOpen" type="textTemplate" required="false">
+                    <caption>Open</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Open</translation>
+                    </translations>
+                </property>
+                <property key="labelPreviousPage" type="textTemplate" required="false">
+                    <caption>Previous page</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Previous page</translation>
+                    </translations>
+                </property>
+                <property key="labelNextPage" type="textTemplate" required="false">
+                    <caption>Next page</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Next page</translation>
+                    </translations>
+                </property>
+                <property key="labelPageNumber" type="textTemplate" required="false">
+                    <caption>Page number</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Page number</translation>
+                    </translations>
+                </property>
+                <property key="labelPageCount" type="textTemplate" required="false">
+                    <caption>Page count</caption>
+                    <description>[total] is replaced by the number of pages.</description>
+                    <translations>
+                        <translation lang="en_US">of [total]</translation>
+                    </translations>
+                </property>
+                <property key="labelZoomIn" type="textTemplate" required="false">
+                    <caption>Zoom in</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Zoom in</translation>
+                    </translations>
+                </property>
+                <property key="labelZoomOut" type="textTemplate" required="false">
+                    <caption>Zoom out</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Zoom out</translation>
+                    </translations>
+                </property>
+                <property key="labelZoom" type="textTemplate" required="false">
+                    <caption>Zoom menu</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Zoom</translation>
+                    </translations>
+                </property>
+                <property key="labelFitWidth" type="textTemplate" required="false">
+                    <caption>Fit width</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Fit width</translation>
+                    </translations>
+                </property>
+                <property key="labelFitPage" type="textTemplate" required="false">
+                    <caption>Fit page</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Fit page</translation>
+                    </translations>
+                </property>
+                <property key="labelActualSize" type="textTemplate" required="false">
+                    <caption>Actual size</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Actual size</translation>
+                    </translations>
+                </property>
+                <property key="labelRotate" type="textTemplate" required="false">
+                    <caption>Rotate</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Rotate</translation>
+                    </translations>
+                </property>
+                <property key="labelSearch" type="textTemplate" required="false">
+                    <caption>Search</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Search</translation>
+                    </translations>
+                </property>
+                <property key="labelSearchPlaceholder" type="textTemplate" required="false">
+                    <caption>Search placeholder</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Search in document</translation>
+                    </translations>
+                </property>
+                <property key="labelSearchResults" type="textTemplate" required="false">
+                    <caption>Search results</caption>
+                    <description>[current] and [total] are replaced by the match numbers.</description>
+                    <translations>
+                        <translation lang="en_US">[current] of [total]</translation>
+                    </translations>
+                </property>
+                <property key="labelNoResults" type="textTemplate" required="false">
+                    <caption>No results</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">No results</translation>
+                    </translations>
+                </property>
+                <property key="labelPreviousMatch" type="textTemplate" required="false">
+                    <caption>Previous match</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Previous match</translation>
+                    </translations>
+                </property>
+                <property key="labelNextMatch" type="textTemplate" required="false">
+                    <caption>Next match</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Next match</translation>
+                    </translations>
+                </property>
+                <property key="labelCloseSearch" type="textTemplate" required="false">
+                    <caption>Close search</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Close search</translation>
+                    </translations>
+                </property>
+                <property key="labelPrint" type="textTemplate" required="false">
+                    <caption>Print</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Print</translation>
+                    </translations>
+                </property>
+                <property key="labelPreparingPrint" type="textTemplate" required="false">
+                    <caption>Preparing print</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Preparing to print…</translation>
+                    </translations>
+                </property>
+                <property key="labelDownload" type="textTemplate" required="false">
+                    <caption>Download</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Download</translation>
+                    </translations>
+                </property>
+                <property key="labelFullscreen" type="textTemplate" required="false">
+                    <caption>Full screen</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Full screen</translation>
+                    </translations>
+                </property>
+                <property key="labelExitFullscreen" type="textTemplate" required="false">
+                    <caption>Exit full screen</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Exit full screen</translation>
+                    </translations>
+                </property>
+                <property key="labelSidebar" type="textTemplate" required="false">
+                    <caption>Sidebar</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Show or hide the sidebar</translation>
+                    </translations>
+                </property>
+                <property key="labelThumbnails" type="textTemplate" required="false">
+                    <caption>Pages tab</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Pages</translation>
+                    </translations>
+                </property>
+                <property key="labelOutline" type="textTemplate" required="false">
+                    <caption>Outline tab</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Outline</translation>
+                    </translations>
+                </property>
+                <property key="labelPreviousFile" type="textTemplate" required="false">
+                    <caption>Previous file</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Previous file</translation>
+                    </translations>
+                </property>
+                <property key="labelNextFile" type="textTemplate" required="false">
+                    <caption>Next file</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Next file</translation>
+                    </translations>
+                </property>
+                <property key="labelAttachments" type="textTemplate" required="false">
+                    <caption>Attachments</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Attachments</translation>
+                    </translations>
+                </property>
+                <property key="labelBack" type="textTemplate" required="false">
+                    <caption>Back</caption>
+                    <description>Returns from an email attachment to the email.</description>
+                    <translations>
+                        <translation lang="en_US">Back</translation>
+                    </translations>
+                </property>
+                <property key="labelFrom" type="textTemplate" required="false">
+                    <caption>From</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">From</translation>
+                    </translations>
+                </property>
+                <property key="labelTo" type="textTemplate" required="false">
+                    <caption>To</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">To</translation>
+                    </translations>
+                </property>
+                <property key="labelCc" type="textTemplate" required="false">
+                    <caption>Cc</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Cc</translation>
+                    </translations>
+                </property>
+                <property key="labelDate" type="textTemplate" required="false">
+                    <caption>Date</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Date</translation>
+                    </translations>
+                </property>
+                <property key="labelRemoteBlocked" type="textTemplate" required="false">
+                    <caption>Remote images hidden</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Remote images are hidden to protect your privacy.</translation>
+                    </translations>
+                </property>
+                <property key="labelShowRemote" type="textTemplate" required="false">
+                    <caption>Show remote images</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Show images</translation>
+                    </translations>
+                </property>
+                <property key="labelWrapLines" type="textTemplate" required="false">
+                    <caption>Wrap lines</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Wrap lines</translation>
+                    </translations>
+                </property>
+                <property key="labelShowSource" type="textTemplate" required="false">
+                    <caption>Show source</caption>
+                    <description>Switches HTML, Markdown and SVG files between the rendered view and their source.</description>
+                    <translations>
+                        <translation lang="en_US">Show source</translation>
+                    </translations>
+                </property>
+                <property key="labelSlidesBeta" type="textTemplate" required="false">
+                    <caption>PowerPoint note</caption>
+                    <description>Leave empty to hide the note.</description>
+                    <translations>
+                        <translation lang="en_US">PowerPoint preview is in beta, so some slides may look different from PowerPoint.</translation>
+                    </translations>
+                </property>
+            </propertyGroup>
+        </propertyGroup>
+        <propertyGroup caption="Common">
+            <propertyGroup caption="Common">
+                <systemProperty key="Name" />
+                <systemProperty key="TabIndex" />
+                <systemProperty key="Visibility" />
+            </propertyGroup>
+        </propertyGroup>
+    </properties>
+</widget>
