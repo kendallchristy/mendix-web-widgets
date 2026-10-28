@@ -190,7 +190,7 @@ export function PdfView(props: ViewProps): ReactElement | null {
                 }
                 pdfjs.current = engine;
                 const assets = pdfAssetsUrl();
-                engine.GlobalWorkerOptions.workerSrc = `${assets}pdf.worker.min.mjs`;
+                engine.GlobalWorkerOptions.workerSrc = `${assets}pdf.worker.min.js`;
                 task = engine.getDocument({
                     // pdf.js takes ownership of the buffer it's given, so hand it a copy.
                     data: new Uint8Array(file.bytes.slice(0)),

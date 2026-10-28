@@ -52,7 +52,8 @@ function copyPdfAssets() {
         writeBundle() {
             const target = join(enginesDir, "pdfjs");
             mkdirSync(target, { recursive: true });
-            cpSync(join(pdfjsRoot, "legacy/build/pdf.worker.min.mjs"), join(target, "pdf.worker.min.mjs"));
+            // Saved as .js: the widget's only .mjs file should be the widget itself, which Studio Pro bundles.
+            cpSync(join(pdfjsRoot, "legacy/build/pdf.worker.min.mjs"), join(target, "pdf.worker.min.js"));
             for (const folder of ["cmaps", "standard_fonts", "wasm", "iccs"]) {
                 cpSync(join(pdfjsRoot, folder), join(target, folder), { recursive: true });
             }
