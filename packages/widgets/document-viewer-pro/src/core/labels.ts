@@ -50,6 +50,22 @@ export const defaultLabels = {
     showRemote: "Show images",
     wrapLines: "Wrap lines",
     showSource: "Show source",
+    markup: "Markup",
+    markupSelect: "Select",
+    markupHighlight: "Highlight text",
+    markupArea: "Highlight an area",
+    markupNote: "Add a note",
+    markupDraw: "Draw",
+    markupColor: "Color",
+    markupUndo: "Undo",
+    markupRedo: "Redo",
+    markupDelete: "Delete",
+    markupClose: "Close markup",
+    markupComment: "Add a comment…",
+    highlight: "Highlight",
+    areaItem: "Area",
+    noteItem: "Note",
+    drawingItem: "Drawing",
     slidesBeta: "PowerPoint preview is in beta, so some slides may look different from PowerPoint."
 };
 

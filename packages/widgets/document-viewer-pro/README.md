@@ -2,7 +2,7 @@
 
 Shows documents inside a Mendix 11 page: PDF, Word, Excel and other spreadsheets, PowerPoint (beta), images, multi-page TIFF scans, text and code, Markdown, HTML, emails, audio and video. Everything renders in the browser, so files never leave the app for a conversion service.
 
-The viewer adds page thumbnails and the PDF outline, zoom, rotate, search with highlighted matches, print, download and full screen, and it reports pages, load results and errors back to the app.
+The viewer adds page thumbnails and the PDF outline, zoom, rotate, search with highlighted matches, print, download and full screen, and it reports pages, load results and errors back to the app. Users can mark up pages with highlights, notes and drawings, which the app stores as JSON.
 
 ## Setup
 
@@ -56,7 +56,9 @@ On narrow viewers (phones, side panels) the toolbar keeps the essentials and hid
 | Ctrl + Plus / Minus / 0                    | Zoom in / out / reset             |
 | Page Down / Page Up                        | Next / previous page              |
 | Arrow keys, Home, End (one page at a time) | Turn pages, first page, last page |
-| Escape                                     | Close search                      |
+| Escape                                     | Close search, then markup         |
+| Ctrl + Z / Ctrl + Shift + Z                | Undo / redo markup                |
+| Delete                                     | Delete the selected markup        |
 
 ## Toolbar
 
@@ -73,6 +75,62 @@ On narrow viewers (phones, side panels) the toolbar keeps the essentials and hid
 | Block remote images in emails | Hides images an email loads from the internet (often tracking pixels) until the user chooses **Show images**.             |
 
 These settings stop casual copying in the viewer. They are not digital rights management: someone with the file's URL or the browser's developer tools can still get the file. Use Mendix access rules to decide who may see a file at all.
+
+## Markup
+
+Users can highlight text, highlight areas, add notes and draw on PDFs, images, TIFF scans and PowerPoint slides. Any highlight, area or drawing can also get a comment. The app stores all of it as JSON in a String attribute, so it reloads with the file and the app can read it.
+
+### Setup
+
+1. Add an unlimited String attribute for the markup, for example `Markup` on the file entity.
+2. On the **Markup** tab, pick it in **Markup**. For a list of files, pick the attribute of the file entity.
+3. Set **On change** to something that saves the object, usually a nanoflow that commits it. The viewer writes the attribute after every change and then runs **On change**, which also receives the JSON as the **Markup** variable. While the action is still running, the viewer waits and runs it once more with the latest JSON.
+4. Optional: **Author** (for example the user's full name) is saved with each mark and shown with comments. **Allow markup** set to false shows the markup without letting the user change it.
+
+If only the attribute is set, the markup changes the object in memory, and a Save button on the page commits it.
+
+### Using it
+
+The pen button in the toolbar opens the markup tools:
+
+| Tool              | Does                                                                          |
+| ----------------- | ----------------------------------------------------------------------------- |
+| Select            | Click markup to select it, then comment on it, change its color or delete it. |
+| Highlight text    | Select text to highlight it (PDFs).                                           |
+| Highlight an area | Drag a box, for example around a figure or part of a scan.                    |
+| Add a note        | Click to place a note and type it.                                            |
+| Draw              | Draw with the mouse, a pen or a finger.                                       |
+
+The colors apply to new markup and to the selected markup. **Undo** and **Redo** (Ctrl + Z, Ctrl + Shift + Z) step through changes, and Delete removes the selected markup. Selecting text in a PDF without the tools open also offers **Highlight**. The sidebar's **Markup** tab lists everything in page order and jumps to it. Printing includes the markup.
+
+Markup positions are fractions of the page, so markup stays in place at any zoom, rotation and screen size. Word, spreadsheet, text and email files don't take markup, because their layout changes with the screen.
+
+### JSON
+
+```json
+{
+    "version": 1,
+    "items": [
+        {
+            "id": "m1",
+            "type": "highlight",
+            "page": 1,
+            "color": "#fab005",
+            "rects": [[0.12, 0.15, 0.51, 0.02]],
+            "text": "Revenue grew in quarter 2.",
+            "comment": "Check this number",
+            "author": "Sam Lee",
+            "date": "2026-10-29T13:45:00.000Z"
+        }
+    ]
+}
+```
+
+`type` is `highlight` (with `rects` and `text`), `area` (with `rect`), `note` (with `x` and `y`) or `ink` (with `strokes`, each a flat list of x, y points, and `width`). Rectangles are `[x, y, width, height]`. All positions are fractions of the page from its top left corner, without the user's rotation. Pages count from 1.
+
+### Selected text
+
+**Markup › Selected text › Action** adds a button to the menu that appears when the user selects text, in any file type with selectable text. The action receives the text and its page number as the **Selected text** and **Page number** variables, for example to create a task from a sentence in a contract. **Button caption** names the button.
 
 ## Events and attributes
 

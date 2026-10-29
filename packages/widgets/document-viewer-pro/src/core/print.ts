@@ -1,5 +1,7 @@
 export type PrintJob =
-    { kind: "images"; images: string[]; landscape?: boolean } | { kind: "html"; html: string; css?: string };
+    // `rotation` is the turn the pages were drawn with, so markup can be drawn on them the same way.
+    | { kind: "images"; images: string[]; landscape?: boolean; rotation?: number }
+    | { kind: "html"; html: string; css?: string };
 
 function escapeHtml(text: string): string {
     return text.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] ?? c);

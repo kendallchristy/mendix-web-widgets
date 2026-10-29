@@ -2,6 +2,7 @@ import classNames from "classnames";
 import { useEffect, useRef, useState, type ReactElement } from "react";
 
 import type { Labels } from "../core/labels";
+import { sortMarkup, type Markup } from "../core/markup";
 import type { OutlineItem, Thumbnails } from "../views/types";
 
 const THUMB_WIDTH = 120;
@@ -108,54 +109,112 @@ function OutlineTree(props: { items: OutlineItem[]; onSelect(page: number): void
     );
 }
 
+function markupTitle(item: Markup, labels: Labels): string {
+    if (item.comment) {
+        return item.comment;
+    }
+    switch (item.type) {
+        case "highlight":
+            return item.text?.trim() || labels.highlight;
+        case "area":
+            return labels.areaItem;
+        case "note":
+            return labels.noteItem;
+        case "ink":
+            return labels.drawingItem;
+    }
+}
+
+function MarkupList(props: {
+    items: Markup[];
+    selectedId: string | null;
+    labels: Labels;
+    onSelect(item: Markup): void;
+}): ReactElement {
+    return (
+        <ul className="dvp-markup-list">
+            {sortMarkup(props.items).map(item => (
+                <li key={item.id}>
+                    <button
+                        type="button"
+                        className={classNames("dvp-markup-item", {
+                            "dvp-markup-item--active": item.id === props.selectedId
+                        })}
+                        onClick={() => props.onSelect(item)}
+                    >
+                        <span className="dvp-markup-item-dot" style={{ background: item.color }} />
+                        <span className="dvp-markup-item-text">
+                            <span className="dvp-markup-item-title">{markupTitle(item, props.labels)}</span>
+                            {item.author && <span className="dvp-markup-item-author">{item.author}</span>}
+                        </span>
+                        <span className="dvp-markup-item-page">{item.page}</span>
+                    </button>
+                </li>
+            ))}
+        </ul>
+    );
+}
+
+type Panel = "pages" | "outline" | "markup";
+
 export function Sidebar(props: {
     labels: Labels;
     thumbnails?: Thumbnails;
     outline?: OutlineItem[];
+    markup?: { items: Markup[]; selectedId: string | null; onSelect(item: Markup): void };
     page: number;
     onSelect(page: number): void;
 }): ReactElement {
-    const { labels, thumbnails, outline } = props;
-    const hasOutline = Boolean(outline?.length);
-    const [tab, setTab] = useState<"pages" | "outline">(thumbnails ? "pages" : "outline");
-    const shown = tab === "outline" && hasOutline ? "outline" : thumbnails ? "pages" : "outline";
+    const { labels, thumbnails, outline, markup } = props;
+    const panels: Array<{ id: Panel; label: string }> = [
+        ...(thumbnails ? [{ id: "pages" as const, label: labels.thumbnails }] : []),
+        ...(outline?.length ? [{ id: "outline" as const, label: labels.outline }] : []),
+        ...(markup?.items.length ? [{ id: "markup" as const, label: labels.markup }] : [])
+    ];
+    const [tab, setTab] = useState<Panel>("pages");
+    const shown = panels.find(panel => panel.id === tab)?.id ?? panels[0]?.id;
     return (
         <aside className="dvp-sidebar">
-            {thumbnails && hasOutline && (
+            {panels.length > 1 && (
                 <div className="dvp-sidebar-tabs" role="tablist">
-                    <button
-                        type="button"
-                        role="tab"
-                        aria-selected={shown === "pages"}
-                        className={classNames("dvp-sidebar-tab", { "dvp-sidebar-tab--active": shown === "pages" })}
-                        onClick={() => setTab("pages")}
-                    >
-                        {labels.thumbnails}
-                    </button>
-                    <button
-                        type="button"
-                        role="tab"
-                        aria-selected={shown === "outline"}
-                        className={classNames("dvp-sidebar-tab", { "dvp-sidebar-tab--active": shown === "outline" })}
-                        onClick={() => setTab("outline")}
-                    >
-                        {labels.outline}
-                    </button>
+                    {panels.map(panel => (
+                        <button
+                            key={panel.id}
+                            type="button"
+                            role="tab"
+                            aria-selected={shown === panel.id}
+                            className={classNames("dvp-sidebar-tab", {
+                                "dvp-sidebar-tab--active": shown === panel.id
+                            })}
+                            onClick={() => setTab(panel.id)}
+                        >
+                            {panel.label}
+                        </button>
+                    ))}
                 </div>
             )}
             <div className="dvp-sidebar-body">
-                {shown === "pages" && thumbnails
-                    ? Array.from({ length: thumbnails.count }, (_, i) => (
-                          <Thumbnail
-                              key={i}
-                              index={i}
-                              thumbnails={thumbnails}
-                              active={props.page === i + 1}
-                              label={`${labels.pageNumber} ${i + 1}`}
-                              onSelect={props.onSelect}
-                          />
-                      ))
-                    : outline && <OutlineTree items={outline} onSelect={props.onSelect} />}
+                {shown === "pages" &&
+                    thumbnails &&
+                    Array.from({ length: thumbnails.count }, (_, i) => (
+                        <Thumbnail
+                            key={i}
+                            index={i}
+                            thumbnails={thumbnails}
+                            active={props.page === i + 1}
+                            label={`${labels.pageNumber} ${i + 1}`}
+                            onSelect={props.onSelect}
+                        />
+                    ))}
+                {shown === "outline" && outline && <OutlineTree items={outline} onSelect={props.onSelect} />}
+                {shown === "markup" && markup && (
+                    <MarkupList
+                        items={markup.items}
+                        selectedId={markup.selectedId}
+                        labels={labels}
+                        onSelect={markup.onSelect}
+                    />
+                )}
             </div>
         </aside>
     );

@@ -190,6 +190,7 @@ export function SlidesView(props: ViewProps): ReactElement | null {
                 renderPage={renderPage}
                 onPage={callbacks.onPage}
                 onScale={callbacks.onScale}
+                overlay={props.pageOverlay}
             />
         </div>
     );

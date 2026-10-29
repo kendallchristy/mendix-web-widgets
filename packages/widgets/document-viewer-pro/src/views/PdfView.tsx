@@ -288,7 +288,7 @@ export function PdfView(props: ViewProps): ReactElement | null {
                 canvas.width = 0;
                 canvas.height = 0;
             }
-            return { kind: "images", images };
+            return { kind: "images", images, rotation };
         };
         callbacks.onInfo({ thumbnails, print });
         resolveOutline(doc)
@@ -496,6 +496,7 @@ export function PdfView(props: ViewProps): ReactElement | null {
                 renderPage={renderPage}
                 onPage={callbacks.onPage}
                 onScale={callbacks.onScale}
+                overlay={props.pageOverlay}
                 allowCopy={props.allowCopy}
             />
         </div>

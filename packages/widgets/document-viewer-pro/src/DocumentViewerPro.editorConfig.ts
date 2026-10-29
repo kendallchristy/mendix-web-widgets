@@ -14,9 +14,16 @@ export function getProperties(values: DocumentViewerProPreviewProps, defaultProp
         hide(["url"]);
     }
     if (values.source === "LIST") {
-        hide(["fileName", "previewFile", "previewMode"]);
+        hide(["fileName", "previewFile", "previewMode", "markupAttribute", "onMarkupChange"]);
     } else {
-        hide(["files", "listFileName", "listCaption"]);
+        hide(["files", "listFileName", "listCaption", "listMarkupAttribute", "onListMarkupChange"]);
+    }
+    const markup = values.source === "LIST" ? values.listMarkupAttribute : values.markupAttribute;
+    if (!markup) {
+        hide(["allowMarkup", "markupAuthor", "onMarkupChange", "onListMarkupChange"]);
+    }
+    if (values.selectionAction === null) {
+        hide(["selectionCaption"]);
     }
     if (values.initialZoom !== "CUSTOM") {
         hide(["zoomPercent"]);

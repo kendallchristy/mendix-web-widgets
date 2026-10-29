@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { fetchBytes } from "../core/fetchFile";
 import { detectKind, streamsFromUrl } from "../core/fileTypes";
 import type { LoadedFile } from "../views/types";
+import type { MarkupSource } from "./useMarkup";
 
 export interface ViewerSource {
     key: string;
@@ -12,18 +13,38 @@ export interface ViewerSource {
     /** A PDF copy for formats the browser can't show. */
     previewUrl?: string;
     previewName?: string;
+    markup?: MarkupSource;
+}
+
+type ReadyState = { status: "ready"; file: LoadedFile; usingPreview: boolean };
+
+function sameBytes(a: ArrayBuffer | undefined, b: ArrayBuffer): boolean {
+    if (!a || a.byteLength !== b.byteLength) {
+        return false;
+    }
+    const left = new Uint8Array(a);
+    const right = new Uint8Array(b);
+    for (let i = 0; i < left.length; i++) {
+        if (left[i] !== right[i]) {
+            return false;
+        }
+    }
+    return true;
 }
 
 export type LoadState =
     | { status: "empty" }
     | { status: "loading"; progress?: number }
-    | { status: "ready"; file: LoadedFile; usingPreview: boolean }
+    | ReadyState
     | { status: "unsupported" }
     | { status: "error"; message?: string };
 
 /**
  * Downloads the current file and works out how to show it. When the file can't be shown and the app supplied a
  * preview file, it switches to that.
+ *
+ * When the same file (same key) gets a new URL, for example because the app saved its markup, the file on screen
+ * stays while the new one downloads, and stays for good when the content turns out to be unchanged.
  */
 export function useFileLoader(
     source: ViewerSource | undefined,
@@ -63,6 +84,13 @@ export function useFileLoader(
     // Results are tagged with the request they belong to, so a stale result never shows for a new file.
     const [result, setResult] = useState<{ key: string; state: LoadState } | null>(null);
 
+    const identity = source?.key ?? "";
+    const [shown, setShown] = useState<{ identity: string; state: ReadyState } | null>(null);
+    const shownRef = useRef(shown);
+    useLayoutEffect(() => {
+        shownRef.current = shown;
+    });
+
     useEffect(() => {
         if (!target || streamed) {
             return;
@@ -70,12 +98,13 @@ export function useFileLoader(
         const controller = new AbortController();
         const canFallBack = !showingPreview && Boolean(previewUrl);
         const report = (state: LoadState): void => setResult({ key: requestKey, state });
-        let shown = -1;
+        const requestedIdentity = identity;
+        let shownPercent = -1;
         fetchBytes(target.url, controller.signal, ({ loaded, total }) => {
             const progress = total ? loaded / total : undefined;
             const percent = progress === undefined ? -1 : Math.floor(progress * 100);
-            if (percent !== shown) {
-                shown = percent;
+            if (percent !== shownPercent) {
+                shownPercent = percent;
                 report({ status: "loading", progress });
             }
         })
@@ -87,6 +116,16 @@ export function useFileLoader(
                     } else {
                         report({ status: "unsupported" });
                     }
+                    return;
+                }
+                const previous = shownRef.current;
+                if (
+                    previous?.identity === requestedIdentity &&
+                    previous.state.usingPreview === showingPreview &&
+                    previous.state.file.name === target.name &&
+                    sameBytes(previous.state.file.bytes, bytes)
+                ) {
+                    report(previous.state);
                     return;
                 }
                 report({
@@ -108,6 +147,8 @@ export function useFileLoader(
         return () => {
             controller.abort();
         };
+        // The identity only matters together with a new target.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [target, streamed, requestKey, showingPreview, previewUrl]);
 
     let state: LoadState;
@@ -119,6 +160,12 @@ export function useFileLoader(
         state = { status: "ready", file: streamed, usingPreview: showingPreview };
     } else {
         state = result?.key === requestKey ? result.state : { status: "loading" };
+    }
+    if (state.status === "loading" && shown?.identity === identity && shown.state.usingPreview === showingPreview) {
+        state = shown.state;
+    }
+    if (state.status === "ready" && state.file.bytes && shown?.state !== state) {
+        setShown({ identity, state });
     }
 
     // A view that can't render its file reports here, and the preview takes over when there is one.

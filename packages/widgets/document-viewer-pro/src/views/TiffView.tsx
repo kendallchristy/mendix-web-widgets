@@ -79,7 +79,7 @@ export function TiffView(props: ViewProps): ReactElement | null {
                         images.push(url);
                     }
                 }
-                return { kind: "images", images };
+                return { kind: "images", images, rotation };
             }
         });
     }, [pages, rotation, callbacks]);
@@ -111,6 +111,7 @@ export function TiffView(props: ViewProps): ReactElement | null {
             renderPage={renderPage}
             onPage={callbacks.onPage}
             onScale={callbacks.onScale}
+            overlay={props.pageOverlay}
         />
     );
 }

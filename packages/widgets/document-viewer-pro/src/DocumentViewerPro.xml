@@ -180,6 +180,64 @@
                 </property>
             </propertyGroup>
         </propertyGroup>
+        <propertyGroup caption="Markup">
+            <propertyGroup caption="Markup">
+                <property key="markupAttribute" type="attribute" required="false">
+                    <caption>Markup</caption>
+                    <description>An unlimited String attribute that stores highlights, notes and drawings as JSON. Leave empty to turn markup off.</description>
+                    <attributeTypes>
+                        <attributeType name="String" />
+                    </attributeTypes>
+                </property>
+                <property key="listMarkupAttribute" type="attribute" dataSource="files" required="false">
+                    <caption>Markup</caption>
+                    <description>An unlimited String attribute of the file entity that stores each file's highlights, notes and drawings as JSON. Leave empty to turn markup off.</description>
+                    <attributeTypes>
+                        <attributeType name="String" />
+                    </attributeTypes>
+                </property>
+                <property key="allowMarkup" type="expression" defaultValue="true">
+                    <caption>Allow markup</caption>
+                    <description>When false, markup is shown but can't be added or changed.</description>
+                    <returnType type="Boolean" />
+                </property>
+                <property key="markupAuthor" type="textTemplate" required="false">
+                    <caption>Author</caption>
+                    <description>Saved with each highlight, note and drawing, usually the user's full name.</description>
+                </property>
+                <property key="onMarkupChange" type="action" required="false">
+                    <caption>On change</caption>
+                    <description>Runs after each change, usually a nanoflow that commits the object. The JSON is also passed as the Markup variable.</description>
+                    <actionVariables>
+                        <actionVariable key="markup" type="String" caption="Markup" />
+                    </actionVariables>
+                </property>
+                <property key="onListMarkupChange" type="action" dataSource="files" required="false">
+                    <caption>On change</caption>
+                    <description>Runs for the file after each change, usually a nanoflow that commits it. The JSON is also passed as the Markup variable.</description>
+                    <actionVariables>
+                        <actionVariable key="markup" type="String" caption="Markup" />
+                    </actionVariables>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Selected text">
+                <property key="selectionAction" type="action" required="false">
+                    <caption>Action</caption>
+                    <description>Adds a button to the menu that appears when the user selects text, for example to create a task from it. The text and its page number are passed as variables.</description>
+                    <actionVariables>
+                        <actionVariable key="text" type="String" caption="Selected text" />
+                        <actionVariable key="page" type="Integer" caption="Page number" />
+                    </actionVariables>
+                </property>
+                <property key="selectionCaption" type="textTemplate" required="false">
+                    <caption>Button caption</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Use selected text</translation>
+                    </translations>
+                </property>
+            </propertyGroup>
+        </propertyGroup>
         <propertyGroup caption="Events">
             <propertyGroup caption="Actions">
                 <property key="onLoad" type="action" required="false">
@@ -547,6 +605,118 @@
                     <description>Switches HTML, Markdown and SVG files between the rendered view and their source.</description>
                     <translations>
                         <translation lang="en_US">Show source</translation>
+                    </translations>
+                </property>
+                <property key="labelMarkup" type="textTemplate" required="false">
+                    <caption>Markup</caption>
+                    <description>The toolbar button that opens the markup tools, and the sidebar tab that lists markup.</description>
+                    <translations>
+                        <translation lang="en_US">Markup</translation>
+                    </translations>
+                </property>
+                <property key="labelMarkupSelect" type="textTemplate" required="false">
+                    <caption>Select tool</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Select</translation>
+                    </translations>
+                </property>
+                <property key="labelMarkupHighlight" type="textTemplate" required="false">
+                    <caption>Highlight text tool</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Highlight text</translation>
+                    </translations>
+                </property>
+                <property key="labelMarkupArea" type="textTemplate" required="false">
+                    <caption>Highlight area tool</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Highlight an area</translation>
+                    </translations>
+                </property>
+                <property key="labelMarkupNote" type="textTemplate" required="false">
+                    <caption>Note tool</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Add a note</translation>
+                    </translations>
+                </property>
+                <property key="labelMarkupDraw" type="textTemplate" required="false">
+                    <caption>Draw tool</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Draw</translation>
+                    </translations>
+                </property>
+                <property key="labelMarkupColor" type="textTemplate" required="false">
+                    <caption>Color</caption>
+                    <description>Followed by the color's number.</description>
+                    <translations>
+                        <translation lang="en_US">Color</translation>
+                    </translations>
+                </property>
+                <property key="labelMarkupUndo" type="textTemplate" required="false">
+                    <caption>Undo</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Undo</translation>
+                    </translations>
+                </property>
+                <property key="labelMarkupRedo" type="textTemplate" required="false">
+                    <caption>Redo</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Redo</translation>
+                    </translations>
+                </property>
+                <property key="labelMarkupDelete" type="textTemplate" required="false">
+                    <caption>Delete</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Delete</translation>
+                    </translations>
+                </property>
+                <property key="labelMarkupClose" type="textTemplate" required="false">
+                    <caption>Close markup</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Close markup</translation>
+                    </translations>
+                </property>
+                <property key="labelMarkupComment" type="textTemplate" required="false">
+                    <caption>Comment placeholder</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Add a comment…</translation>
+                    </translations>
+                </property>
+                <property key="labelHighlight" type="textTemplate" required="false">
+                    <caption>Highlight</caption>
+                    <description>The button in the menu for selected text, and the name of a highlight in the markup list.</description>
+                    <translations>
+                        <translation lang="en_US">Highlight</translation>
+                    </translations>
+                </property>
+                <property key="labelAreaItem" type="textTemplate" required="false">
+                    <caption>Area</caption>
+                    <description>The name of a highlighted area in the markup list.</description>
+                    <translations>
+                        <translation lang="en_US">Area</translation>
+                    </translations>
+                </property>
+                <property key="labelNoteItem" type="textTemplate" required="false">
+                    <caption>Note</caption>
+                    <description>The name of a note in the markup list.</description>
+                    <translations>
+                        <translation lang="en_US">Note</translation>
+                    </translations>
+                </property>
+                <property key="labelDrawingItem" type="textTemplate" required="false">
+                    <caption>Drawing</caption>
+                    <description>The name of a drawing in the markup list.</description>
+                    <translations>
+                        <translation lang="en_US">Drawing</translation>
                     </translations>
                 </property>
                 <property key="labelSlidesBeta" type="textTemplate" required="false">

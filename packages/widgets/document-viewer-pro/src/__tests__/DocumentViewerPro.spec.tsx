@@ -183,6 +183,22 @@ describe("DocumentViewerPro", () => {
         expect(await screen.findByRole("heading", { name: "Title" })).toBeTruthy();
     });
 
+    it("keeps the file on screen when saving the file object changes its URL", async () => {
+        files["/files/notes.txt?changedDate=1"] = files["/files/notes.txt"];
+        files["/files/notes.txt?changedDate=2"] = files["/files/notes.txt"];
+        const { rerender } = render(
+            <DocumentViewerPro {...props({ file: fileValue("/files/notes.txt?changedDate=1", "notes.txt") })} />
+        );
+        expect(await screen.findByText(/First line about revenue/)).toBeTruthy();
+        rerender(<DocumentViewerPro {...props({ file: fileValue("/files/notes.txt?changedDate=2", "notes.txt") })} />);
+        expect(screen.queryByText(defaultLabels.loading)).toBeNull();
+        expect(screen.getByText(/First line about revenue/)).toBeTruthy();
+        await waitFor(() =>
+            expect(global.fetch).toHaveBeenCalledWith("/files/notes.txt?changedDate=2", expect.anything())
+        );
+        expect(screen.getByText(/First line about revenue/)).toBeTruthy();
+    });
+
     it("sets the height from the settings", () => {
         const { container } = render(<DocumentViewerPro {...props({ heightUnit: "VIEWPORT", height: 80 })} />);
         expect((container.firstChild as HTMLElement).style.height).toBe("80vh");

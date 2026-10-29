@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import type { FileKind } from "../core/fileTypes";
 import type { Labels } from "../core/labels";
 import type { PrintJob } from "../core/print";
@@ -64,6 +66,9 @@ export interface PageRequest {
     seq: number;
 }
 
+/** Draws something above a page, sized to the page as it shows (after zoom and rotation). */
+export type PageOverlay = (page: number, box: { width: number; height: number; rotation: number }) => ReactNode;
+
 export interface ViewProps {
     file: LoadedFile;
     zoom: Zoom;
@@ -76,4 +81,6 @@ export interface ViewProps {
     blockRemoteImages: boolean;
     labels: Labels;
     callbacks: ViewCallbacks;
+    /** Markup on paged views. */
+    pageOverlay?: PageOverlay;
 }

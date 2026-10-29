@@ -45,9 +45,17 @@ export function ImageView(props: ViewProps): ReactElement | null {
             return;
         }
         callbacks.onInfo({
-            print: async () => ({ kind: "images", images: [image.url] })
+            // A copy of its own: the viewer frees print images afterwards, and the view still needs its URL.
+            print: async () => ({
+                kind: "images",
+                images: [
+                    file.bytes
+                        ? URL.createObjectURL(new Blob([file.bytes], { type: imageMimeType(file.ext) }))
+                        : image.url
+                ]
+            })
         });
-    }, [image, callbacks]);
+    }, [image, file, callbacks]);
 
     const sizes = useMemo(() => (image ? [{ width: image.width, height: image.height }] : []), [image]);
 
@@ -82,6 +90,7 @@ export function ImageView(props: ViewProps): ReactElement | null {
             renderPage={renderPage}
             onPage={noop}
             onScale={callbacks.onScale}
+            overlay={props.pageOverlay}
             pannable
             maxFit={1}
         />

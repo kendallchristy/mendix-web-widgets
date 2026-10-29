@@ -3,7 +3,17 @@
  * WARNING: All changes made to this file will be overwritten
  * @author Mendix Widgets Framework Team
  */
-import { ActionValue, DynamicValue, EditableValue, FileValue, ListExpressionValue, ListValue } from "mendix";
+import {
+    ActionValue,
+    DynamicValue,
+    EditableValue,
+    FileValue,
+    ListActionValue,
+    ListAttributeValue,
+    ListExpressionValue,
+    ListValue,
+    Option
+} from "mendix";
 import { ComponentType, CSSProperties, ReactNode } from "react";
 import { Big } from "big.js";
 
@@ -56,6 +66,14 @@ export interface DocumentViewerProContainerProps {
     allowCopy: DynamicValue<boolean>;
     watermark?: DynamicValue<string>;
     blockRemoteImages: boolean;
+    markupAttribute?: EditableValue<string>;
+    listMarkupAttribute?: ListAttributeValue<string>;
+    allowMarkup: DynamicValue<boolean>;
+    markupAuthor?: DynamicValue<string>;
+    onMarkupChange?: ActionValue<{ markup: Option<string> }>;
+    onListMarkupChange?: ListActionValue<{ markup: Option<string> }>;
+    selectionAction?: ActionValue<{ text: Option<string>; page: Option<Big> }>;
+    selectionCaption?: DynamicValue<string>;
     onLoad?: ActionValue;
     onError?: ActionValue;
     onPageChange?: ActionValue;
@@ -109,6 +127,22 @@ export interface DocumentViewerProContainerProps {
     labelShowRemote?: DynamicValue<string>;
     labelWrapLines?: DynamicValue<string>;
     labelShowSource?: DynamicValue<string>;
+    labelMarkup?: DynamicValue<string>;
+    labelMarkupSelect?: DynamicValue<string>;
+    labelMarkupHighlight?: DynamicValue<string>;
+    labelMarkupArea?: DynamicValue<string>;
+    labelMarkupNote?: DynamicValue<string>;
+    labelMarkupDraw?: DynamicValue<string>;
+    labelMarkupColor?: DynamicValue<string>;
+    labelMarkupUndo?: DynamicValue<string>;
+    labelMarkupRedo?: DynamicValue<string>;
+    labelMarkupDelete?: DynamicValue<string>;
+    labelMarkupClose?: DynamicValue<string>;
+    labelMarkupComment?: DynamicValue<string>;
+    labelHighlight?: DynamicValue<string>;
+    labelAreaItem?: DynamicValue<string>;
+    labelNoteItem?: DynamicValue<string>;
+    labelDrawingItem?: DynamicValue<string>;
     labelSlidesBeta?: DynamicValue<string>;
 }
 
@@ -153,6 +187,14 @@ export interface DocumentViewerProPreviewProps {
     allowCopy: string;
     watermark: string;
     blockRemoteImages: boolean;
+    markupAttribute: string;
+    listMarkupAttribute: string;
+    allowMarkup: string;
+    markupAuthor: string;
+    onMarkupChange: {} | null;
+    onListMarkupChange: {} | null;
+    selectionAction: {} | null;
+    selectionCaption: string;
     onLoad: {} | null;
     onError: {} | null;
     onPageChange: {} | null;
@@ -206,5 +248,21 @@ export interface DocumentViewerProPreviewProps {
     labelShowRemote: string;
     labelWrapLines: string;
     labelShowSource: string;
+    labelMarkup: string;
+    labelMarkupSelect: string;
+    labelMarkupHighlight: string;
+    labelMarkupArea: string;
+    labelMarkupNote: string;
+    labelMarkupDraw: string;
+    labelMarkupColor: string;
+    labelMarkupUndo: string;
+    labelMarkupRedo: string;
+    labelMarkupDelete: string;
+    labelMarkupClose: string;
+    labelMarkupComment: string;
+    labelHighlight: string;
+    labelAreaItem: string;
+    labelNoteItem: string;
+    labelDrawingItem: string;
     labelSlidesBeta: string;
 }

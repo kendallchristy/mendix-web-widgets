@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactElement } from "react";
+import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactElement } from "react";
 
 import {
     currentPageAt,
@@ -11,7 +11,7 @@ import {
 } from "../core/pages";
 import { resolveScale, type Zoom } from "../core/zoom";
 import { useElementSize } from "./hooks";
-import type { PageRequest } from "./types";
+import type { PageOverlay, PageRequest } from "./types";
 
 /** Draws one page into its host element and returns a cleanup function. */
 export type RenderPage = (index: number, host: HTMLDivElement, scale: number, rotation: number) => (() => void) | void;
@@ -31,6 +31,7 @@ export interface PagedViewProps {
     pannable?: boolean;
     /** Largest scale the fit modes pick. */
     maxFit?: number;
+    overlay?: PageOverlay;
 }
 
 function PageSlot(props: {
@@ -202,7 +203,6 @@ export function PagedView(props: PagedViewProps): ReactElement {
                 ? [0]
                 : []
             : visiblePages(pageLayout, scrollTop, viewport.height || 800, 1);
-    // Pages center in the viewport; a wider page (a landscape page among portrait ones) scrolls sideways.
     // Pages center in the viewport; a page wider than the rest (landscape among portrait) scrolls sideways.
     const contentWidth = Math.max(viewport.width, pageLayout.maxWidth + PAGE_PADDING * 2);
 
@@ -221,18 +221,27 @@ export function PagedView(props: PagedViewProps): ReactElement {
                 {shown.map(slot => {
                     const index = layout === "single" ? singlePage : slot;
                     const width = pageLayout.widths[slot] ?? 0;
+                    const height = pageLayout.heights[slot] ?? 0;
+                    const top = pageLayout.offsets[slot] ?? 0;
+                    const left = Math.max(PAGE_PADDING, (viewport.width - width) / 2);
                     return (
-                        <PageSlot
-                            key={index}
-                            index={index}
-                            top={pageLayout.offsets[slot] ?? 0}
-                            left={Math.max(PAGE_PADDING, (viewport.width - width) / 2)}
-                            width={width}
-                            height={pageLayout.heights[slot] ?? 0}
-                            scale={scale}
-                            rotation={rotation}
-                            renderPage={renderPage}
-                        />
+                        <Fragment key={index}>
+                            <PageSlot
+                                index={index}
+                                top={top}
+                                left={left}
+                                width={width}
+                                height={height}
+                                scale={scale}
+                                rotation={rotation}
+                                renderPage={renderPage}
+                            />
+                            {props.overlay && (
+                                <div className="dvp-page-overlay" style={{ top, left, width, height }}>
+                                    {props.overlay(index + 1, { width, height, rotation })}
+                                </div>
+                            )}
+                        </Fragment>
                     );
                 })}
             </div>

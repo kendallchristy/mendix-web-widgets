@@ -46,6 +46,7 @@ export interface ToolbarProps {
     onDownload(): void;
     fullscreen: boolean;
     onToggleFullscreen(): void;
+    markup?: { open: boolean; onToggle(): void };
     extra?: ReactNode;
 }
 
@@ -216,6 +217,14 @@ export function Toolbar(props: ToolbarProps): ReactElement {
                         label={labels.rotate}
                         onClick={props.onRotate}
                         className="dvp-tool--rotate"
+                    />
+                )}
+                {props.markup && (
+                    <ToolButton
+                        icon="pen"
+                        label={labels.markup}
+                        onClick={props.markup.onToggle}
+                        pressed={props.markup.open}
                     />
                 )}
                 {show.search && props.searchable && (

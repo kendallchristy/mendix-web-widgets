@@ -1,8 +1,9 @@
 import { Big } from "big.js";
-import type { ActionValue, DynamicValue, EditableValue, ObjectItem } from "mendix";
-import { useCallback, useMemo, useState, type CSSProperties, type ReactElement } from "react";
+import type { ActionValue, DynamicValue, EditableValue, ObjectItem, Option } from "mendix";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactElement } from "react";
 
 import type { DocumentViewerProContainerProps } from "../typings/DocumentViewerProProps";
+import type { MarkupSource } from "./components/useMarkup";
 import { Viewer, type ViewerSettings, type ViewerSource } from "./components/Viewer";
 import { defaultLabels, type Labels } from "./core/labels";
 import type { ZoomMode } from "./core/zoom";
@@ -32,6 +33,39 @@ const zoomModes: Record<string, ZoomMode> = {
     ACTUAL: "actual",
     CUSTOM: "custom"
 };
+
+/**
+ * Mendix puts the file's change date in its URL, so saving any attribute of the file object (its markup, for
+ * example) changes the URL. The key leaves the date out, so the viewer stays on the same file and only reloads it.
+ */
+function stableKey(uri: string): string {
+    return uri.replace(/([?&])changedDate=[^&#]*&?/, "$1").replace(/[?&]$/, "");
+}
+
+type MarkupAction = ActionValue<{ markup: Option<string> }>;
+
+/** The markup attribute is written at once; the change action (usually a commit) waits while it's still running. */
+function useMarkupSaver(): (attribute: EditableValue<string>, action: MarkupAction | undefined, json: string) => void {
+    const pending = useRef<{ action: MarkupAction; json: string } | null>(null);
+    useEffect(() => {
+        const next = pending.current;
+        if (next && !next.action.isExecuting && next.action.canExecute) {
+            pending.current = null;
+            next.action.execute({ markup: next.json });
+        }
+    });
+    return useCallback((attribute, action, json) => {
+        if (!attribute.readOnly) {
+            attribute.setValue(json);
+        }
+        if (action?.isExecuting) {
+            pending.current = { action, json };
+        } else if (action?.canExecute) {
+            pending.current = null;
+            action.execute({ markup: json });
+        }
+    }, []);
+}
 
 /** Mendix serves every FileDocument at /file?guid=…, which is how files from a list data source are shown. */
 function fileUrl(item: ObjectItem): string {
@@ -88,6 +122,22 @@ function labelsFrom(props: DocumentViewerProContainerProps): Labels {
         showRemote: pick(props.labelShowRemote, defaultLabels.showRemote),
         wrapLines: pick(props.labelWrapLines, defaultLabels.wrapLines),
         showSource: pick(props.labelShowSource, defaultLabels.showSource),
+        markup: pick(props.labelMarkup, defaultLabels.markup),
+        markupSelect: pick(props.labelMarkupSelect, defaultLabels.markupSelect),
+        markupHighlight: pick(props.labelMarkupHighlight, defaultLabels.markupHighlight),
+        markupArea: pick(props.labelMarkupArea, defaultLabels.markupArea),
+        markupNote: pick(props.labelMarkupNote, defaultLabels.markupNote),
+        markupDraw: pick(props.labelMarkupDraw, defaultLabels.markupDraw),
+        markupColor: pick(props.labelMarkupColor, defaultLabels.markupColor),
+        markupUndo: pick(props.labelMarkupUndo, defaultLabels.markupUndo),
+        markupRedo: pick(props.labelMarkupRedo, defaultLabels.markupRedo),
+        markupDelete: pick(props.labelMarkupDelete, defaultLabels.markupDelete),
+        markupClose: pick(props.labelMarkupClose, defaultLabels.markupClose),
+        markupComment: pick(props.labelMarkupComment, defaultLabels.markupComment),
+        highlight: pick(props.labelHighlight, defaultLabels.highlight),
+        areaItem: pick(props.labelAreaItem, defaultLabels.areaItem),
+        noteItem: pick(props.labelNoteItem, defaultLabels.noteItem),
+        drawingItem: pick(props.labelDrawingItem, defaultLabels.drawingItem),
         // An emptied note hides it, so only fall back while the text hasn't loaded.
         slidesBeta:
             props.labelSlidesBeta?.status === "available"
@@ -121,14 +171,40 @@ function heightStyle(props: DocumentViewerProContainerProps): CSSProperties {
 export function DocumentViewerPro(props: DocumentViewerProContainerProps): ReactElement {
     const labels = useStableLabels(labelsFrom(props));
     const { source, file, url, fileName, files, listFileName, listCaption, previewFile } = props;
+    const { markupAttribute, listMarkupAttribute, onMarkupChange, onListMarkupChange } = props;
+    const markupAllowed = props.allowMarkup?.value !== false;
+    const author = props.markupAuthor?.value || undefined;
+    const saveMarkup = useMarkupSaver();
 
     const sources: ViewerSource[] = useMemo(() => {
+        const markupOf = (
+            attribute: EditableValue<string> | undefined,
+            action: MarkupAction | undefined
+        ): MarkupSource | undefined =>
+            attribute
+                ? {
+                      json: attribute.value,
+                      editable:
+                          markupAllowed &&
+                          attribute.status === "available" &&
+                          (!attribute.readOnly || Boolean(action?.canExecute)),
+                      author,
+                      save: json => saveMarkup(attribute, action, json)
+                  }
+                : undefined;
         if (source === "LIST") {
             return (files?.items ?? []).map(item => {
                 const name = listFileName?.get(item).value ?? "";
-                return { key: item.id, url: fileUrl(item), name, caption: listCaption?.get(item).value };
+                return {
+                    key: item.id,
+                    url: fileUrl(item),
+                    name,
+                    caption: listCaption?.get(item).value,
+                    markup: markupOf(listMarkupAttribute?.get(item), onListMarkupChange?.get(item))
+                };
             });
         }
+        const markup = markupOf(markupAttribute, onMarkupChange);
         const preview =
             previewFile?.status === "available" && previewFile.value?.uri
                 ? { previewUrl: previewFile.value.uri, previewName: previewFile.value.name }
@@ -139,14 +215,38 @@ export function DocumentViewerPro(props: DocumentViewerProContainerProps): React
                 return [];
             }
             const name = fileName?.value || decodeURIComponent(address.split(/[?#]/)[0].split("/").pop() ?? "");
-            return [{ key: address, url: address, name, ...preview }];
+            return [{ key: address, url: address, name, markup, ...preview }];
         }
         const value = file?.status === "available" ? file.value : undefined;
         if (!value?.uri) {
             return [];
         }
-        return [{ key: value.uri, url: value.uri, name: fileName?.value || value.name || "", ...preview }];
-    }, [source, file, url, fileName, files, listFileName, listCaption, previewFile]);
+        return [
+            {
+                key: stableKey(value.uri),
+                url: value.uri,
+                name: fileName?.value || value.name || "",
+                markup,
+                ...preview
+            }
+        ];
+    }, [
+        source,
+        file,
+        url,
+        fileName,
+        files,
+        listFileName,
+        listCaption,
+        previewFile,
+        markupAttribute,
+        listMarkupAttribute,
+        onMarkupChange,
+        onListMarkupChange,
+        markupAllowed,
+        author,
+        saveMarkup
+    ]);
 
     const pending =
         (source === "FILE" && file?.status === "loading") ||
@@ -240,6 +340,22 @@ export function DocumentViewerPro(props: DocumentViewerProContainerProps): React
     );
     const download = useMemo(() => (onDownload ? () => run(onDownload) : undefined), [onDownload]);
 
+    const { selectionAction: textAction, selectionCaption } = props;
+    const selectionAction = useMemo(
+        () =>
+            textAction?.canExecute
+                ? {
+                      label: selectionCaption?.value || "Use selected text",
+                      run: (text: string, page: number) => {
+                          if (textAction.canExecute && !textAction.isExecuting) {
+                              textAction.execute({ text, page: new Big(page) });
+                          }
+                      }
+                  }
+                : undefined,
+        [textAction, selectionCaption?.value]
+    );
+
     return (
         <Viewer
             sources={sources}
@@ -252,6 +368,7 @@ export function DocumentViewerPro(props: DocumentViewerProContainerProps): React
             onError={onFailed}
             onPage={onPage}
             onDownload={download}
+            selectionAction={selectionAction}
             className={props.class}
             style={{ ...heightStyle(props), ...props.style }}
             tabIndex={props.tabIndex}

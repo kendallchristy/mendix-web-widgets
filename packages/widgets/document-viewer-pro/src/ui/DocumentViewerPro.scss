@@ -111,7 +111,8 @@ $dark-mode-ancestors: ".dark-mode";
         user-select: none !important;
     }
 
-    button {
+    // Without adding specificity, so the font sizes of the viewer's own buttons still apply.
+    :where(button) {
         font: inherit;
     }
 
@@ -493,13 +494,18 @@ mark.dvp-match {
 }
 
 .dvp-sidebar-tab {
-    flex: 1;
+    flex: 1 1 auto;
+    min-width: 0;
     height: 28px;
+    padding: 0 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     border: none;
     border-radius: 6px;
     background: transparent;
     color: var(--dvp-text-muted);
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 500;
     cursor: pointer;
 
@@ -1341,6 +1347,312 @@ mark.dvp-match {
 .dvp-password-error {
     color: #dc2626;
     font-size: 13px;
+}
+
+// Markup
+
+.dvp-markup-bar {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 2px;
+    min-height: 44px;
+    padding: 4px 8px;
+    overflow-x: auto;
+    border-bottom: 1px solid var(--dvp-border);
+    background: var(--dvp-surface);
+    scrollbar-width: none;
+
+    .dvp-tool--active {
+        background: var(--dvp-accent-soft);
+        color: var(--dvp-accent);
+
+        &:hover:not(:disabled) {
+            background: var(--dvp-accent-soft);
+            color: var(--dvp-accent);
+        }
+    }
+}
+
+.dvp-markup-tools {
+    display: flex;
+    flex: none;
+    gap: 2px;
+}
+
+.dvp-markup-divider {
+    flex: none;
+    width: 1px;
+    height: 20px;
+    margin: 0 6px;
+    background: var(--dvp-border);
+}
+
+.dvp-markup-spacer {
+    flex: 1;
+}
+
+.dvp-markup-swatches {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 6px;
+    padding: 0 4px;
+}
+
+.dvp-markup-swatch {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: 2px solid var(--dvp-surface);
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px var(--dvp-border-strong);
+    cursor: pointer;
+
+    &[aria-checked="true"] {
+        box-shadow: 0 0 0 2px var(--dvp-text);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--dvp-accent);
+        outline-offset: 2px;
+    }
+}
+
+.dvp-page-overlay {
+    position: absolute;
+    z-index: 3;
+    pointer-events: none;
+
+    // An open comment can reach past its page; keep it above the next page and the watermark.
+    &:has(.dvp-markup-popover) {
+        z-index: 5;
+    }
+}
+
+.dvp-markup-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+
+    &.dvp-markup-layer--drawing {
+        cursor: crosshair;
+        pointer-events: auto;
+        touch-action: none;
+        user-select: none;
+    }
+
+    &.dvp-markup-layer--note {
+        cursor: copy;
+    }
+}
+
+.dvp-markup-svg {
+    position: absolute;
+    inset: 0;
+    overflow: visible;
+}
+
+.dvp-markup-highlight {
+    mix-blend-mode: multiply;
+}
+
+.dvp-markup-outline {
+    fill: none;
+    stroke: var(--dvp-accent);
+    stroke-width: 1.5;
+    stroke-dasharray: 4 3;
+}
+
+.dvp-markup-pin {
+    position: absolute;
+    display: flex;
+    width: 32px;
+    height: 32px;
+    padding: 2px;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    cursor: pointer;
+    pointer-events: auto;
+    transform: translate(-50%, -50%);
+    filter: drop-shadow(0 1px 2px rgba(17, 24, 39, 0.35));
+
+    &:hover,
+    &.dvp-markup-pin--selected {
+        transform: translate(-50%, -50%) scale(1.15);
+    }
+
+    &.dvp-markup-pin--selected {
+        filter: drop-shadow(0 0 0 var(--dvp-accent)) drop-shadow(0 1px 3px rgba(17, 24, 39, 0.45));
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--dvp-accent);
+    }
+}
+
+.dvp-markup-popover {
+    position: absolute;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
+    border: 1px solid var(--dvp-border);
+    border-radius: 10px;
+    background: var(--dvp-surface);
+    box-shadow:
+        0 8px 24px rgba(17, 24, 39, 0.16),
+        0 2px 6px rgba(17, 24, 39, 0.08);
+    color: var(--dvp-text);
+    font-size: 13px;
+    pointer-events: auto;
+    cursor: auto;
+
+    &.dvp-markup-popover--above {
+        transform: translateY(-100%);
+    }
+}
+
+.dvp-markup-comment {
+    width: 100%;
+    min-height: 64px;
+    padding: 6px 8px;
+    border: 1px solid var(--dvp-border-strong);
+    border-radius: 6px;
+    background: var(--dvp-surface);
+    color: var(--dvp-text);
+    font: inherit;
+    resize: vertical;
+
+    &:focus {
+        border-color: var(--dvp-accent);
+        outline: 2px solid var(--dvp-accent-soft);
+    }
+}
+
+.dvp-markup-comment-text {
+    margin: 0;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.dvp-markup-meta {
+    color: var(--dvp-text-muted);
+    font-size: 12px;
+}
+
+.dvp-markup-popover-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    .dvp-markup-swatches {
+        padding: 0;
+    }
+}
+
+.dvp-selection-menu {
+    position: absolute;
+    z-index: 6;
+    display: flex;
+    gap: 2px;
+    padding: 4px;
+    border: 1px solid var(--dvp-border);
+    border-radius: 8px;
+    background: var(--dvp-surface);
+    box-shadow: 0 6px 18px rgba(17, 24, 39, 0.18);
+    transform: translateX(-50%);
+}
+
+.dvp-selection-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 30px;
+    padding: 0 10px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--dvp-text);
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+
+    &:hover {
+        background: var(--dvp-hover);
+    }
+}
+
+.dvp-markup-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.dvp-markup-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 6px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--dvp-text);
+    text-align: left;
+    cursor: pointer;
+
+    &:hover {
+        background: var(--dvp-hover);
+    }
+
+    &.dvp-markup-item--active {
+        background: var(--dvp-accent-soft);
+    }
+}
+
+.dvp-markup-item-dot {
+    flex: none;
+    width: 10px;
+    height: 10px;
+    margin-top: 4px;
+    border-radius: 50%;
+}
+
+.dvp-markup-item-text {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.dvp-markup-item-title {
+    display: -webkit-box;
+    overflow: hidden;
+    font-size: 13px;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+}
+
+.dvp-markup-item-author {
+    overflow: hidden;
+    color: var(--dvp-text-muted);
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dvp-markup-item-page {
+    flex: none;
+    color: var(--dvp-text-muted);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
 }
 
 // Watermark

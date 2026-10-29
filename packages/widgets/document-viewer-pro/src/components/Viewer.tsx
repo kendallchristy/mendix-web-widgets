@@ -8,6 +8,7 @@ import {
     useState,
     type CSSProperties,
     type KeyboardEvent,
+    type MouseEvent,
     type ReactElement,
     type ReactNode
 } from "react";
@@ -15,17 +16,32 @@ import {
 import { downloadBytes, downloadUrl } from "../core/download";
 import { detectKind } from "../core/fileTypes";
 import type { Labels } from "../core/labels";
-import { buildPrintDocument, printDocument } from "../core/print";
+import {
+    drawMarkup,
+    fromView,
+    hitTest,
+    MARKUP_COLORS,
+    mergeLineRects,
+    type Markup,
+    type MarkupTool,
+    type NewMarkup
+} from "../core/markup";
+import { buildPrintDocument, printDocument, type PrintJob } from "../core/print";
 import { clampScale, stepScale, type Zoom, type ZoomMode } from "../core/zoom";
 import { views } from "../views";
-import type { Attachment, LoadedFile, PageRequest, ViewCallbacks, ViewInfo } from "../views/types";
+import { canvasToObjectUrl } from "../views/canvas";
+import type { Attachment, LoadedFile, PageOverlay, PageRequest, ViewCallbacks, ViewInfo } from "../views/types";
 import { FileStrip } from "./FileStrip";
 import { Icon } from "./Icons";
+import { MarkupBar } from "./MarkupBar";
+import { MarkupLayer, screenRectsToPage } from "./MarkupLayer";
+import { readSelection } from "./selection";
 import { SearchBar } from "./SearchBar";
 import { Sidebar } from "./Sidebar";
 import { LoadingState, MessageState } from "./StatusCard";
 import { Toolbar, type ToolbarVisibility } from "./Toolbar";
 import { useFileLoader, type ViewerSource } from "./useFileLoader";
+import { useMarkup } from "./useMarkup";
 import { Watermark } from "./Watermark";
 
 export type { ViewerSource } from "./useFileLoader";
@@ -59,12 +75,63 @@ export interface ViewerProps {
     onPage?(page: number, byUser: boolean): void;
     /** Replaces the built-in download when set. */
     onDownload?: () => void;
+    /** A button in the menu that appears when text is selected. */
+    selectionAction?: { label: string; run(text: string, page: number): void };
     className?: string;
     style?: CSSProperties;
     tabIndex?: number;
 }
 
 const SIDEBAR_AUTO_WIDTH = 900;
+// Markup goes on views made of pages.
+const MARKUP_KINDS = new Set(["pdf", "image", "tiff", "slides"]);
+
+function loadImage(url: string): Promise<HTMLImageElement> {
+    return new Promise((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve(image);
+        image.onerror = reject;
+        image.src = url;
+    });
+}
+
+/** Draws each page's markup onto its print image. */
+async function printWithMarkup(job: PrintJob, items: Markup[]): Promise<PrintJob> {
+    if (job.kind !== "images" || items.length === 0) {
+        return job;
+    }
+    const images = await Promise.all(
+        job.images.map(async (url, index) => {
+            const onPage = items.filter(item => item.page === index + 1);
+            if (onPage.length === 0) {
+                return url;
+            }
+            try {
+                const image = await loadImage(url);
+                const canvas = document.createElement("canvas");
+                canvas.width = image.naturalWidth;
+                canvas.height = image.naturalHeight;
+                const context = canvas.getContext("2d");
+                if (!context) {
+                    return url;
+                }
+                context.drawImage(image, 0, 0);
+                drawMarkup(context, onPage, canvas.width, canvas.height, job.rotation ?? 0);
+                const marked = await canvasToObjectUrl(canvas);
+                if (!marked) {
+                    return url;
+                }
+                if (url.startsWith("blob:")) {
+                    URL.revokeObjectURL(url);
+                }
+                return marked;
+            } catch {
+                return url;
+            }
+        })
+    );
+    return { ...job, images };
+}
 
 function isTyping(target: EventTarget | null): boolean {
     const element = target as HTMLElement | null;
@@ -106,6 +173,20 @@ export function Viewer(props: ViewerProps): ReactElement {
     const [sidebarOpen, setSidebarOpen] = useState<boolean | null>(null);
     const [fullscreen, setFullscreen] = useState(false);
     const [printing, setPrinting] = useState(false);
+    const [markupOpen, setMarkupOpen] = useState(false);
+    const [tool, setTool] = useState<MarkupTool>("select");
+    const [color, setColor] = useState(MARKUP_COLORS[0]);
+    const [selectedId, setSelectedId] = useState<string | null>(null);
+    const [selectionMenu, setSelectionMenu] = useState<{ left: number; top: number; highlight: boolean } | null>(null);
+
+    // Markup belongs to the file from the app, not to attachments opened from an email.
+    const markupSource = attachments.length === 0 ? source?.markup : undefined;
+    const markup = useMarkup(source?.key ?? "", markupSource);
+    const showMarkup = Boolean(markupSource && file && MARKUP_KINDS.has(file.kind));
+    const markupEditing = showMarkup && markupOpen && markup.editable;
+    // Text highlights need the text of a PDF page.
+    const activeTool: MarkupTool = !markupEditing || (tool === "highlight" && file?.kind !== "pdf") ? "select" : tool;
+    const selectedMarkup = showMarkup ? markup.items.find(item => item.id === selectedId) : undefined;
 
     const latest = useRef(props);
     useLayoutEffect(() => {
@@ -123,6 +204,8 @@ export function Viewer(props: ViewerProps): ReactElement {
         setMatchCount(0);
         setActiveMatch(0);
         setGoTo(null);
+        setSelectedId(null);
+        setSelectionMenu(null);
         // Photos read best whole, so fit width becomes fit page for images.
         setZoom(
             file?.kind === "image" && settings.initialZoom.mode === "fitWidth"
@@ -276,7 +359,9 @@ export function Viewer(props: ViewerProps): ReactElement {
     }, [zoomable]);
 
     // Sidebar: automatic opens it on wide viewers.
-    const sidebarAvailable = settings.sidebar !== "hidden" && Boolean(info?.thumbnails || info?.outline?.length);
+    const sidebarAvailable =
+        settings.sidebar !== "hidden" &&
+        Boolean(info?.thumbnails || info?.outline?.length || (showMarkup && markup.items.length > 0));
     useLayoutEffect(() => {
         if (sidebarOpen !== null) {
             return;
@@ -340,7 +425,7 @@ export function Viewer(props: ViewerProps): ReactElement {
         }
         setPrinting(true);
         try {
-            const job = await info.print();
+            const job = await printWithMarkup(await info.print(), showMarkup ? markup.items : []);
             await printDocument(buildPrintDocument(job, file?.name ?? "", settings.watermark));
             if (job.kind === "images") {
                 job.images
@@ -350,7 +435,158 @@ export function Viewer(props: ViewerProps): ReactElement {
         } finally {
             setPrinting(false);
         }
-    }, [info, printing, file?.name, settings.watermark]);
+    }, [info, printing, file?.name, settings.watermark, showMarkup, markup.items]);
+
+    const addMarkup = (item: NewMarkup): void => {
+        const created = markup.add(item);
+        // A new note opens for typing, and the next click goes back to selecting rather than adding another.
+        if (created?.type === "note") {
+            setSelectedId(created.id);
+            setTool("select");
+        }
+    };
+    const removeMarkup = (id: string): void => {
+        markup.remove(id);
+        setSelectedId(current => (current === id ? null : current));
+    };
+
+    const pageOverlay: PageOverlay | undefined = showMarkup
+        ? (overlayPage, box) => (
+              <MarkupLayer
+                  page={overlayPage}
+                  width={box.width}
+                  height={box.height}
+                  rotation={box.rotation}
+                  items={markup.items}
+                  tool={activeTool}
+                  color={color}
+                  editable={markup.editable}
+                  selectedId={selectedId}
+                  labels={labels}
+                  onAdd={addMarkup}
+                  onSelect={setSelectedId}
+                  onUpdate={markup.update}
+                  onRemove={removeMarkup}
+              />
+          )
+        : undefined;
+
+    const canHighlightText = showMarkup && markup.editable && file?.kind === "pdf";
+    const highlightSelection = (): void => {
+        const element = content.current;
+        const selected = element ? readSelection(element) : null;
+        if (!element || !selected) {
+            return;
+        }
+        for (const [selectedPage, piece] of selected.pages) {
+            const rects = mergeLineRects(screenRectsToPage(piece.rects, piece.layer));
+            if (rects.length > 0) {
+                markup.add({
+                    type: "highlight",
+                    page: selectedPage,
+                    color,
+                    rects,
+                    text: selected.pages.size === 1 ? selected.text : piece.text.trim()
+                });
+            }
+        }
+        element.ownerDocument.getSelection()?.removeAllRanges();
+        setSelectionMenu(null);
+    };
+    const runSelectionAction = (): void => {
+        const element = content.current;
+        const selected = element ? readSelection(element) : null;
+        if (selected && props.selectionAction) {
+            const [firstPage] = selected.pages.keys();
+            props.selectionAction.run(selected.text, firstPage ?? page);
+        }
+        setSelectionMenu(null);
+    };
+
+    // After a selection ends: highlight it with the highlight tool, otherwise offer the selection menu.
+    const onContentMouseUp = (): void => {
+        setTimeout(() => {
+            const element = content.current;
+            const rootElement = root.current;
+            const selected = element ? readSelection(element) : null;
+            if (!selected || !rootElement) {
+                setSelectionMenu(null);
+                return;
+            }
+            const highlight = canHighlightText && selected.pages.size > 0;
+            if (highlight && activeTool === "highlight") {
+                highlightSelection();
+                return;
+            }
+            if (!highlight && !props.selectionAction) {
+                return;
+            }
+            const box = rootElement.getBoundingClientRect();
+            const below = selected.anchor.bottom - box.top + 8;
+            setSelectionMenu({
+                left: Math.min(
+                    Math.max(selected.anchor.left + selected.anchor.width / 2 - box.left, 90),
+                    box.width - 90
+                ),
+                top: below + 44 > box.height ? Math.max(0, selected.anchor.top - box.top - 44) : below,
+                highlight
+            });
+        }, 0);
+    };
+
+    useEffect(() => {
+        if (!selectionMenu) {
+            return;
+        }
+        const hide = (): void => {
+            if (document.getSelection()?.isCollapsed ?? true) {
+                setSelectionMenu(null);
+            }
+        };
+        const element = content.current;
+        const onScroll = (): void => setSelectionMenu(null);
+        document.addEventListener("selectionchange", hide);
+        element?.addEventListener("scroll", onScroll, true);
+        return () => {
+            document.removeEventListener("selectionchange", hide);
+            element?.removeEventListener("scroll", onScroll, true);
+        };
+    }, [selectionMenu]);
+
+    // Clicking markup selects it; clicking elsewhere on a page lets go.
+    const onContentClick = (event: MouseEvent<HTMLDivElement>): void => {
+        const element = content.current;
+        if (!showMarkup || !element || (activeTool !== "select" && activeTool !== "highlight")) {
+            return;
+        }
+        if (!(document.getSelection()?.isCollapsed ?? true)) {
+            return;
+        }
+        if ((event.target as HTMLElement).closest?.(".dvp-markup-popover, .dvp-markup-pin, a, button")) {
+            return;
+        }
+        for (const layer of Array.from(element.querySelectorAll<HTMLElement>(".dvp-markup-layer"))) {
+            const box = layer.getBoundingClientRect();
+            if (
+                event.clientX < box.left ||
+                event.clientX > box.right ||
+                event.clientY < box.top ||
+                event.clientY > box.bottom
+            ) {
+                continue;
+            }
+            const turn = Number(layer.dataset.rotation) || 0;
+            const [x, y] = fromView(
+                (event.clientX - box.left) / (box.width || 1),
+                (event.clientY - box.top) / (box.height || 1),
+                turn
+            );
+            const aspect = turn % 180 === 0 ? box.height / (box.width || 1) : box.width / (box.height || 1);
+            setSelectedId(hitTest(markup.items, Number(layer.dataset.markupPage), x, y, aspect)?.id ?? null);
+            return;
+        }
+        setSelectedId(null);
+    };
 
     const onKeyDown = useCallback(
         (event: KeyboardEvent<HTMLDivElement>) => {
@@ -369,6 +605,29 @@ export function Viewer(props: ViewerProps): ReactElement {
                 return;
             }
             if (isTyping(event.target)) {
+                return;
+            }
+            if (selectedMarkup && markup.editable && (event.key === "Delete" || event.key === "Backspace")) {
+                event.preventDefault();
+                removeMarkup(selectedMarkup.id);
+                return;
+            }
+            if (markupEditing && mod && (event.key.toLowerCase() === "z" || event.key.toLowerCase() === "y")) {
+                event.preventDefault();
+                if (event.key.toLowerCase() === "y" || event.shiftKey) {
+                    markup.redo();
+                } else {
+                    markup.undo();
+                }
+                return;
+            }
+            if (event.key === "Escape" && (selectedId || markupOpen)) {
+                event.preventDefault();
+                if (selectedId) {
+                    setSelectedId(null);
+                } else {
+                    setMarkupOpen(false);
+                }
                 return;
             }
             if (mod && (event.key === "+" || event.key === "=") && zoomable) {
@@ -403,7 +662,21 @@ export function Viewer(props: ViewerProps): ReactElement {
                 closeSearch();
             }
         },
-        [info, settings, canPrint, print, zoomable, zoomStep, setZoomMode, goToPage, page, searchOpen, closeSearch]
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [
+            info,
+            settings,
+            canPrint,
+            print,
+            zoomable,
+            zoomStep,
+            setZoomMode,
+            goToPage,
+            page,
+            searchOpen,
+            closeSearch,
+            markup
+        ]
     );
 
     const View = file && file.kind !== "unknown" ? views[file.kind] : undefined;
@@ -449,6 +722,7 @@ export function Viewer(props: ViewerProps): ReactElement {
                     blockRemoteImages={settings.blockRemoteImages}
                     labels={labels}
                     callbacks={callbacks}
+                    pageOverlay={pageOverlay}
                 />
             </div>
         );
@@ -495,6 +769,17 @@ export function Viewer(props: ViewerProps): ReactElement {
                 onDownload={download}
                 fullscreen={fullscreen}
                 onToggleFullscreen={toggleFullscreen}
+                markup={
+                    showMarkup && markup.editable
+                        ? {
+                              open: markupOpen,
+                              onToggle: () => {
+                                  setMarkupOpen(open => !open);
+                                  setSelectedId(null);
+                              }
+                          }
+                        : undefined
+                }
                 extra={props.toolbarContent}
             />
         ) : null;
@@ -525,6 +810,34 @@ export function Viewer(props: ViewerProps): ReactElement {
                     onClose={closeSearch}
                 />
             )}
+            {markupEditing && (
+                <MarkupBar
+                    labels={labels}
+                    tool={activeTool}
+                    color={color}
+                    textHighlights={file?.kind === "pdf"}
+                    canUndo={markup.canUndo}
+                    canRedo={markup.canRedo}
+                    canDelete={Boolean(selectedMarkup)}
+                    onTool={value => {
+                        setTool(value);
+                        setSelectedId(null);
+                    }}
+                    onColor={value => {
+                        setColor(value);
+                        if (selectedMarkup) {
+                            markup.update(selectedMarkup.id, { color: value });
+                        }
+                    }}
+                    onUndo={markup.undo}
+                    onRedo={markup.redo}
+                    onDelete={() => selectedMarkup && removeMarkup(selectedMarkup.id)}
+                    onClose={() => {
+                        setMarkupOpen(false);
+                        setSelectedId(null);
+                    }}
+                />
+            )}
             {showStrip && (
                 <FileStrip
                     files={sources.map(s => ({ key: s.key, name: s.name, caption: s.caption }))}
@@ -544,16 +857,49 @@ export function Viewer(props: ViewerProps): ReactElement {
                         labels={labels}
                         thumbnails={info?.thumbnails}
                         outline={info?.outline}
+                        markup={
+                            showMarkup && markup.items.length > 0
+                                ? {
+                                      items: markup.items,
+                                      selectedId,
+                                      onSelect: item => {
+                                          goToPage(item.page);
+                                          setSelectedId(item.id);
+                                      }
+                                  }
+                                : undefined
+                        }
                         page={page}
                         onSelect={goToPage}
                     />
                 )}
-                <div ref={content} className="dvp-content">
+                <div ref={content} className="dvp-content" onMouseUp={onContentMouseUp} onClick={onContentClick}>
                     {body}
                     {settings.watermark && file && <Watermark text={settings.watermark} />}
                 </div>
             </div>
             {settings.toolbarPosition === "bottom" && toolbar}
+            {selectionMenu && (
+                <div
+                    className="dvp-selection-menu"
+                    style={{ left: selectionMenu.left, top: selectionMenu.top }}
+                    role="toolbar"
+                    // Keeps the text selected while a button is pressed.
+                    onMouseDown={event => event.preventDefault()}
+                >
+                    {selectionMenu.highlight && (
+                        <button type="button" className="dvp-selection-button" onClick={highlightSelection}>
+                            <span className="dvp-markup-item-dot" style={{ background: color }} />
+                            {labels.highlight}
+                        </button>
+                    )}
+                    {props.selectionAction && (
+                        <button type="button" className="dvp-selection-button" onClick={runSelectionAction}>
+                            {props.selectionAction.label}
+                        </button>
+                    )}
+                </div>
+            )}
         </div>
     );
 }
