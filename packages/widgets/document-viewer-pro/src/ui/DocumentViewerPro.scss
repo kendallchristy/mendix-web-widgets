@@ -16,6 +16,8 @@ $dark-mode-ancestors: ".dark-mode";
     --dvp-pressed: rgba(17, 24, 39, 0.1);
     --dvp-accent: #2563eb;
     --dvp-accent-soft: rgba(37, 99, 235, 0.12);
+    --dvp-on-accent: #ffffff;
+    --dvp-danger: #dc2626;
     --dvp-page-shadow: 0 1px 3px rgba(17, 24, 39, 0.12), 0 4px 12px rgba(17, 24, 39, 0.06);
     --dvp-match: rgba(250, 204, 21, 0.45);
     --dvp-match-active: rgba(249, 115, 22, 0.6);
@@ -45,6 +47,8 @@ $dark-mode-ancestors: ".dark-mode";
     --dvp-pressed: rgba(255, 255, 255, 0.14);
     --dvp-accent: #60a5fa;
     --dvp-accent-soft: rgba(96, 165, 250, 0.18);
+    --dvp-on-accent: #0b1220;
+    --dvp-danger: #f87171;
     --dvp-page-shadow: 0 1px 3px rgba(0, 0, 0, 0.5), 0 4px 12px rgba(0, 0, 0, 0.3);
     --dvp-match: rgba(250, 204, 21, 0.4);
     --dvp-match-active: rgba(249, 115, 22, 0.65);
@@ -639,6 +643,9 @@ mark.dvp-match {
     overflow: hidden;
     background: #ffffff;
     box-shadow: var(--dvp-page-shadow);
+    // pdf.js sizes its text and form layers with these.
+    --scale-round-x: 1px;
+    --scale-round-y: 1px;
 
     .dvp-page-canvas {
         display: block;
@@ -696,6 +703,19 @@ mark.dvp-match {
         mark.dvp-match {
             color: transparent;
         }
+    }
+
+    // pdf.js lays text and form fields out on the unrotated page and turns the layer as a whole.
+    [data-main-rotation="90"] {
+        transform: rotate(90deg) translateY(-100%);
+    }
+
+    [data-main-rotation="180"] {
+        transform: rotate(180deg) translate(-100%, -100%);
+    }
+
+    [data-main-rotation="270"] {
+        transform: rotate(270deg) translateX(-100%);
     }
 
     [data-allow-copy="false"] & .textLayer :is(span, br) {
@@ -1653,6 +1673,524 @@ mark.dvp-match {
     color: var(--dvp-text-muted);
     font-size: 12px;
     font-variant-numeric: tabular-nums;
+}
+
+// Forms and signatures
+
+.dvp-button {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 12px;
+    border: 1px solid var(--dvp-border-strong);
+    border-radius: 6px;
+    background: var(--dvp-surface);
+    color: var(--dvp-text);
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+        background: var(--dvp-hover);
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: default;
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--dvp-accent);
+        outline-offset: 1px;
+    }
+
+    &.dvp-button--primary {
+        border-color: var(--dvp-accent);
+        background: var(--dvp-accent);
+        color: var(--dvp-on-accent);
+
+        &:hover:not(:disabled) {
+            background: var(--dvp-accent);
+            filter: brightness(1.08);
+        }
+    }
+}
+
+// Floats over the pages, so starting to place a signature doesn't move them.
+.dvp-sign-banner {
+    position: absolute;
+    top: calc(var(--dvp-toolbar-height) + 10px);
+    left: 50%;
+    z-index: 7;
+    max-width: calc(100% - 32px);
+    box-sizing: border-box;
+    border: 1px solid var(--dvp-border);
+    border-radius: 999px;
+    padding: 6px 6px 6px 16px;
+    background: var(--dvp-surface);
+    color: var(--dvp-text);
+    box-shadow: 0 6px 18px rgba(17, 24, 39, 0.18);
+    transform: translateX(-50%);
+
+    .dvp--toolbar-bottom & {
+        top: 10px;
+    }
+
+    .dvp-button {
+        border-radius: 999px;
+    }
+}
+
+.dvp-save-bar {
+    display: flex;
+    flex: none;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-top: 1px solid var(--dvp-border);
+    background: var(--dvp-surface);
+    color: var(--dvp-text-subtle);
+    font-size: 13px;
+
+    &.dvp-save-bar--error {
+        color: var(--dvp-danger);
+    }
+}
+
+.dvp-save-bar-text {
+    flex: 1;
+    min-width: 160px;
+}
+
+// pdf.js form fields, from its viewer styles.
+.dvp-page .annotationLayer {
+    --annotation-unfocused-field-background: rgba(0, 54, 255, 0.13);
+    --input-focus-border-color: var(--dvp-accent);
+
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 2;
+    color-scheme: only light;
+    pointer-events: none;
+    transform-origin: 0 0;
+
+    section {
+        position: absolute;
+        box-sizing: border-box;
+        text-align: initial;
+        pointer-events: auto;
+        transform-origin: 0 0;
+        user-select: none;
+
+        &:has(div.annotationContent) canvas.annotationContent {
+            display: none;
+        }
+    }
+
+    .annotationContent {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+    }
+
+    .hasOwnCanvas:not(.sandboxModified) :is(input, textarea) {
+        display: none;
+    }
+
+    .textWidgetAnnotation :is(input, textarea),
+    .choiceWidgetAnnotation select,
+    .buttonWidgetAnnotation:is(.checkBox, .radioButton) input {
+        box-sizing: border-box;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0 2px;
+        border: 2px solid transparent;
+        border-radius: 2px;
+        background: var(--annotation-unfocused-field-background);
+        color: #000000;
+        font: calc(9px * var(--total-scale-factor)) sans-serif;
+        vertical-align: top;
+    }
+
+    .textWidgetAnnotation textarea {
+        resize: none;
+    }
+
+    .choiceWidgetAnnotation select option {
+        padding: 0;
+    }
+
+    .textWidgetAnnotation :is(input, textarea)[disabled],
+    .choiceWidgetAnnotation select[disabled],
+    .buttonWidgetAnnotation:is(.checkBox, .radioButton) input[disabled] {
+        background: none;
+        cursor: not-allowed;
+    }
+
+    .textWidgetAnnotation :is(input, textarea):hover,
+    .choiceWidgetAnnotation select:hover,
+    .buttonWidgetAnnotation:is(.checkBox, .radioButton) input:hover {
+        border-color: rgba(0, 0, 0, 0.6);
+    }
+
+    .textWidgetAnnotation :is(input, textarea):focus,
+    .choiceWidgetAnnotation select:focus,
+    .buttonWidgetAnnotation:is(.checkBox, .radioButton) input:focus {
+        border-color: var(--input-focus-border-color);
+        background: none;
+        outline: none;
+    }
+
+    .textWidgetAnnotation input.comb {
+        --comb-width: 0px;
+        --comb-letter-spacing: calc(var(--comb-width) - 1ch);
+
+        padding: 0;
+        overflow-x: hidden;
+        font-family: monospace;
+        letter-spacing: var(--comb-letter-spacing);
+        text-indent: calc(var(--comb-offset, 0) * var(--comb-width) + var(--comb-letter-spacing) / 2);
+    }
+
+    .buttonWidgetAnnotation:is(.checkBox, .radioButton) {
+        input {
+            appearance: none;
+        }
+
+        &:has([data-canvas-name="checked"]) input:checked,
+        &:has([data-canvas-name="unchecked"]) input:not(:checked) {
+            background: none;
+        }
+
+        // Check boxes drawn by the PDF itself get the field tint behind them.
+        &:has([data-canvas-name]):not(:focus-within) {
+            background: var(--annotation-unfocused-field-background);
+        }
+
+        [data-canvas-name="checked"] {
+            &:has(~ input:checked) {
+                display: block;
+            }
+
+            &:has(~ input:not(:checked)) {
+                display: none;
+            }
+        }
+
+        [data-canvas-name="unchecked"] {
+            &:has(~ input:checked) {
+                display: none;
+            }
+
+            &:has(~ input:not(:checked)) {
+                display: block;
+            }
+        }
+    }
+
+    .buttonWidgetAnnotation.radioButton input {
+        border-radius: 50%;
+    }
+
+    :is(.linkAnnotation, .buttonWidgetAnnotation.pushButton) > a {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
+}
+
+.dvp-signature-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+
+    &.dvp-signature-layer--placing {
+        cursor: copy;
+        pointer-events: auto;
+        touch-action: none;
+    }
+
+    &.dvp-signature-layer--dragging {
+        cursor: grabbing;
+        pointer-events: auto;
+        touch-action: none;
+        user-select: none;
+    }
+}
+
+.dvp-signature-field {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-width: 24px;
+    min-height: 18px;
+    padding: 0 6px;
+    overflow: hidden;
+    border: 1.5px dashed var(--dvp-accent);
+    border-radius: 4px;
+    background: rgba(37, 99, 235, 0.08);
+    color: #1d4ed8;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    pointer-events: auto;
+
+    &:hover:not(:disabled) {
+        background: rgba(37, 99, 235, 0.16);
+    }
+
+    &:disabled {
+        cursor: default;
+    }
+
+    .dvp-icon {
+        flex: none;
+        width: 16px;
+        height: 16px;
+    }
+
+    span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+
+.dvp-signature {
+    position: absolute;
+    border: 1.5px solid transparent;
+    border-radius: 3px;
+    cursor: grab;
+    pointer-events: auto;
+    touch-action: none;
+    user-select: none;
+
+    img {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        pointer-events: none;
+    }
+
+    &:hover {
+        border-color: var(--dvp-accent-soft);
+    }
+
+    &.dvp-signature--selected {
+        border: 1.5px dashed var(--dvp-accent);
+    }
+
+    &.dvp-signature--preview {
+        opacity: 0.6;
+        pointer-events: none;
+    }
+}
+
+.dvp-signature-remove {
+    position: absolute;
+    top: -12px;
+    right: -12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: 1px solid var(--dvp-border-strong);
+    border-radius: 50%;
+    background: var(--dvp-surface);
+    color: var(--dvp-text);
+    box-shadow: 0 1px 3px rgba(17, 24, 39, 0.2);
+    cursor: pointer;
+
+    .dvp-icon {
+        width: 14px;
+        height: 14px;
+    }
+}
+
+.dvp-signature-handle {
+    position: absolute;
+    right: -7px;
+    bottom: -7px;
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--dvp-surface);
+    border-radius: 50%;
+    background: var(--dvp-accent);
+    cursor: nwse-resize;
+}
+
+.dvp-dialog-backdrop {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: rgba(17, 24, 39, 0.45);
+}
+
+.dvp-dialog {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: min(560px, 100%);
+    max-height: 100%;
+    padding: 18px;
+    overflow: auto;
+    border-radius: 12px;
+    background: var(--dvp-surface);
+    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.28);
+    color: var(--dvp-text);
+    box-sizing: border-box;
+    user-select: none;
+
+    &:focus {
+        outline: none;
+    }
+}
+
+.dvp-dialog-title {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.dvp-dialog-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.dvp-segmented {
+    display: flex;
+    gap: 2px;
+    padding: 3px;
+    border-radius: 8px;
+    background: var(--dvp-hover);
+}
+
+.dvp-segment {
+    flex: 1;
+    height: 30px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--dvp-text-subtle);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+
+    &.dvp-segment--active {
+        background: var(--dvp-surface);
+        color: var(--dvp-text);
+        box-shadow: 0 1px 2px rgba(17, 24, 39, 0.15);
+    }
+}
+
+// The signing area stays paper white in dark mode, like the pages it goes on.
+.dvp-signature-area {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    aspect-ratio: 16 / 5;
+    overflow: hidden;
+    border: 1px solid var(--dvp-border-strong);
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.dvp-signature-pad {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    cursor: crosshair;
+    touch-action: none;
+}
+
+.dvp-signature-line {
+    position: absolute;
+    right: 8%;
+    bottom: 22%;
+    left: 8%;
+    height: 1px;
+    background: #c7cbd3;
+    pointer-events: none;
+}
+
+.dvp-signature-typed {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 10px 12px 0;
+    box-sizing: border-box;
+}
+
+.dvp-signature-name {
+    height: 32px;
+    padding: 0 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #111827;
+    font-size: 14px;
+
+    &:focus {
+        border-color: #2563eb;
+        outline: 2px solid rgba(37, 99, 235, 0.15);
+    }
+}
+
+.dvp-signature-preview {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    padding: 0 8%;
+    overflow: hidden;
+    font-size: clamp(28px, 7vw, 44px);
+    white-space: nowrap;
+}
+
+.dvp-signature-upload {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #4b5563;
+    font-size: 13px;
+    cursor: pointer;
+
+    &:hover {
+        background: #f9fafb;
+    }
+
+    img {
+        max-width: 84%;
+        max-height: 70%;
+    }
+
+    input {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        opacity: 0;
+    }
 }
 
 // Watermark

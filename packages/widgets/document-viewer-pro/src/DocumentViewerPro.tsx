@@ -4,7 +4,8 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, 
 
 import type { DocumentViewerProContainerProps } from "../typings/DocumentViewerProProps";
 import type { MarkupSource } from "./components/useMarkup";
-import { Viewer, type ViewerSettings, type ViewerSource } from "./components/Viewer";
+import { Viewer, type PdfEditing, type ViewerSettings, type ViewerSource } from "./components/Viewer";
+import { parseFormValues, type FormValues } from "./core/forms";
 import { defaultLabels, type Labels } from "./core/labels";
 import type { ZoomMode } from "./core/zoom";
 import "./ui/DocumentViewerPro.scss";
@@ -138,6 +139,25 @@ function labelsFrom(props: DocumentViewerProContainerProps): Labels {
         areaItem: pick(props.labelAreaItem, defaultLabels.areaItem),
         noteItem: pick(props.labelNoteItem, defaultLabels.noteItem),
         drawingItem: pick(props.labelDrawingItem, defaultLabels.drawingItem),
+        sign: pick(props.labelSign, defaultLabels.sign),
+        signTitle: pick(props.labelSignTitle, defaultLabels.signTitle),
+        signDraw: pick(props.labelSignDraw, defaultLabels.signDraw),
+        signType: pick(props.labelSignType, defaultLabels.signType),
+        signUpload: pick(props.labelSignUpload, defaultLabels.signUpload),
+        signTypePlaceholder: pick(props.labelSignTypePlaceholder, defaultLabels.signTypePlaceholder),
+        signUploadPrompt: pick(props.labelSignUploadPrompt, defaultLabels.signUploadPrompt),
+        signClear: pick(props.labelSignClear, defaultLabels.signClear),
+        signCancel: pick(props.labelSignCancel, defaultLabels.signCancel),
+        signApply: pick(props.labelSignApply, defaultLabels.signApply),
+        signPlace: pick(props.labelSignPlace, defaultLabels.signPlace),
+        signHere: pick(props.labelSignHere, defaultLabels.signHere),
+        removeSignature: pick(props.labelRemoveSignature, defaultLabels.removeSignature),
+        unsavedChanges: pick(props.labelUnsavedChanges, defaultLabels.unsavedChanges),
+        saveDocument: pick(props.labelSaveDocument, defaultLabels.saveDocument),
+        savingDocument: pick(props.labelSavingDocument, defaultLabels.savingDocument),
+        savedDocument: pick(props.labelSavedDocument, defaultLabels.savedDocument),
+        downloadCopy: pick(props.labelDownloadCopy, defaultLabels.downloadCopy),
+        saveError: pick(props.labelSaveError, defaultLabels.saveError),
         // An emptied note hides it, so only fall back while the text hasn't loaded.
         slidesBeta:
             props.labelSlidesBeta?.status === "available"
@@ -340,6 +360,40 @@ export function DocumentViewerPro(props: DocumentViewerProContainerProps): React
     );
     const download = useMemo(() => (onDownload ? () => run(onDownload) : undefined), [onDownload]);
 
+    const { formData, onFormChange, saveFile, onSave, flattenOnSave } = props;
+    const single = source !== "LIST";
+    const fill = props.allowFormFilling?.value !== false;
+    const sign = props.allowSigning?.value !== false;
+    const signerName = props.signerName?.value || undefined;
+    // Read when a PDF opens; the viewer keeps track of changes after that.
+    const formJson = single ? formData?.value : undefined;
+    const pdf: PdfEditing = useMemo(
+        () => ({
+            fill,
+            initial: parseFormValues(formJson),
+            onFormChange: single
+                ? (values: FormValues) => {
+                      const json = JSON.stringify(values);
+                      setText(formData, json);
+                      if (onFormChange?.canExecute && !onFormChange.isExecuting) {
+                          onFormChange.execute({ values: json });
+                      }
+                  }
+                : undefined,
+            sign,
+            signerName,
+            flatten: flattenOnSave,
+            save:
+                single && saveFile?.status === "available" && !saveFile.readOnly
+                    ? async (bytes: Uint8Array, name: string) => {
+                          saveFile.setValue(new File([bytes as BlobPart], name, { type: "application/pdf" }));
+                          run(onSave);
+                      }
+                    : undefined
+        }),
+        [fill, formJson, single, formData, onFormChange, sign, signerName, flattenOnSave, saveFile, onSave]
+    );
+
     const { selectionAction: textAction, selectionCaption } = props;
     const selectionAction = useMemo(
         () =>
@@ -369,6 +423,7 @@ export function DocumentViewerPro(props: DocumentViewerProContainerProps): React
             onPage={onPage}
             onDownload={download}
             selectionAction={selectionAction}
+            pdf={pdf}
             className={props.class}
             style={{ ...heightStyle(props), ...props.style }}
             tabIndex={props.tabIndex}

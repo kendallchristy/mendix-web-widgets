@@ -17,7 +17,7 @@ const load = async name => {
     return module.default ?? module;
 };
 
-const ENGINES = ["pdf", "docx", "sheet", "pptx", "tiff", "code", "markdown", "email"];
+const ENGINES = ["pdf", "pdfsave", "docx", "sheet", "pptx", "tiff", "code", "markdown", "email"];
 const widgetDir = "com/kendallchristy/widget/web/documentviewerpro";
 const enginesDir = join("dist/tmp/widgets", widgetDir, "engines");
 
@@ -65,13 +65,14 @@ function copyPdfAssets() {
 export default async args => {
     const production = Boolean(args.configProduction);
     const defaults = args.configDefaultConfig;
-    const [nodeResolve, commonjs, typescript, terser, replace, license] = await Promise.all([
+    const [nodeResolve, commonjs, typescript, terser, replace, license, json] = await Promise.all([
         load("@rollup/plugin-node-resolve").then(m => m.nodeResolve ?? m),
         load("@rollup/plugin-commonjs"),
         load("@rollup/plugin-typescript"),
         load("@rollup/plugin-terser"),
         load("rollup-plugin-re"),
-        load("rollup-plugin-license")
+        load("rollup-plugin-license"),
+        load("@rollup/plugin-json")
     ]);
 
     const engineConfigs = ENGINES.map((name, index) => ({
@@ -86,6 +87,8 @@ export default async args => {
             browserShims(),
             nodeResolve({ preferBuiltins: false, browser: true, mainFields: ["module", "browser", "main"] }),
             commonjs({ transformMixedEsModules: true, requireReturnsDefault: "auto" }),
+            // pdf-lib keeps its standard font metrics in JSON files.
+            json(),
             typescript({
                 noEmitOnError: !args.watch,
                 sourceMap: !production,

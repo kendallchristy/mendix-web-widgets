@@ -2,9 +2,11 @@ import type { PDFDocumentLoadingTask, PDFDocumentProxy, PDFPageProxy } from "pdf
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type FormEvent, type ReactElement } from "react";
 
 import { loadEngine, pdfAssetsUrl } from "../core/engines";
+import { formStorageEntries, isFillable, readFormValues, type FieldWidget } from "../core/forms";
 import type { PageSize } from "../core/pages";
 import type { PrintJob } from "../core/print";
 import { clearHighlights, countMatches, highlightMatches, setActiveMark } from "../core/search";
+import { dataUrlBytes, type PlacedSignature, type SignatureField } from "../core/signatures";
 import { PagedView, type RenderPage } from "./PagedView";
 import type { OutlineItem, Thumbnails, ViewProps } from "./types";
 
@@ -14,6 +16,37 @@ const CSS_UNITS = 96 / 72;
 const MAX_CANVAS_PIXELS = 16_000_000;
 
 type PdfJs = Awaited<ReturnType<typeof loadEngine<"pdf">>>;
+type Fields = Record<string, FieldWidget[]>;
+
+// Form fields need a link service; links themselves are drawn by addLinks.
+const LINK_SERVICE = {
+    externalLinkEnabled: false,
+    isInPresentationMode: false,
+    eventBus: { on: noop, off: noop, dispatch: noop },
+    getDestinationHash: () => "#",
+    getAnchorUrl: () => "#",
+    addLinkAttributes: noop,
+    goToDestination: noop,
+    executeNamedAction: noop,
+    executeSetOCGState: noop
+};
+
+function noop(): void {
+    // Not needed for form fields.
+}
+
+function currentValues(doc: PDFDocumentProxy, fields: Fields): ReturnType<typeof readFormValues> {
+    const storage = doc.annotationStorage;
+    const stored: Record<string, { value?: unknown } | undefined> = {};
+    for (const widgets of Object.values(fields)) {
+        for (const widget of widgets) {
+            if (storage.has(widget.id)) {
+                stored[widget.id] = storage.getRawValue(widget.id) as { value?: unknown };
+            }
+        }
+    }
+    return readFormValues(fields, stored);
+}
 
 interface PasswordState {
     retry(password: string): void;
@@ -129,7 +162,8 @@ async function renderToCanvas(
     canvas: HTMLCanvasElement,
     scale: number,
     rotation: number,
-    pixelRatio: number
+    pixelRatio: number,
+    annotationMode?: number
 ): Promise<void> {
     const viewport = page.getViewport({ scale: scale * CSS_UNITS, rotation: (page.rotate + rotation) % 360 });
     let ratio = pixelRatio;
@@ -143,8 +177,66 @@ async function renderToCanvas(
     await page.render({
         canvas,
         viewport,
+        annotationMode,
         transform: ratio !== 1 ? [ratio, 0, 0, ratio, 0, 0] : undefined
     }).promise;
+}
+
+async function renderFormFields(
+    host: HTMLElement,
+    page: PDFPageProxy,
+    viewport: ReturnType<PDFPageProxy["getViewport"]>,
+    doc: PDFDocumentProxy,
+    fields: Fields,
+    annotationCanvasMap: Map<string, HTMLCanvasElement>,
+    engine: PdfJs,
+    onChange: () => void
+): Promise<void> {
+    const annotations = (await page.getAnnotations({ intent: "display" })).filter(
+        annotation => annotation.subtype === "Widget" && annotation.fieldType !== "Sig"
+    );
+    if (annotations.length === 0) {
+        return;
+    }
+    const div = document.createElement("div");
+    div.className = "annotationLayer";
+    div.style.setProperty("--total-scale-factor", String(viewport.scale));
+    div.style.setProperty("--scale-factor", String(viewport.scale));
+    host.appendChild(div);
+    const flipped = viewport.clone({ dontFlip: true });
+    const layer = new engine.AnnotationLayer({
+        div,
+        accessibilityManager: null,
+        annotationCanvasMap,
+        annotationEditorUIManager: null,
+        page,
+        viewport: flipped,
+        structTreeLayer: null,
+        commentManager: null,
+        linkService: LINK_SERVICE,
+        annotationStorage: doc.annotationStorage
+    });
+    await layer.render({
+        viewport: flipped,
+        div,
+        annotations,
+        page,
+        linkService: LINK_SERVICE as never,
+        annotationStorage: doc.annotationStorage,
+        renderForms: true,
+        enableScripting: false,
+        hasJSActions: false,
+        fieldObjects: new Map(Object.entries(fields)) as never,
+        annotationCanvasMap
+    });
+    // pdf.js stores each change itself; the app hears about it a moment later.
+    let timer = 0;
+    const changed = (): void => {
+        window.clearTimeout(timer);
+        timer = window.setTimeout(onChange, 300);
+    };
+    div.addEventListener("input", changed);
+    div.addEventListener("change", changed);
 }
 
 export function PdfView(props: ViewProps): ReactElement | null {
@@ -152,6 +244,14 @@ export function PdfView(props: ViewProps): ReactElement | null {
     const [doc, setDoc] = useState<PDFDocumentProxy | null>(null);
     const [sizes, setSizes] = useState<PageSize[]>([]);
     const [password, setPassword] = useState<PasswordState | null>(null);
+    const [fields, setFields] = useState<Fields | null>(null);
+    const forms = useRef(props.forms);
+    // The values last sent to the app, so a field that fires both input and change reports once.
+    const sentValues = useRef("");
+    useLayoutEffect(() => {
+        forms.current = props.forms;
+    });
+    const fillForms = Boolean(props.forms?.fill && fields && isFillable(Object.values(fields).flat()));
     const pdfjs = useRef<PdfJs | null>(null);
     const pages = useRef(new Map<number, Promise<PDFPageProxy>>());
     const textLayers = useRef(new Map<number, HTMLElement>());
@@ -220,6 +320,24 @@ export function PdfView(props: ViewProps): ReactElement | null {
                     width: base.width,
                     height: base.height
                 }));
+                // Form fields, filled with the app's values before anything is drawn.
+                // pdf.js gives a Map of field name to widgets.
+                const found = (await loaded.getFieldObjects().catch(() => null)) as Map<string, FieldWidget[]> | null;
+                const fieldObjects: Fields | null = found ? Object.fromEntries(found) : null;
+                if (cancelled) {
+                    return;
+                }
+                const storage = loaded.annotationStorage;
+                for (const [id, value] of formStorageEntries(fieldObjects, forms.current?.initial ?? {})) {
+                    storage.setValue(id, value);
+                }
+                storage.resetModified();
+                Object.assign(storage, {
+                    onSetModified: () => callbacks.onInfo({ formDirty: true }),
+                    onResetModified: () => callbacks.onInfo({ formDirty: false })
+                });
+                sentValues.current = JSON.stringify(currentValues(loaded, fieldObjects ?? {}));
+                setFields(fieldObjects);
                 setDoc(loaded);
                 setSizes(guess);
                 callbacks.onReady({
@@ -227,7 +345,8 @@ export function PdfView(props: ViewProps): ReactElement | null {
                     zoomable: true,
                     fits: true,
                     rotatable: true,
-                    searchable: true
+                    searchable: true,
+                    form: Boolean(fieldObjects && isFillable(Object.values(fieldObjects).flat()))
                 });
                 const real: PageSize[] = [];
                 for (let i = 0; i < loaded.numPages; i++) {
@@ -271,7 +390,14 @@ export function PdfView(props: ViewProps): ReactElement | null {
             render: async (index, canvas, width) => {
                 const page = await getPage(index);
                 const base = page.getViewport({ scale: CSS_UNITS });
-                await renderToCanvas(page, canvas, width / base.width, 0, window.devicePixelRatio || 1);
+                await renderToCanvas(
+                    page,
+                    canvas,
+                    width / base.width,
+                    0,
+                    window.devicePixelRatio || 1,
+                    pdfjs.current?.AnnotationMode.ENABLE_STORAGE
+                );
             }
         };
         const print = async (): Promise<PrintJob> => {
@@ -280,7 +406,7 @@ export function PdfView(props: ViewProps): ReactElement | null {
                 const page = await getPage(i);
                 const canvas = document.createElement("canvas");
                 // About 150 dpi: sharp on paper without running out of memory on long documents.
-                await renderToCanvas(page, canvas, 1, rotation, 1.6);
+                await renderToCanvas(page, canvas, 1, rotation, 1.6, pdfjs.current?.AnnotationMode.ENABLE_STORAGE);
                 const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, "image/png"));
                 if (blob) {
                     images.push(URL.createObjectURL(blob));
@@ -290,7 +416,74 @@ export function PdfView(props: ViewProps): ReactElement | null {
             }
             return { kind: "images", images, rotation };
         };
-        callbacks.onInfo({ thumbnails, print });
+        const exportPdf = async (signatures: PlacedSignature[], flatten: boolean): Promise<Uint8Array> => {
+            const data = doc.annotationStorage.size > 0 ? await doc.saveDocument() : await doc.getData();
+            if (signatures.length === 0 && !flatten) {
+                return data;
+            }
+            const saver = await loadEngine("pdfsave");
+            const images = await Promise.all(
+                signatures.map(async signature => {
+                    const page = await getPage(signature.page - 1);
+                    // At scale 1 a viewport unit is a PDF point; the viewport includes the page's own rotation.
+                    const viewport = page.getViewport({ scale: 1 });
+                    const [x, y, w, h] = signature.rect;
+                    const [left, bottom] = viewport.convertToPdfPoint(
+                        x * viewport.width,
+                        (y + h) * viewport.height
+                    ) as [number, number];
+                    return {
+                        pageIndex: signature.page - 1,
+                        png: dataUrlBytes(signature.image),
+                        x: left,
+                        y: bottom,
+                        width: w * viewport.width,
+                        height: h * viewport.height,
+                        rotate: page.rotate,
+                        field: signature.field
+                    };
+                })
+            );
+            return saver.stampPdf(data, images, flatten);
+        };
+        callbacks.onInfo({
+            thumbnails,
+            print,
+            exportPdf,
+            markSaved: () => doc.annotationStorage.resetModified()
+        });
+        // Empty signature fields, so the viewer can offer to sign there.
+        (async () => {
+            const signatureFields: SignatureField[] = [];
+            for (let i = 0; i < doc.numPages; i++) {
+                const page = await getPage(i);
+                const annotations = await page.getAnnotations({ intent: "display" });
+                const viewport = page.getViewport({ scale: 1 });
+                for (const annotation of annotations) {
+                    if (annotation.subtype !== "Widget" || annotation.fieldType !== "Sig" || annotation.fieldValue) {
+                        continue;
+                    }
+                    const [x1, y1] = viewport.convertToViewportPoint(annotation.rect[0], annotation.rect[1]);
+                    const [x2, y2] = viewport.convertToViewportPoint(annotation.rect[2], annotation.rect[3]);
+                    signatureFields.push({
+                        key: String(annotation.id ?? `${i}-${signatureFields.length}`),
+                        page: i + 1,
+                        rect: [
+                            Math.min(x1, x2) / viewport.width,
+                            Math.min(y1, y2) / viewport.height,
+                            Math.abs(x2 - x1) / viewport.width,
+                            Math.abs(y2 - y1) / viewport.height
+                        ]
+                    });
+                }
+                if (cancelled) {
+                    return;
+                }
+            }
+            if (signatureFields.length > 0) {
+                callbacks.onInfo({ signatureFields });
+            }
+        })().catch(() => undefined);
         resolveOutline(doc)
             .then(outline => {
                 if (!cancelled && outline.length > 0) {
@@ -404,9 +597,15 @@ export function PdfView(props: ViewProps): ReactElement | null {
                     canvas.width = Math.floor(viewport.width * ratio);
                     canvas.height = Math.floor(viewport.height * ratio);
                     canvas.className = "dvp-page-canvas";
+                    // When fields can be filled, they're drawn as inputs instead of onto the page.
+                    const annotationCanvasMap = new Map<string, HTMLCanvasElement>();
                     const task = page.render({
                         canvas,
                         viewport,
+                        annotationMode: fillForms
+                            ? engine.AnnotationMode.ENABLE_FORMS
+                            : engine.AnnotationMode.ENABLE_STORAGE,
+                        annotationCanvasMap,
                         transform: ratio !== 1 ? [ratio, 0, 0, ratio, 0, 0] : undefined
                     });
                     renderTask = task;
@@ -434,6 +633,16 @@ export function PdfView(props: ViewProps): ReactElement | null {
                     textLayers.current.set(index, text);
                     applyHighlights(index, text, true);
                     addLinks(host, page, viewport, doc as PDFDocumentProxy, goToPage);
+                    if (fillForms && doc && fields) {
+                        await renderFormFields(host, page, viewport, doc, fields, annotationCanvasMap, engine, () => {
+                            const values = currentValues(doc, fields);
+                            const json = JSON.stringify(values);
+                            if (json !== sentValues.current) {
+                                sentValues.current = json;
+                                forms.current?.onChange?.(values);
+                            }
+                        });
+                    }
                 })
                 .catch(() => undefined);
             return () => {
@@ -445,7 +654,7 @@ export function PdfView(props: ViewProps): ReactElement | null {
                 }
             };
         },
-        [getPage, applyHighlights, doc, goToPage]
+        [getPage, applyHighlights, doc, goToPage, fillForms, fields]
     );
 
     const onSubmitPassword = useCallback(

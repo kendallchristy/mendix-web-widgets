@@ -3,6 +3,7 @@ import type { DocxEngine } from "../engines/docx";
 import type { EmailEngine } from "../engines/email";
 import type { MarkdownEngine } from "../engines/markdown";
 import type { PdfEngine } from "../engines/pdf";
+import type { PdfSaveEngine } from "../engines/pdfsave";
 import type { PptxEngine } from "../engines/pptx";
 import { ENGINE_GLOBAL } from "../engines/register";
 import type { SheetEngine } from "../engines/sheet";
@@ -10,6 +11,7 @@ import type { TiffEngine } from "../engines/tiff";
 
 export interface Engines {
     pdf: PdfEngine;
+    pdfsave: PdfSaveEngine;
     docx: DocxEngine;
     sheet: SheetEngine;
     pptx: PptxEngine;

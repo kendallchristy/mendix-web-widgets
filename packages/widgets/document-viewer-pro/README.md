@@ -48,17 +48,17 @@ On narrow viewers (phones, side panels) the toolbar keeps the essentials and hid
 
 ### Keyboard
 
-| Keys                                       | Does                              |
-| ------------------------------------------ | --------------------------------- |
-| Ctrl + F                                   | Search                            |
-| Enter / Shift + Enter                      | Next / previous match             |
-| Ctrl + P                                   | Print                             |
-| Ctrl + Plus / Minus / 0                    | Zoom in / out / reset             |
-| Page Down / Page Up                        | Next / previous page              |
-| Arrow keys, Home, End (one page at a time) | Turn pages, first page, last page |
-| Escape                                     | Close search, then markup         |
-| Ctrl + Z / Ctrl + Shift + Z                | Undo / redo markup                |
-| Delete                                     | Delete the selected markup        |
+| Keys                                       | Does                                    |
+| ------------------------------------------ | --------------------------------------- |
+| Ctrl + F                                   | Search                                  |
+| Enter / Shift + Enter                      | Next / previous match                   |
+| Ctrl + P                                   | Print                                   |
+| Ctrl + Plus / Minus / 0                    | Zoom in / out / reset                   |
+| Page Down / Page Up                        | Next / previous page                    |
+| Arrow keys, Home, End (one page at a time) | Turn pages, first page, last page       |
+| Escape                                     | Close search, then markup               |
+| Ctrl + Z / Ctrl + Shift + Z                | Undo / redo markup                      |
+| Delete                                     | Delete the selected markup or signature |
 
 ## Toolbar
 
@@ -132,6 +132,37 @@ Markup positions are fractions of the page, so markup stays in place at any zoom
 
 **Markup › Selected text › Action** adds a button to the menu that appears when the user selects text, in any file type with selectable text. The action receives the text and its page number as the **Selected text** and **Page number** variables, for example to create a task from a sentence in a contract. **Button caption** names the button.
 
+## Forms and signatures
+
+PDFs with form fields can be filled in right in the viewer, and users can sign any PDF. Both are on the **Forms and signatures** tab.
+
+### Form fields
+
+Text fields, check boxes, radio buttons, drop-downs and lists work as they do in a PDF reader. **Allow filling in** set to false shows the values without letting the user change them.
+
+To keep the values in the app, pick an unlimited String attribute in **Form values**. The viewer writes the values there as JSON after each change, by field name, and runs **On change**, which also receives the JSON as the **Values** variable. Values already in the attribute are filled in when the PDF opens, so the app can prefill a form.
+
+```json
+{ "company": "Acme Supplies", "country": "Germany", "terms": "net30", "agree": true, "tags": ["a", "b"] }
+```
+
+Text fields and drop-downs give text, check boxes `true` or `false`, radio buttons the chosen option's value, and lists that allow several choices a list.
+
+### Signing
+
+The signature button in the toolbar opens a dialog where the user draws, types or uploads a signature (**Signer name** fills in the typed name). Then they click on the page to put it there, drag it to move it and drag its corner to resize it. When the PDF has empty signature fields, they show **Sign here**: clicking one signs right in the field, and later fields reuse the same signature.
+
+The signature is an image on the page (an electronic signature), not a certificate-based digital signature.
+
+### Saving
+
+Filled in fields and signatures are kept in the viewer until they're saved. A bar at the bottom says there are unsaved changes and offers:
+
+- **Download copy**: downloads the PDF with the values and signatures (when downloads are allowed).
+- **Save**: puts the PDF in the **Save to** file document and runs **On save**. Set **On save** to a nanoflow that commits the object, because the file is only stored once the object is committed. **Save to** can be the same file that is shown; the viewer then reloads it and stays on the same page.
+
+**Flatten fields** turns the fields into plain page content when saving, so the saved PDF can't be changed. Without **Save to** and with downloads turned off, the Sign button is hidden, because a signature couldn't be kept. Form values and **Save to** apply when the viewer shows a single file.
+
 ## Events and attributes
 
 | Event          | Runs                                                                               |
@@ -164,6 +195,7 @@ Each format's engine is a separate script inside the widget package, loaded the 
 | Format       | Library                                                                                                              | License                    |
 | ------------ | -------------------------------------------------------------------------------------------------------------------- | -------------------------- |
 | PDF          | [pdf.js](https://github.com/mozilla/pdf.js)                                                                          | Apache-2.0                 |
+| PDF saving   | [pdf-lib](https://pdf-lib.js.org)                                                                                    | MIT                        |
 | Word         | [docx-preview](https://github.com/VolodymyrBaydalka/docxjs)                                                          | Apache-2.0                 |
 | Spreadsheets | [SheetJS Community Edition](https://sheetjs.com)                                                                     | Apache-2.0                 |
 | PowerPoint   | [PptxViewJS](https://www.npmjs.com/package/pptxviewjs) with Chart.js, JSZip                                          | MIT                        |

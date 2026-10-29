@@ -238,6 +238,54 @@
                 </property>
             </propertyGroup>
         </propertyGroup>
+        <propertyGroup caption="Forms and signatures">
+            <propertyGroup caption="Form fields">
+                <property key="allowFormFilling" type="expression" defaultValue="true">
+                    <caption>Allow filling in</caption>
+                    <description>When true, the fields of a fillable PDF can be filled in. When false, they show their values but can't be changed.</description>
+                    <returnType type="Boolean" />
+                </property>
+                <property key="formData" type="attribute" required="false">
+                    <caption>Form values</caption>
+                    <description>An unlimited String attribute that gets the field values as JSON, by field name, after each change. Values already in it are filled in when the PDF opens. Only for a single file.</description>
+                    <attributeTypes>
+                        <attributeType name="String" />
+                    </attributeTypes>
+                </property>
+                <property key="onFormChange" type="action" required="false">
+                    <caption>On change</caption>
+                    <description>Runs after the user changes a field. The values are also passed as the Values variable.</description>
+                    <actionVariables>
+                        <actionVariable key="values" type="String" caption="Values" />
+                    </actionVariables>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Signatures">
+                <property key="allowSigning" type="expression" defaultValue="true">
+                    <caption>Allow signing</caption>
+                    <description>Adds a Sign button for PDFs. Users draw, type or upload a signature and place it on the page or in a signature field. It needs Save to or downloads to keep the signed PDF.</description>
+                    <returnType type="Boolean" />
+                </property>
+                <property key="signerName" type="textTemplate" required="false">
+                    <caption>Signer name</caption>
+                    <description>Filled in when the user types a signature, usually the user's full name.</description>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Saving">
+                <property key="saveFile" type="file" allowUpload="true" required="false">
+                    <caption>Save to</caption>
+                    <description>The file document that gets the filled in or signed PDF when the user clicks Save. It can be the same file that is shown. Leave empty to only allow downloading a copy. Only for a single file.</description>
+                </property>
+                <property key="flattenOnSave" type="boolean" defaultValue="false">
+                    <caption>Flatten fields</caption>
+                    <description>Turns the form fields into plain page content when saving, so the saved PDF can't be changed.</description>
+                </property>
+                <property key="onSave" type="action" required="false">
+                    <caption>On save</caption>
+                    <description>Runs after the PDF is put in the Save to file, usually a nanoflow that commits that object. The file is only stored once the object is committed.</description>
+                </property>
+            </propertyGroup>
+        </propertyGroup>
         <propertyGroup caption="Events">
             <propertyGroup caption="Actions">
                 <property key="onLoad" type="action" required="false">
@@ -717,6 +765,139 @@
                     <description>The name of a drawing in the markup list.</description>
                     <translations>
                         <translation lang="en_US">Drawing</translation>
+                    </translations>
+                </property>
+                <property key="labelSign" type="textTemplate" required="false">
+                    <caption>Sign</caption>
+                    <description>The button that adds a signature.</description>
+                    <translations>
+                        <translation lang="en_US">Sign</translation>
+                    </translations>
+                </property>
+                <property key="labelSignTitle" type="textTemplate" required="false">
+                    <caption>Signature dialog title</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Add your signature</translation>
+                    </translations>
+                </property>
+                <property key="labelSignDraw" type="textTemplate" required="false">
+                    <caption>Draw</caption>
+                    <description>The tab for drawing a signature.</description>
+                    <translations>
+                        <translation lang="en_US">Draw</translation>
+                    </translations>
+                </property>
+                <property key="labelSignType" type="textTemplate" required="false">
+                    <caption>Type</caption>
+                    <description>The tab for typing a signature.</description>
+                    <translations>
+                        <translation lang="en_US">Type</translation>
+                    </translations>
+                </property>
+                <property key="labelSignUpload" type="textTemplate" required="false">
+                    <caption>Upload</caption>
+                    <description>The tab for uploading an image of a signature.</description>
+                    <translations>
+                        <translation lang="en_US">Upload</translation>
+                    </translations>
+                </property>
+                <property key="labelSignTypePlaceholder" type="textTemplate" required="false">
+                    <caption>Name placeholder</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Type your name</translation>
+                    </translations>
+                </property>
+                <property key="labelSignUploadPrompt" type="textTemplate" required="false">
+                    <caption>Upload prompt</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Choose an image of your signature</translation>
+                    </translations>
+                </property>
+                <property key="labelSignClear" type="textTemplate" required="false">
+                    <caption>Clear</caption>
+                    <description>Clears the drawn signature.</description>
+                    <translations>
+                        <translation lang="en_US">Clear</translation>
+                    </translations>
+                </property>
+                <property key="labelSignCancel" type="textTemplate" required="false">
+                    <caption>Cancel</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Cancel</translation>
+                    </translations>
+                </property>
+                <property key="labelSignApply" type="textTemplate" required="false">
+                    <caption>Add signature</caption>
+                    <description>Confirms the signature in the dialog.</description>
+                    <translations>
+                        <translation lang="en_US">Add signature</translation>
+                    </translations>
+                </property>
+                <property key="labelSignPlace" type="textTemplate" required="false">
+                    <caption>Placing hint</caption>
+                    <description>Shown while the user places a signature.</description>
+                    <translations>
+                        <translation lang="en_US">Click where the signature goes.</translation>
+                    </translations>
+                </property>
+                <property key="labelSignHere" type="textTemplate" required="false">
+                    <caption>Sign here</caption>
+                    <description>Shown on the PDF's empty signature fields.</description>
+                    <translations>
+                        <translation lang="en_US">Sign here</translation>
+                    </translations>
+                </property>
+                <property key="labelRemoveSignature" type="textTemplate" required="false">
+                    <caption>Remove signature</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Remove signature</translation>
+                    </translations>
+                </property>
+                <property key="labelUnsavedChanges" type="textTemplate" required="false">
+                    <caption>Unsaved changes</caption>
+                    <description>Shown while filled in fields or signatures aren't saved.</description>
+                    <translations>
+                        <translation lang="en_US">This document has changes that aren't saved yet.</translation>
+                    </translations>
+                </property>
+                <property key="labelSaveDocument" type="textTemplate" required="false">
+                    <caption>Save</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Save</translation>
+                    </translations>
+                </property>
+                <property key="labelSavingDocument" type="textTemplate" required="false">
+                    <caption>Saving</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Saving…</translation>
+                    </translations>
+                </property>
+                <property key="labelSavedDocument" type="textTemplate" required="false">
+                    <caption>Saved</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Saved.</translation>
+                    </translations>
+                </property>
+                <property key="labelDownloadCopy" type="textTemplate" required="false">
+                    <caption>Download copy</caption>
+                    <description>Downloads the PDF with its fields and signatures.</description>
+                    <translations>
+                        <translation lang="en_US">Download copy</translation>
+                    </translations>
+                </property>
+                <property key="labelSaveError" type="textTemplate" required="false">
+                    <caption>Save failed</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">The document couldn't be saved.</translation>
                     </translations>
                 </property>
                 <property key="labelSlidesBeta" type="textTemplate" required="false">

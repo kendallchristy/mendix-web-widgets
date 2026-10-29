@@ -47,6 +47,7 @@ export interface ToolbarProps {
     fullscreen: boolean;
     onToggleFullscreen(): void;
     markup?: { open: boolean; onToggle(): void };
+    sign?: { active: boolean; onClick(): void };
     extra?: ReactNode;
 }
 
@@ -225,6 +226,14 @@ export function Toolbar(props: ToolbarProps): ReactElement {
                         label={labels.markup}
                         onClick={props.markup.onToggle}
                         pressed={props.markup.open}
+                    />
+                )}
+                {props.sign && (
+                    <ToolButton
+                        icon="signature"
+                        label={labels.sign}
+                        onClick={props.sign.onClick}
+                        pressed={props.sign.active}
                     />
                 )}
                 {show.search && props.searchable && (

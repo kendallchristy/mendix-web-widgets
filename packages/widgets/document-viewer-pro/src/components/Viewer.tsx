@@ -15,6 +15,7 @@ import {
 
 import { downloadBytes, downloadUrl } from "../core/download";
 import { detectKind } from "../core/fileTypes";
+import type { FormValues } from "../core/forms";
 import type { Labels } from "../core/labels";
 import {
     drawMarkup,
@@ -27,6 +28,7 @@ import {
     type NewMarkup
 } from "../core/markup";
 import { buildPrintDocument, printDocument, type PrintJob } from "../core/print";
+import { fitInto, type PlacedSignature, type Signature, type SignatureField } from "../core/signatures";
 import { clampScale, stepScale, type Zoom, type ZoomMode } from "../core/zoom";
 import { views } from "../views";
 import { canvasToObjectUrl } from "../views/canvas";
@@ -38,6 +40,8 @@ import { MarkupLayer, screenRectsToPage } from "./MarkupLayer";
 import { readSelection } from "./selection";
 import { SearchBar } from "./SearchBar";
 import { Sidebar } from "./Sidebar";
+import { SignatureDialog } from "./SignatureDialog";
+import { SignatureLayer } from "./SignatureLayer";
 import { LoadingState, MessageState } from "./StatusCard";
 import { Toolbar, type ToolbarVisibility } from "./Toolbar";
 import { useFileLoader, type ViewerSource } from "./useFileLoader";
@@ -60,6 +64,20 @@ export interface ViewerSettings {
     previewMode: "fallback" | "always";
 }
 
+/** PDF forms and signatures, for the file from the app. */
+export interface PdfEditing {
+    fill: boolean;
+    /** Field values to start with, by field name. */
+    initial?: FormValues;
+    onFormChange?(values: FormValues): void;
+    sign: boolean;
+    signerName?: string;
+    /** Turns fields into plain page content when saving. */
+    flatten: boolean;
+    /** Saves the filled or signed PDF back to the app. Without it, the user can only download a copy. */
+    save?(bytes: Uint8Array, name: string): Promise<void>;
+}
+
 export interface ViewerProps {
     sources: ViewerSource[];
     /** True while Mendix is still fetching the file object. */
@@ -77,6 +95,7 @@ export interface ViewerProps {
     onDownload?: () => void;
     /** A button in the menu that appears when text is selected. */
     selectionAction?: { label: string; run(text: string, page: number): void };
+    pdf?: PdfEditing;
     className?: string;
     style?: CSSProperties;
     tabIndex?: number;
@@ -135,7 +154,9 @@ async function printWithMarkup(job: PrintJob, items: Markup[]): Promise<PrintJob
 
 function isTyping(target: EventTarget | null): boolean {
     const element = target as HTMLElement | null;
-    return Boolean(element?.closest?.("input, textarea, select, [contenteditable='true'], .dvp-toolbar-extra"));
+    return Boolean(
+        element?.closest?.("input, textarea, select, [contenteditable='true'], .dvp-toolbar-extra, .dvp-dialog")
+    );
 }
 
 export function Viewer(props: ViewerProps): ReactElement {
@@ -178,6 +199,13 @@ export function Viewer(props: ViewerProps): ReactElement {
     const [color, setColor] = useState(MARKUP_COLORS[0]);
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [selectionMenu, setSelectionMenu] = useState<{ left: number; top: number; highlight: boolean } | null>(null);
+    const [signatures, setSignatures] = useState<PlacedSignature[]>([]);
+    const [placing, setPlacing] = useState<Signature | null>(null);
+    // The user's signature, reused for the next signature field they click.
+    const [mySignature, setMySignature] = useState<Signature | null>(null);
+    const [signDialog, setSignDialog] = useState<{ field?: SignatureField } | null>(null);
+    const [signatureId, setSignatureId] = useState<string | null>(null);
+    const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
     // Markup belongs to the file from the app, not to attachments opened from an email.
     const markupSource = attachments.length === 0 ? source?.markup : undefined;
@@ -187,6 +215,14 @@ export function Viewer(props: ViewerProps): ReactElement {
     // Text highlights need the text of a PDF page.
     const activeTool: MarkupTool = !markupEditing || (tool === "highlight" && file?.kind !== "pdf") ? "select" : tool;
     const selectedMarkup = showMarkup ? markup.items.find(item => item.id === selectedId) : undefined;
+
+    // Forms and signatures belong to the PDF from the app too.
+    const pdf = attachments.length === 0 && file?.kind === "pdf" ? props.pdf : undefined;
+    const canSave = Boolean(pdf?.save);
+    const canSign = Boolean(pdf?.sign && (canSave || settings.allowDownload));
+    const unsaved = Boolean(info?.formDirty) || signatures.length > 0;
+    const showSaveBar =
+        Boolean(pdf && info?.exportPdf) && (canSave || settings.allowDownload) && (unsaved || saveState !== "idle");
 
     const latest = useRef(props);
     useLayoutEffect(() => {
@@ -206,6 +242,11 @@ export function Viewer(props: ViewerProps): ReactElement {
         setGoTo(null);
         setSelectedId(null);
         setSelectionMenu(null);
+        setSignatures([]);
+        setPlacing(null);
+        setSignDialog(null);
+        setSignatureId(null);
+        setSaveState(state => (state === "saved" ? state : "idle"));
         // Photos read best whole, so fit width becomes fit page for images.
         setZoom(
             file?.kind === "image" && settings.initialZoom.mode === "fitWidth"
@@ -214,6 +255,8 @@ export function Viewer(props: ViewerProps): ReactElement {
         );
     }
     const reportedPage = useRef<number | undefined>(undefined);
+    // After saving, the app's file comes back changed; it opens again on the page the user was on.
+    const reopenAt = useRef<{ key: string; page: number } | null>(null);
     const callbacks: ViewCallbacks = useMemo(() => {
         const opened: { ready: boolean; lastPage?: number } = { ready: false };
         return {
@@ -287,6 +330,26 @@ export function Viewer(props: ViewerProps): ReactElement {
             setGoTo({ page: requestedPage, seq: Date.now() });
         }
     }, [requestedPage, info?.pageCount]);
+
+    const fileOpen = info?.pageCount;
+    useEffect(() => {
+        const reopen = reopenAt.current;
+        if (reopen && fileOpen && reopen.key === source?.key) {
+            reopenAt.current = null;
+            if (reopen.page > 1) {
+                setGoTo({ page: Math.min(reopen.page, fileOpen), seq: Date.now() });
+            }
+        }
+    }, [fileOpen, fileKey, source?.key]);
+
+    // "Saved" shows for a moment.
+    useEffect(() => {
+        if (saveState !== "saved") {
+            return;
+        }
+        const timer = setTimeout(() => setSaveState("idle"), 2500);
+        return () => clearTimeout(timer);
+    }, [saveState]);
 
     const goToPage = useCallback(
         (target: number) => {
@@ -450,26 +513,125 @@ export function Viewer(props: ViewerProps): ReactElement {
         setSelectedId(current => (current === id ? null : current));
     };
 
-    const pageOverlay: PageOverlay | undefined = showMarkup
-        ? (overlayPage, box) => (
-              <MarkupLayer
-                  page={overlayPage}
-                  width={box.width}
-                  height={box.height}
-                  rotation={box.rotation}
-                  items={markup.items}
-                  tool={activeTool}
-                  color={color}
-                  editable={markup.editable}
-                  selectedId={selectedId}
-                  labels={labels}
-                  onAdd={addMarkup}
-                  onSelect={setSelectedId}
-                  onUpdate={markup.update}
-                  onRemove={removeMarkup}
-              />
-          )
-        : undefined;
+    const signatureFields = canSign ? (info?.signatureFields ?? []) : [];
+    const showSignatures = canSign && (signatures.length > 0 || signatureFields.length > 0 || Boolean(placing));
+    const placeSignature = (
+        signature: Signature,
+        onPage: number,
+        rect: PlacedSignature["rect"],
+        field?: string
+    ): void => {
+        const id = `s${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+        setSignatures(list => [...list, { ...signature, id, page: onPage, rect, field }]);
+        setSignatureId(id);
+        setPlacing(null);
+        setSaveState("idle");
+    };
+    // Fills a signature field, keeping the signature's shape on the page as it's shown.
+    const signInto = (field: SignatureField, signature: Signature): void => {
+        const layer = content.current?.querySelector<HTMLElement>(`.dvp-signature-layer[data-page="${field.page}"]`);
+        const width = layer?.clientWidth || 1;
+        const height = layer?.clientHeight || 1;
+        const pageAspect = rotation % 180 !== 0 ? width / height : height / width;
+        placeSignature(signature, field.page, fitInto(field.rect, signature, pageAspect), field.key);
+    };
+    const signField = (field: SignatureField): void => {
+        if (mySignature) {
+            signInto(field, mySignature);
+        } else {
+            setSignDialog({ field });
+        }
+    };
+    const onSigned = (signature: Signature): void => {
+        const field = signDialog?.field;
+        setMySignature(signature);
+        setSignDialog(null);
+        if (field) {
+            signInto(field, signature);
+        } else {
+            setPlacing(signature);
+            setMarkupOpen(false);
+            setSelectedId(null);
+        }
+        root.current?.focus();
+    };
+    const removeSignature = (id: string): void => {
+        setSignatures(list => list.filter(signature => signature.id !== id));
+        setSignatureId(current => (current === id ? null : current));
+    };
+
+    const savePdf = async (copy: boolean): Promise<void> => {
+        if (!pdf || !info?.exportPdf || saveState === "saving" || !file) {
+            return;
+        }
+        setSaveState("saving");
+        try {
+            const bytes = await info.exportPdf(signatures, pdf.flatten);
+            if (copy || !pdf.save) {
+                downloadBytes(bytes, file.name, "application/pdf");
+                setSaveState("idle");
+                return;
+            }
+            reopenAt.current = source ? { key: source.key, page } : null;
+            await pdf.save(bytes, file.name);
+            setSignatures([]);
+            setSignatureId(null);
+            info.markSaved?.();
+            setSaveState("saved");
+        } catch {
+            reopenAt.current = null;
+            setSaveState("error");
+        }
+    };
+
+    const pageOverlay: PageOverlay | undefined =
+        showMarkup || showSignatures
+            ? (overlayPage, box) => (
+                  <>
+                      {showMarkup && (
+                          <MarkupLayer
+                              page={overlayPage}
+                              width={box.width}
+                              height={box.height}
+                              rotation={box.rotation}
+                              items={markup.items}
+                              tool={activeTool}
+                              color={color}
+                              editable={markup.editable}
+                              selectedId={selectedId}
+                              labels={labels}
+                              onAdd={addMarkup}
+                              onSelect={setSelectedId}
+                              onUpdate={markup.update}
+                              onRemove={removeMarkup}
+                          />
+                      )}
+                      {showSignatures && (
+                          <SignatureLayer
+                              page={overlayPage}
+                              width={box.width}
+                              height={box.height}
+                              rotation={box.rotation}
+                              signatures={signatures}
+                              fields={signatureFields}
+                              placing={placing}
+                              selectedId={signatureId}
+                              editable
+                              labels={labels}
+                              onPlace={(onPage, rect, field) => placing && placeSignature(placing, onPage, rect, field)}
+                              onSignField={signField}
+                              onChange={(id, rect) =>
+                                  setSignatures(list =>
+                                      list.map(signature => (signature.id === id ? { ...signature, rect } : signature))
+                                  )
+                              }
+                              onSelect={setSignatureId}
+                              onRemove={removeSignature}
+                          />
+                      )}
+                  </>
+              )
+            : undefined;
 
     const canHighlightText = showMarkup && markup.editable && file?.kind === "pdf";
     const highlightSelection = (): void => {
@@ -555,6 +717,9 @@ export function Viewer(props: ViewerProps): ReactElement {
 
     // Clicking markup selects it; clicking elsewhere on a page lets go.
     const onContentClick = (event: MouseEvent<HTMLDivElement>): void => {
+        if (signatureId && !(event.target as HTMLElement).closest?.(".dvp-signature")) {
+            setSignatureId(null);
+        }
         const element = content.current;
         if (!showMarkup || !element || (activeTool !== "select" && activeTool !== "highlight")) {
             return;
@@ -605,6 +770,17 @@ export function Viewer(props: ViewerProps): ReactElement {
                 return;
             }
             if (isTyping(event.target)) {
+                return;
+            }
+            if (event.key === "Escape" && (placing || signatureId)) {
+                event.preventDefault();
+                setPlacing(null);
+                setSignatureId(null);
+                return;
+            }
+            if (signatureId && (event.key === "Delete" || event.key === "Backspace")) {
+                event.preventDefault();
+                removeSignature(signatureId);
                 return;
             }
             if (selectedMarkup && markup.editable && (event.key === "Delete" || event.key === "Backspace")) {
@@ -675,11 +851,25 @@ export function Viewer(props: ViewerProps): ReactElement {
             page,
             searchOpen,
             closeSearch,
-            markup
+            markup,
+            placing,
+            signatureId
         ]
     );
 
     const View = file && file.kind !== "unknown" ? views[file.kind] : undefined;
+    const formFill = Boolean(pdf?.fill);
+    const formInitial = pdf?.initial;
+    const formsProp = useMemo(
+        () => ({
+            fill: formFill,
+            initial: formInitial,
+            onChange: (values: FormValues) => latest.current.pdf?.onFormChange?.(values)
+        }),
+        // The starting values are read once per file; later changes come from the user typing.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [formFill, fileKey]
+    );
     const showStrip = sources.length > 1;
     const usingPreview = state.status === "ready" && state.usingPreview && attachments.length === 0;
 
@@ -723,6 +913,7 @@ export function Viewer(props: ViewerProps): ReactElement {
                     labels={labels}
                     callbacks={callbacks}
                     pageOverlay={pageOverlay}
+                    forms={formsProp}
                 />
             </div>
         );
@@ -777,6 +968,14 @@ export function Viewer(props: ViewerProps): ReactElement {
                                   setMarkupOpen(open => !open);
                                   setSelectedId(null);
                               }
+                          }
+                        : undefined
+                }
+                sign={
+                    canSign
+                        ? {
+                              active: Boolean(placing) || Boolean(signDialog),
+                              onClick: () => (placing ? setPlacing(null) : setSignDialog({}))
                           }
                         : undefined
                 }
@@ -838,6 +1037,14 @@ export function Viewer(props: ViewerProps): ReactElement {
                     }}
                 />
             )}
+            {placing && (
+                <div className="dvp-note dvp-sign-banner" role="status">
+                    <span>{labels.signPlace}</span>
+                    <button type="button" className="dvp-button" onClick={() => setPlacing(null)}>
+                        {labels.signCancel}
+                    </button>
+                </div>
+            )}
             {showStrip && (
                 <FileStrip
                     files={sources.map(s => ({ key: s.key, name: s.name, caption: s.caption }))}
@@ -878,7 +1085,56 @@ export function Viewer(props: ViewerProps): ReactElement {
                     {settings.watermark && file && <Watermark text={settings.watermark} />}
                 </div>
             </div>
+            {showSaveBar && (
+                <div
+                    className={classNames("dvp-save-bar", { "dvp-save-bar--error": saveState === "error" })}
+                    role="status"
+                >
+                    <span className="dvp-save-bar-text">
+                        {saveState === "saving"
+                            ? labels.savingDocument
+                            : saveState === "saved" && !unsaved
+                              ? labels.savedDocument
+                              : saveState === "error"
+                                ? labels.saveError
+                                : labels.unsavedChanges}
+                    </span>
+                    {unsaved && settings.allowDownload && (
+                        <button
+                            type="button"
+                            className="dvp-button"
+                            disabled={saveState === "saving"}
+                            onClick={() => savePdf(true)}
+                        >
+                            <Icon name="download" />
+                            {labels.downloadCopy}
+                        </button>
+                    )}
+                    {unsaved && canSave && (
+                        <button
+                            type="button"
+                            className="dvp-button dvp-button--primary"
+                            disabled={saveState === "saving"}
+                            onClick={() => savePdf(false)}
+                        >
+                            <Icon name="save" />
+                            {labels.saveDocument}
+                        </button>
+                    )}
+                </div>
+            )}
             {settings.toolbarPosition === "bottom" && toolbar}
+            {signDialog && (
+                <SignatureDialog
+                    labels={labels}
+                    signerName={pdf?.signerName}
+                    onDone={onSigned}
+                    onCancel={() => {
+                        setSignDialog(null);
+                        root.current?.focus();
+                    }}
+                />
+            )}
             {selectionMenu && (
                 <div
                     className="dvp-selection-menu"

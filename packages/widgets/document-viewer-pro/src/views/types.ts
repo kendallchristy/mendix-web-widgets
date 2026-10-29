@@ -1,8 +1,10 @@
 import type { ReactNode } from "react";
 
 import type { FileKind } from "../core/fileTypes";
+import type { FormValues } from "../core/forms";
 import type { Labels } from "../core/labels";
 import type { PrintJob } from "../core/print";
+import type { PlacedSignature, SignatureField } from "../core/signatures";
 import type { Zoom } from "../core/zoom";
 
 export interface LoadedFile {
@@ -40,6 +42,14 @@ export interface ViewInfo {
     print?: () => Promise<PrintJob>;
     thumbnails?: Thumbnails;
     outline?: OutlineItem[];
+    /** PDFs: whether the document has fields to fill in, and whether any were changed since it opened or saved. */
+    form?: boolean;
+    formDirty?: boolean;
+    signatureFields?: SignatureField[];
+    /** PDFs: a copy of the document with the form values and the given signatures written into it. */
+    exportPdf?: (signatures: PlacedSignature[], flatten: boolean) => Promise<Uint8Array>;
+    /** PDFs: counts the current form values as saved. */
+    markSaved?: () => void;
 }
 
 export interface Attachment {
@@ -83,4 +93,6 @@ export interface ViewProps {
     callbacks: ViewCallbacks;
     /** Markup on paged views. */
     pageOverlay?: PageOverlay;
+    /** PDF forms: whether fields can be filled in, the values to start with, and where changes go. */
+    forms?: { fill: boolean; initial?: FormValues; onChange?(values: FormValues): void };
 }

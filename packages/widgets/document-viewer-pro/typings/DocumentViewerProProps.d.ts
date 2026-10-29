@@ -6,6 +6,7 @@
 import {
     ActionValue,
     DynamicValue,
+    EditableFileValue,
     EditableValue,
     FileValue,
     ListActionValue,
@@ -74,6 +75,14 @@ export interface DocumentViewerProContainerProps {
     onListMarkupChange?: ListActionValue<{ markup: Option<string> }>;
     selectionAction?: ActionValue<{ text: Option<string>; page: Option<Big> }>;
     selectionCaption?: DynamicValue<string>;
+    allowFormFilling: DynamicValue<boolean>;
+    formData?: EditableValue<string>;
+    onFormChange?: ActionValue<{ values: Option<string> }>;
+    allowSigning: DynamicValue<boolean>;
+    signerName?: DynamicValue<string>;
+    saveFile?: EditableFileValue;
+    flattenOnSave: boolean;
+    onSave?: ActionValue;
     onLoad?: ActionValue;
     onError?: ActionValue;
     onPageChange?: ActionValue;
@@ -143,6 +152,25 @@ export interface DocumentViewerProContainerProps {
     labelAreaItem?: DynamicValue<string>;
     labelNoteItem?: DynamicValue<string>;
     labelDrawingItem?: DynamicValue<string>;
+    labelSign?: DynamicValue<string>;
+    labelSignTitle?: DynamicValue<string>;
+    labelSignDraw?: DynamicValue<string>;
+    labelSignType?: DynamicValue<string>;
+    labelSignUpload?: DynamicValue<string>;
+    labelSignTypePlaceholder?: DynamicValue<string>;
+    labelSignUploadPrompt?: DynamicValue<string>;
+    labelSignClear?: DynamicValue<string>;
+    labelSignCancel?: DynamicValue<string>;
+    labelSignApply?: DynamicValue<string>;
+    labelSignPlace?: DynamicValue<string>;
+    labelSignHere?: DynamicValue<string>;
+    labelRemoveSignature?: DynamicValue<string>;
+    labelUnsavedChanges?: DynamicValue<string>;
+    labelSaveDocument?: DynamicValue<string>;
+    labelSavingDocument?: DynamicValue<string>;
+    labelSavedDocument?: DynamicValue<string>;
+    labelDownloadCopy?: DynamicValue<string>;
+    labelSaveError?: DynamicValue<string>;
     labelSlidesBeta?: DynamicValue<string>;
 }
 
@@ -195,6 +223,14 @@ export interface DocumentViewerProPreviewProps {
     onListMarkupChange: {} | null;
     selectionAction: {} | null;
     selectionCaption: string;
+    allowFormFilling: string;
+    formData: string;
+    onFormChange: {} | null;
+    allowSigning: string;
+    signerName: string;
+    saveFile: string;
+    flattenOnSave: boolean;
+    onSave: {} | null;
     onLoad: {} | null;
     onError: {} | null;
     onPageChange: {} | null;
@@ -264,5 +300,24 @@ export interface DocumentViewerProPreviewProps {
     labelAreaItem: string;
     labelNoteItem: string;
     labelDrawingItem: string;
+    labelSign: string;
+    labelSignTitle: string;
+    labelSignDraw: string;
+    labelSignType: string;
+    labelSignUpload: string;
+    labelSignTypePlaceholder: string;
+    labelSignUploadPrompt: string;
+    labelSignClear: string;
+    labelSignCancel: string;
+    labelSignApply: string;
+    labelSignPlace: string;
+    labelSignHere: string;
+    labelRemoveSignature: string;
+    labelUnsavedChanges: string;
+    labelSaveDocument: string;
+    labelSavingDocument: string;
+    labelSavedDocument: string;
+    labelDownloadCopy: string;
+    labelSaveError: string;
     labelSlidesBeta: string;
 }
