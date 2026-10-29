@@ -1,7 +1,7 @@
 {
     "name": "@kendallchristy/document-viewer-pro",
     "widgetName": "DocumentViewerPro",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "private": true,
     "description": "View PDF, Office, image, code, email and media files in the browser, with thumbnails, search, print and app events.",
     "license": "Apache-2.0",
