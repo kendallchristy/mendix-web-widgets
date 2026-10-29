@@ -1,0 +1,323 @@
+/**
+ * This file was generated from DocumentViewerPro.xml
+ * WARNING: All changes made to this file will be overwritten
+ * @author Mendix Widgets Framework Team
+ */
+import {
+    ActionValue,
+    DynamicValue,
+    EditableFileValue,
+    EditableValue,
+    FileValue,
+    ListActionValue,
+    ListAttributeValue,
+    ListExpressionValue,
+    ListValue,
+    Option
+} from "mendix";
+import { ComponentType, CSSProperties, ReactNode } from "react";
+import { Big } from "big.js";
+
+export type SourceEnum = "FILE" | "URL" | "LIST";
+
+export type PreviewModeEnum = "FALLBACK" | "ALWAYS";
+
+export type LayoutEnum = "CONTINUOUS" | "SINGLE";
+
+export type InitialZoomEnum = "FIT_WIDTH" | "FIT_PAGE" | "ACTUAL" | "CUSTOM";
+
+export type SidebarEnum = "AUTO" | "OPEN" | "CLOSED" | "HIDDEN";
+
+export type HeightUnitEnum = "PIXELS" | "VIEWPORT" | "PARENT";
+
+export type ToolbarPositionEnum = "TOP" | "BOTTOM" | "HIDDEN";
+
+export interface DocumentViewerProContainerProps {
+    name: string;
+    class: string;
+    style?: CSSProperties;
+    tabIndex?: number;
+    source: SourceEnum;
+    file?: DynamicValue<FileValue>;
+    url?: DynamicValue<string>;
+    fileName?: DynamicValue<string>;
+    files?: ListValue;
+    listFileName?: ListExpressionValue<string>;
+    listCaption?: ListExpressionValue<string>;
+    previewFile?: DynamicValue<FileValue>;
+    previewMode: PreviewModeEnum;
+    layout: LayoutEnum;
+    initialZoom: InitialZoomEnum;
+    zoomPercent: number;
+    sidebar: SidebarEnum;
+    heightUnit: HeightUnitEnum;
+    height: number;
+    toolbarPosition: ToolbarPositionEnum;
+    showFileName: boolean;
+    showPageControls: boolean;
+    showZoom: boolean;
+    showRotate: boolean;
+    showSearch: boolean;
+    showPrint: boolean;
+    showDownload: boolean;
+    showFullscreen: boolean;
+    toolbarContent?: ReactNode;
+    allowDownload: DynamicValue<boolean>;
+    allowPrint: DynamicValue<boolean>;
+    allowCopy: DynamicValue<boolean>;
+    watermark?: DynamicValue<string>;
+    blockRemoteImages: boolean;
+    markupAttribute?: EditableValue<string>;
+    listMarkupAttribute?: ListAttributeValue<string>;
+    allowMarkup: DynamicValue<boolean>;
+    markupAuthor?: DynamicValue<string>;
+    onMarkupChange?: ActionValue<{ markup: Option<string> }>;
+    onListMarkupChange?: ListActionValue<{ markup: Option<string> }>;
+    selectionAction?: ActionValue<{ text: Option<string>; page: Option<Big> }>;
+    selectionCaption?: DynamicValue<string>;
+    allowFormFilling: DynamicValue<boolean>;
+    formData?: EditableValue<string>;
+    onFormChange?: ActionValue<{ values: Option<string> }>;
+    allowSigning: DynamicValue<boolean>;
+    signerName?: DynamicValue<string>;
+    saveFile?: EditableFileValue;
+    flattenOnSave: boolean;
+    onSave?: ActionValue;
+    onLoad?: ActionValue;
+    onError?: ActionValue;
+    onPageChange?: ActionValue;
+    onDownload?: ActionValue;
+    currentPage?: EditableValue<Big>;
+    pageCount?: EditableValue<Big>;
+    errorMessage?: EditableValue<string>;
+    labelLoading?: DynamicValue<string>;
+    labelError?: DynamicValue<string>;
+    labelUnsupported?: DynamicValue<string>;
+    labelNoFile?: DynamicValue<string>;
+    labelFallback?: DynamicValue<string>;
+    labelPassword?: DynamicValue<string>;
+    labelWrongPassword?: DynamicValue<string>;
+    labelOpen?: DynamicValue<string>;
+    labelPreviousPage?: DynamicValue<string>;
+    labelNextPage?: DynamicValue<string>;
+    labelPageNumber?: DynamicValue<string>;
+    labelPageCount?: DynamicValue<string>;
+    labelZoomIn?: DynamicValue<string>;
+    labelZoomOut?: DynamicValue<string>;
+    labelZoom?: DynamicValue<string>;
+    labelFitWidth?: DynamicValue<string>;
+    labelFitPage?: DynamicValue<string>;
+    labelActualSize?: DynamicValue<string>;
+    labelRotate?: DynamicValue<string>;
+    labelSearch?: DynamicValue<string>;
+    labelSearchPlaceholder?: DynamicValue<string>;
+    labelSearchResults?: DynamicValue<string>;
+    labelNoResults?: DynamicValue<string>;
+    labelPreviousMatch?: DynamicValue<string>;
+    labelNextMatch?: DynamicValue<string>;
+    labelCloseSearch?: DynamicValue<string>;
+    labelPrint?: DynamicValue<string>;
+    labelPreparingPrint?: DynamicValue<string>;
+    labelDownload?: DynamicValue<string>;
+    labelFullscreen?: DynamicValue<string>;
+    labelExitFullscreen?: DynamicValue<string>;
+    labelSidebar?: DynamicValue<string>;
+    labelThumbnails?: DynamicValue<string>;
+    labelOutline?: DynamicValue<string>;
+    labelPreviousFile?: DynamicValue<string>;
+    labelNextFile?: DynamicValue<string>;
+    labelAttachments?: DynamicValue<string>;
+    labelBack?: DynamicValue<string>;
+    labelFrom?: DynamicValue<string>;
+    labelTo?: DynamicValue<string>;
+    labelCc?: DynamicValue<string>;
+    labelDate?: DynamicValue<string>;
+    labelRemoteBlocked?: DynamicValue<string>;
+    labelShowRemote?: DynamicValue<string>;
+    labelWrapLines?: DynamicValue<string>;
+    labelShowSource?: DynamicValue<string>;
+    labelMarkup?: DynamicValue<string>;
+    labelMarkupSelect?: DynamicValue<string>;
+    labelMarkupHighlight?: DynamicValue<string>;
+    labelMarkupArea?: DynamicValue<string>;
+    labelMarkupNote?: DynamicValue<string>;
+    labelMarkupDraw?: DynamicValue<string>;
+    labelMarkupColor?: DynamicValue<string>;
+    labelMarkupUndo?: DynamicValue<string>;
+    labelMarkupRedo?: DynamicValue<string>;
+    labelMarkupDelete?: DynamicValue<string>;
+    labelMarkupClose?: DynamicValue<string>;
+    labelMarkupComment?: DynamicValue<string>;
+    labelHighlight?: DynamicValue<string>;
+    labelAreaItem?: DynamicValue<string>;
+    labelNoteItem?: DynamicValue<string>;
+    labelDrawingItem?: DynamicValue<string>;
+    labelSign?: DynamicValue<string>;
+    labelSignTitle?: DynamicValue<string>;
+    labelSignDraw?: DynamicValue<string>;
+    labelSignType?: DynamicValue<string>;
+    labelSignUpload?: DynamicValue<string>;
+    labelSignTypePlaceholder?: DynamicValue<string>;
+    labelSignUploadPrompt?: DynamicValue<string>;
+    labelSignClear?: DynamicValue<string>;
+    labelSignCancel?: DynamicValue<string>;
+    labelSignApply?: DynamicValue<string>;
+    labelSignPlace?: DynamicValue<string>;
+    labelSignHere?: DynamicValue<string>;
+    labelRemoveSignature?: DynamicValue<string>;
+    labelUnsavedChanges?: DynamicValue<string>;
+    labelSaveDocument?: DynamicValue<string>;
+    labelSavingDocument?: DynamicValue<string>;
+    labelSavedDocument?: DynamicValue<string>;
+    labelDownloadCopy?: DynamicValue<string>;
+    labelSaveError?: DynamicValue<string>;
+    labelSlidesBeta?: DynamicValue<string>;
+}
+
+export interface DocumentViewerProPreviewProps {
+    /**
+     * @deprecated Deprecated since version 9.18.0. Please use class property instead.
+     */
+    className: string;
+    class: string;
+    style: string;
+    styleObject?: CSSProperties;
+    readOnly: boolean;
+    renderMode: "design" | "xray" | "structure";
+    translate: (text: string) => string;
+    source: SourceEnum;
+    file: string;
+    url: string;
+    fileName: string;
+    files: {} | { caption: string } | { type: string } | null;
+    listFileName: string;
+    listCaption: string;
+    previewFile: string;
+    previewMode: PreviewModeEnum;
+    layout: LayoutEnum;
+    initialZoom: InitialZoomEnum;
+    zoomPercent: number | null;
+    sidebar: SidebarEnum;
+    heightUnit: HeightUnitEnum;
+    height: number | null;
+    toolbarPosition: ToolbarPositionEnum;
+    showFileName: boolean;
+    showPageControls: boolean;
+    showZoom: boolean;
+    showRotate: boolean;
+    showSearch: boolean;
+    showPrint: boolean;
+    showDownload: boolean;
+    showFullscreen: boolean;
+    toolbarContent: { widgetCount: number; renderer: ComponentType<{ children: ReactNode; caption?: string }> };
+    allowDownload: string;
+    allowPrint: string;
+    allowCopy: string;
+    watermark: string;
+    blockRemoteImages: boolean;
+    markupAttribute: string;
+    listMarkupAttribute: string;
+    allowMarkup: string;
+    markupAuthor: string;
+    onMarkupChange: {} | null;
+    onListMarkupChange: {} | null;
+    selectionAction: {} | null;
+    selectionCaption: string;
+    allowFormFilling: string;
+    formData: string;
+    onFormChange: {} | null;
+    allowSigning: string;
+    signerName: string;
+    saveFile: string;
+    flattenOnSave: boolean;
+    onSave: {} | null;
+    onLoad: {} | null;
+    onError: {} | null;
+    onPageChange: {} | null;
+    onDownload: {} | null;
+    currentPage: string;
+    pageCount: string;
+    errorMessage: string;
+    labelLoading: string;
+    labelError: string;
+    labelUnsupported: string;
+    labelNoFile: string;
+    labelFallback: string;
+    labelPassword: string;
+    labelWrongPassword: string;
+    labelOpen: string;
+    labelPreviousPage: string;
+    labelNextPage: string;
+    labelPageNumber: string;
+    labelPageCount: string;
+    labelZoomIn: string;
+    labelZoomOut: string;
+    labelZoom: string;
+    labelFitWidth: string;
+    labelFitPage: string;
+    labelActualSize: string;
+    labelRotate: string;
+    labelSearch: string;
+    labelSearchPlaceholder: string;
+    labelSearchResults: string;
+    labelNoResults: string;
+    labelPreviousMatch: string;
+    labelNextMatch: string;
+    labelCloseSearch: string;
+    labelPrint: string;
+    labelPreparingPrint: string;
+    labelDownload: string;
+    labelFullscreen: string;
+    labelExitFullscreen: string;
+    labelSidebar: string;
+    labelThumbnails: string;
+    labelOutline: string;
+    labelPreviousFile: string;
+    labelNextFile: string;
+    labelAttachments: string;
+    labelBack: string;
+    labelFrom: string;
+    labelTo: string;
+    labelCc: string;
+    labelDate: string;
+    labelRemoteBlocked: string;
+    labelShowRemote: string;
+    labelWrapLines: string;
+    labelShowSource: string;
+    labelMarkup: string;
+    labelMarkupSelect: string;
+    labelMarkupHighlight: string;
+    labelMarkupArea: string;
+    labelMarkupNote: string;
+    labelMarkupDraw: string;
+    labelMarkupColor: string;
+    labelMarkupUndo: string;
+    labelMarkupRedo: string;
+    labelMarkupDelete: string;
+    labelMarkupClose: string;
+    labelMarkupComment: string;
+    labelHighlight: string;
+    labelAreaItem: string;
+    labelNoteItem: string;
+    labelDrawingItem: string;
+    labelSign: string;
+    labelSignTitle: string;
+    labelSignDraw: string;
+    labelSignType: string;
+    labelSignUpload: string;
+    labelSignTypePlaceholder: string;
+    labelSignUploadPrompt: string;
+    labelSignClear: string;
+    labelSignCancel: string;
+    labelSignApply: string;
+    labelSignPlace: string;
+    labelSignHere: string;
+    labelRemoveSignature: string;
+    labelUnsavedChanges: string;
+    labelSaveDocument: string;
+    labelSavingDocument: string;
+    labelSavedDocument: string;
+    labelDownloadCopy: string;
+    labelSaveError: string;
+    labelSlidesBeta: string;
+}

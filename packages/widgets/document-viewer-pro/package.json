@@ -1,0 +1,47 @@
+{
+    "name": "@kendallchristy/document-viewer-pro",
+    "widgetName": "DocumentViewerPro",
+    "version": "0.1.0",
+    "private": true,
+    "description": "View PDF, Office, image, code, email and media files in the browser, with thumbnails, search, print and app events.",
+    "license": "Apache-2.0",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/kendallchristy/mendix-web-widgets.git"
+    },
+    "packagePath": "com.kendallchristy.widget.web",
+    "config": {},
+    "scripts": {
+        "build": "pluggable-widgets-tools build:web",
+        "dev": "pluggable-widgets-tools start:web",
+        "lint": "eslint src",
+        "release": "pluggable-widgets-tools release:web",
+        "test": "pluggable-widgets-tools test:unit:web",
+        "typecheck": "tsc --noEmit"
+    },
+    "dependencies": {
+        "@kenjiuno/msgreader": "1.29.0",
+        "big.js": "6.2.2",
+        "chart.js": "4.5.1",
+        "classnames": "catalog:",
+        "docx-preview": "0.4.1",
+        "dompurify": "3.4.17",
+        "highlight.js": "11.12.0",
+        "jszip": "3.10.1",
+        "marked": "18.1.2",
+        "pdf-lib": "1.17.1",
+        "pdfjs-dist": "6.4.299",
+        "postal-mime": "4.1.4",
+        "pptxviewjs": "1.1.9",
+        "utif2": "4.1.0",
+        "xlsx": "npm:@e965/xlsx@0.20.3"
+    },
+    "devDependencies": {
+        "@mendix/pluggable-widgets-tools": "catalog:",
+        "@testing-library/jest-dom": "catalog:",
+        "@testing-library/react": "catalog:",
+        "@testing-library/user-event": "catalog:",
+        "mendix": "catalog:",
+        "typescript": "catalog:"
+    }
+}
