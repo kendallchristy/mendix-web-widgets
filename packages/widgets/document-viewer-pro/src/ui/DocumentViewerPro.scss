@@ -623,6 +623,9 @@ mark.dvp-match {
     min-height: 0;
     overflow: auto;
     overscroll-behavior: contain;
+    // Room for a vertical scrollbar is kept on both sides whether it shows or not, so its coming and going never
+    // changes the width a page is fitted to, and pages stay centered.
+    scrollbar-gutter: stable both-edges;
 
     &.dvp-pages--pannable {
         cursor: grab;

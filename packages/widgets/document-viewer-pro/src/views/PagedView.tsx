@@ -1,4 +1,14 @@
-import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactElement } from "react";
+import {
+    Fragment,
+    useCallback,
+    useEffect,
+    useLayoutEffect,
+    useMemo,
+    useRef,
+    useState,
+    type CSSProperties,
+    type ReactElement
+} from "react";
 
 import {
     currentPageAt,
@@ -86,8 +96,17 @@ export function PagedView(props: PagedViewProps): ReactElement {
         }
     }
 
+    // Browsers round the measured size, up to half a pixel over the real one, so fit modes leave a pixel spare.
+    // Otherwise a page that exactly fills the viewer can overflow it by a fraction, show scrollbars, shrink to make
+    // room for them, fit again without them and start over.
     const scale = useMemo(
-        () => resolveScale(zoom, sizes[0] ? rotateSize(sizes[0], rotation) : undefined, viewport, props.maxFit),
+        () =>
+            resolveScale(
+                zoom,
+                sizes[0] ? rotateSize(sizes[0], rotation) : undefined,
+                { width: viewport.width - 1, height: viewport.height - 1 },
+                props.maxFit
+            ),
         [zoom, sizes, rotation, viewport, props.maxFit]
     );
 
@@ -205,11 +224,17 @@ export function PagedView(props: PagedViewProps): ReactElement {
             : visiblePages(pageLayout, scrollTop, viewport.height || 800, 1);
     // Pages center in the viewport; a page wider than the rest (landscape among portrait) scrolls sideways.
     const contentWidth = Math.max(viewport.width, pageLayout.maxWidth + PAGE_PADDING * 2);
+    // When the pages fit, that direction gets no scrollbar at all, so rounding can never bring one up.
+    const overflow: CSSProperties = {
+        overflowX: pageLayout.maxWidth + PAGE_PADDING * 2 <= viewport.width ? "hidden" : "auto",
+        overflowY: pageLayout.totalHeight <= viewport.height ? "hidden" : "auto"
+    };
 
     return (
         <div
             ref={scroller}
             className={props.pannable ? "dvp-pages dvp-pages--pannable" : "dvp-pages"}
+            style={viewport.width > 0 ? overflow : undefined}
             onScroll={onScroll}
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
