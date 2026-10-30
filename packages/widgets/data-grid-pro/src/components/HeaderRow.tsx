@@ -1,7 +1,9 @@
 import classNames from "classnames";
 import { useRef, useState, type MouseEvent, type PointerEvent, type ReactElement } from "react";
 
+import type { FilterValue } from "../model/filters";
 import type { ColumnModel, SortState } from "../model/types";
+import { HeaderFilter } from "./HeaderFilter";
 import { SortIcon } from "./icons";
 
 interface HeaderRowProps {
@@ -16,6 +18,13 @@ interface HeaderRowProps {
     onResize(columnId: string, width: number): void;
     /** Moves a column in front of another, or to the end. Undefined turns dragging off. */
     onReorder: ((columnId: string, beforeId: string | undefined) => void) | undefined;
+    /** Header filter values. Undefined leaves out the filter row. */
+    filters: HeaderFilters | undefined;
+}
+
+export interface HeaderFilters {
+    values: Record<string, FilterValue>;
+    onChange(columnId: string, value: FilterValue | undefined): void;
 }
 
 /** Pixels the pointer must travel before a press on a header becomes a drag rather than a click. */
@@ -163,6 +172,32 @@ export function HeaderRow(props: HeaderRowProps): ReactElement {
                     );
                 })}
             </div>
+            {props.filters && <FilterRow columns={columns} leading={props.leadingWidth > 0} filters={props.filters} />}
+        </div>
+    );
+}
+
+function FilterRow(props: { columns: ColumnModel[]; leading: boolean; filters: HeaderFilters }): ReactElement {
+    const { values, onChange } = props.filters;
+    return (
+        <div className="dgp-cells dgp-filter-row" role="row">
+            {props.leading && <div role="columnheader" className="dgp-fcell dgp-leading dgp-pin" />}
+            {props.columns.map((column, index) => (
+                <div
+                    key={column.id}
+                    role="columnheader"
+                    className={classNames("dgp-fcell", { "dgp-pin dgp-pin--first": index === 0 })}
+                >
+                    {column.filter && (
+                        <HeaderFilter
+                            filter={column.filter}
+                            label={column.header || column.id}
+                            value={values[column.id]}
+                            onChange={value => onChange(column.id, value)}
+                        />
+                    )}
+                </div>
+            ))}
         </div>
     );
 }

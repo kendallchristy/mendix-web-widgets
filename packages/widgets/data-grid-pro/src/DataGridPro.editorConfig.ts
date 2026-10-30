@@ -44,6 +44,9 @@ export function getProperties(values: DataGridProPreviewProps, defaultProperties
         if (column.showContentAs !== "attribute" || !values.showSearch) {
             hide.push("searchable");
         }
+        if (column.showContentAs !== "attribute" || !values.showHeaderFilters) {
+            hide.push("filterable");
+        }
         if (column.widthMode === "fixed") {
             hide.push("fillWeight", "minWidth");
         } else {
@@ -63,10 +66,19 @@ export function getProperties(values: DataGridProPreviewProps, defaultProperties
             "onSelectionChange",
             "keepSelection",
             "clearAfterBulkAction",
+            "selectAllPages",
+            "selectAllMax",
             "bulkActions"
         ]);
-    } else if (values.bulkActions.widgetCount === 0) {
-        hidePropertyIn(defaultProperties, values, "clearAfterBulkAction");
+    } else {
+        if (values.bulkActions.widgetCount === 0) {
+            hidePropertyIn(defaultProperties, values, "clearAfterBulkAction");
+        }
+        if (values.itemSelection === "Single") {
+            hidePropertiesIn(defaultProperties, values, ["selectAllPages", "selectAllMax"]);
+        } else if (!values.selectAllPages) {
+            hidePropertyIn(defaultProperties, values, "selectAllMax");
+        }
     }
     if (values.pagination === "pages") {
         hidePropertyIn(defaultProperties, values, "heightMode");

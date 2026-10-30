@@ -22,6 +22,8 @@ export interface GridData {
      * Loading another window while scrolling doesn't count.
      */
     refreshes: number;
+    /** Asks the data source for the grid's own window again, after something else moved it. */
+    restore(): void;
 }
 
 /** Skeleton rows shown before the first response arrives. */
@@ -34,7 +36,13 @@ const FIRST_LOAD_ROWS = 12;
  * so memory and request size stay constant however far they scroll. This needs the total row count; data
  * sources that can't report one fall back to growing the limit one page at a time.
  */
-export function useGridData(ds: ListValue, mode: "virtualScrolling" | "pages", pageSize: number): GridData {
+export function useGridData(
+    ds: ListValue,
+    mode: "virtualScrolling" | "pages",
+    pageSize: number,
+    /** While true the grid keeps showing the rows it has, so something else can page through the data source. */
+    paused = false
+): GridData {
     const size = Math.max(pageSize, 1);
     const windowSize = size * 3;
     const requested = useRef({ offset: 0, limit: mode === "pages" ? size : windowSize });
@@ -59,7 +67,7 @@ export function useGridData(ds: ListValue, mode: "virtualScrolling" | "pages", p
         limit: number;
         refreshes: number;
     }>({ items: undefined, offset: 0, limit: 0, refreshes: 0 });
-    if (ds.status === "available" && ds.items !== loaded.items) {
+    if (!paused && ds.status === "available" && ds.items !== loaded.items) {
         const sameWindow = loaded.items !== undefined && ds.offset === loaded.offset && ds.limit === loaded.limit;
         setLoaded({
             items: ds.items,
@@ -99,7 +107,7 @@ export function useGridData(ds: ListValue, mode: "virtualScrolling" | "pages", p
 
     const showRange = useCallback(
         (start: number, end: number) => {
-            if (mode === "pages" || firstLoad) {
+            if (mode === "pages" || firstLoad || paused) {
                 return;
             }
             const { offset, limit } = requested.current;
@@ -121,7 +129,7 @@ export function useGridData(ds: ListValue, mode: "virtualScrolling" | "pages", p
             clearTimeout(timer.current);
             timer.current = setTimeout(() => request(nextOffset, nextLimit), 80);
         },
-        [ds, firstLoad, mode, request, size, total, windowSize, windowed]
+        [ds, firstLoad, mode, paused, request, size, total, windowSize, windowed]
     );
 
     const getItem = useCallback(
@@ -154,6 +162,10 @@ export function useGridData(ds: ListValue, mode: "virtualScrolling" | "pages", p
         pageCount: total !== undefined ? Math.max(1, Math.ceil(total / size)) : page + (ds.hasMoreItems ? 2 : 1),
         setPage,
         reset,
-        refreshes: loaded.refreshes
+        refreshes: loaded.refreshes,
+        restore: () => {
+            ds.setOffset(requested.current.offset);
+            ds.setLimit(requested.current.limit);
+        }
     };
 }

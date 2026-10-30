@@ -9,8 +9,9 @@ A fast, high-density data grid for Mendix 11. It is built for lists of thousands
 - **Association columns.** Show many related objects in one cell as pills, loaded in one request per window (see below).
 - **Cell styles.** Text, colored badges and progress bars, plus custom widgets per cell. A column can widen on hover to show more detail.
 - **Expandable rows.** Put widgets in _Row details_ and rows open a panel below them, like an accordion.
-- **Selection.** Single or multi selection, with shift-click ranges, select all, and bulk actions in the toolbar.
+- **Selection.** Single or multi selection, with shift-click ranges, select all (including rows that aren't loaded), and bulk actions in the toolbar.
 - **Search.** One search box in the toolbar that looks in the columns you choose.
+- **Header filters.** A filter under each column header that fits its attribute, with active filters shown as chips.
 - **Column reordering.** Users drag headers, or use the column menu, to change the column order.
 - **User settings.** Sort, column order, widths, hidden columns and density, saved in the browser or in an attribute.
 - **Keyboard.** Arrow keys, Page Up and Page Down, Home and End move between cells. Enter runs the row action or opens the details, and Space selects.
@@ -57,6 +58,20 @@ Turn on **Search box** on the Toolbar tab to show one search field in the toolba
 
 Booleans, dates, dynamic text, custom content and related objects columns are skipped. Searching starts once typing pauses, or right away on Enter. Escape or the × clears it. The search runs in the database, on top of the data source's own constraints.
 
+### Header filters
+
+Turn on **Header filters** in the Columns group to add a row of filters under the column headers. Each column that shows an attribute and has **Can filter** on (the default) gets the filter that fits its type:
+
+| Attribute type         | Filter                                                                                     |
+| ---------------------- | ------------------------------------------------------------------------------------------ |
+| String                 | Contains the typed text, ignoring case.                                                    |
+| Integer, Long, Decimal | A number (`12`), a comparison (`>100`, `<=3.5`) or a range (`10..20`, both ends included). |
+| Date and time          | A From and To date, whole days.                                                            |
+| Enumeration            | Pick one or more values.                                                                   |
+| Boolean                | Any, Yes or No.                                                                            |
+
+Filters combine with each other and with the search box: a row must match all of them. Each active filter shows as a chip in the toolbar; its × removes it, and **Clear filters** removes them all. Filters run in the database on top of the data source's own constraints, and they last for the page visit.
+
 ### Column order
 
 With **Can reorder columns** on (the default), users drag a header left or right to move the column. The column menu also has move buttons for keyboard users and a **Reset columns** button that brings back the Studio Pro order, widths and hidden columns. The order is saved with the user's other settings. The first column in the user's order is the pinned one.
@@ -67,12 +82,16 @@ Set **Selection** to Single or Multi and place buttons in **Bulk actions**. They
 
 To act on the selected rows, have a button call a microflow or nanoflow with a parameter of the grid's entity: a list for Multi selection, a single object for Single selection. In the button's call settings, pass the grid's selection as that parameter (Studio Pro lists it under the grid's name and maps it automatically when it's the only match). This works from any button on the page, not only from Bulk actions.
 
-| Setting                     | Effect                                                                                                                                                                                                                                 |
-| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Keep selection**          | On (default): rows stay selected when the user sorts or searches. Off: sorting or searching clears the selection. Rows always stay selected while scrolling and when the data refreshes, so the action gets every row the user picked. |
-| **Clear after bulk action** | On (default): once a Bulk actions button has run and the grid's data has refreshed, the selection is cleared. Actions that change no data, like an export, leave it as it is.                                                          |
+| Setting                     | Effect                                                                                                                                                                                                                                                     |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Keep selection**          | On (default): rows stay selected when the user sorts, searches or filters. Off: sorting, searching or filtering clears the selection. Rows always stay selected while scrolling and when the data refreshes, so the action gets every row the user picked. |
+| **Clear after bulk action** | On (default): once a Bulk actions button has run and the grid's data has refreshed, the selection is cleared. Actions that change no data, like an export, leave it as it is.                                                                              |
 
 Escape on a focused row also clears the selection.
+
+### Selecting every row
+
+The header checkbox selects the loaded rows. With **Select all pages** on (the default) and more rows in the data source, the bulk actions bar then offers **Select all N**. It fetches the rows in batches of 500 with a progress bar and a Cancel button, then selects them all, so a bulk action gets every row. **Select all maximum** (default 50,000) caps how many rows it takes; above that the link reads **Select first N**. Bulk action buttons are hidden while it runs.
 
 ### Loading and height
 

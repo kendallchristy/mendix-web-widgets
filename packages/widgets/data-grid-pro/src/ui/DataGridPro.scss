@@ -95,6 +95,35 @@
     font-weight: 600;
 }
 
+.dgp-select-all {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+}
+
+.dgp-select-all-bar {
+    width: 140px;
+    height: 6px;
+    border: 0;
+    border-radius: 3px;
+    overflow: hidden;
+    background: var(--dgp-border);
+    accent-color: var(--dgp-accent);
+
+    &::-webkit-progress-bar {
+        background: var(--dgp-border);
+    }
+
+    &::-webkit-progress-value {
+        background: var(--dgp-accent);
+    }
+
+    &::-moz-progress-bar {
+        background: var(--dgp-accent);
+    }
+}
+
 .dgp-tools {
     display: flex;
     gap: 6px;
@@ -255,7 +284,7 @@
     position: sticky;
     top: 0;
     z-index: 3;
-    height: var(--dgp-header-height);
+    height: calc(var(--dgp-header-height) + var(--dgp-filter-height, 0px));
     background: var(--dgp-header-bg);
     border-bottom: 1px solid var(--dgp-border);
     min-width: var(--dgp-min-width);
@@ -272,6 +301,129 @@
     color: var(--dgp-text-muted);
     font-weight: 500;
     white-space: nowrap;
+}
+
+.dgp-fcell {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    height: var(--dgp-filter-height);
+    padding: 0 6px;
+    background: var(--dgp-header-bg);
+}
+
+.dgp-filter-row {
+    border-top: 1px solid var(--dgp-border);
+}
+
+.dgp-filter-input {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    height: min(28px, calc(var(--dgp-filter-height) - 6px));
+    padding: 0 8px;
+    border: 1px solid var(--dgp-border-strong);
+    border-radius: 6px;
+    background: var(--dgp-bg);
+    color: var(--dgp-text);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 400;
+
+    &::placeholder {
+        color: var(--dgp-text-muted);
+        opacity: 0.8;
+    }
+
+    &:focus {
+        outline: none;
+        border-color: var(--dgp-focus);
+        box-shadow: 0 0 0 2px color-mix(in srgb, var(--dgp-focus) 20%, transparent);
+    }
+}
+
+.dgp-filter-input--invalid {
+    border-color: #dc2626;
+}
+
+.dgp-filter-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+    color: var(--dgp-text-muted);
+    text-align: left;
+    cursor: pointer;
+
+    .dgp-chevron {
+        flex: none;
+        width: 12px;
+        height: 12px;
+    }
+}
+
+.dgp-filter-button--active {
+    color: var(--dgp-text);
+    border-color: color-mix(in srgb, var(--dgp-accent) 50%, var(--dgp-border-strong));
+}
+
+.dgp-filter-summary {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dgp-filter-panel {
+    min-width: 180px;
+}
+
+.dgp-filter-field {
+    display: grid;
+    gap: 4px;
+    padding: 6px;
+    color: var(--dgp-text-muted);
+    font-size: 12px;
+
+    .dgp-filter-input {
+        height: 30px;
+    }
+}
+
+.dgp-chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+}
+
+.dgp-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    max-width: 320px;
+    height: 26px;
+    padding: 0 2px 0 10px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--dgp-accent) 10%, var(--dgp-bg));
+    color: var(--dgp-text);
+    font-size: 12px;
+
+    .dgp-icon-button {
+        width: 22px;
+        height: 22px;
+        border-radius: 999px;
+    }
+}
+
+.dgp-chip-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dgp-chip-name {
+    font-weight: 600;
 }
 
 .dgp-hbutton {

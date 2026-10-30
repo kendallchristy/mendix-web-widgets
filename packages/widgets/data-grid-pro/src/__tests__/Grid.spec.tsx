@@ -24,6 +24,7 @@ function grid(overrides: Partial<GridProps> = {}): ReactElement {
             widths={{}}
             onResize={() => undefined}
             onReorder={undefined}
+            filters={undefined}
             sort={undefined}
             onSort={() => undefined}
             selection={noSelection}

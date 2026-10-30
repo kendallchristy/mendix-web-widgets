@@ -110,6 +110,14 @@ export class MockList<R extends MockItem> {
                     return wanted === undefined ? value === undefined : String(value) === String(wanted);
                 case "!=":
                     return wanted === undefined ? value !== undefined : String(value) !== String(wanted);
+                case ">":
+                    return Number(value) > Number(wanted);
+                case ">=":
+                    return Number(value) >= Number(wanted);
+                case "<":
+                    return Number(value) < Number(wanted);
+                case "<=":
+                    return Number(value) <= Number(wanted);
             }
         }
         if (left.type !== "association" || right.type !== "literal") {

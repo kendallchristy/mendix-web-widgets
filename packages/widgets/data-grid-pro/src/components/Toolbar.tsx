@@ -1,7 +1,15 @@
 import { useEffect, useRef, useState, type ReactElement, type ReactNode, type RefObject } from "react";
 
 import type { ColumnModel, Density } from "../model/types";
+import type { SelectAllProgress } from "../model/useSelectAll";
 import { ArrowIcon, ColumnsIcon, DensityIcon, SearchIcon } from "./icons";
+
+export interface FilterChip {
+    id: string;
+    name: string;
+    text: string;
+    onRemove(): void;
+}
 
 interface ToolbarProps {
     title: string | undefined;
@@ -10,6 +18,17 @@ interface ToolbarProps {
     selectedCount: number;
     bulkActions: ReactNode;
     onClearSelection(): void;
+    /** The offer to select every row in the data source, or its progress. */
+    selectAll:
+        | {
+              total: number;
+              /** The data source has more rows than select all takes. */
+              capped: boolean;
+              progress: SelectAllProgress | undefined;
+              onStart(): void;
+              onCancel(): void;
+          }
+        | undefined;
     /** Called when something in the bulk actions is clicked. */
     onBulkAction: (() => void) | undefined;
     /** Columns listed in the column menu, in their current order. Undefined hides the menu. */
@@ -20,14 +39,27 @@ interface ToolbarProps {
     onMoveColumn: ((columnId: string, delta: -1 | 1) => void) | undefined;
     onResetColumns(): void;
     search: { placeholder: string; onSearch(text: string): void } | undefined;
+    /** Active header filters, shown as chips. */
+    chips: FilterChip[];
+    onClearFilters(): void;
     density: Density | undefined;
     onDensity(density: Density): void;
 }
 
 export function Toolbar(props: ToolbarProps): ReactElement | null {
-    const selecting = props.selectedCount > 0 && props.bulkActions !== undefined;
+    const { selectAll } = props;
+    const selecting =
+        (props.selectedCount > 0 && (props.bulkActions !== undefined || selectAll !== undefined)) ||
+        selectAll?.progress !== undefined;
     const hasTools = props.columns !== undefined || props.density !== undefined || props.search !== undefined;
-    if (!props.title && props.total === undefined && !props.content && !selecting && !hasTools) {
+    if (
+        !props.title &&
+        props.total === undefined &&
+        !props.content &&
+        !selecting &&
+        !hasTools &&
+        props.chips.length === 0
+    ) {
         return null;
     }
     return (
@@ -40,10 +72,21 @@ export function Toolbar(props: ToolbarProps): ReactElement | null {
             )}
             {selecting ? (
                 <div className="dgp-bulk" role="region" aria-label="Bulk actions">
-                    <span className="dgp-bulk-count" aria-live="polite">
-                        {props.selectedCount.toLocaleString()} selected
-                    </span>
+                    {selectAll?.progress ? (
+                        <SelectAllProgressBar progress={selectAll.progress} onCancel={selectAll.onCancel} />
+                    ) : (
+                        <span className="dgp-bulk-count" aria-live="polite">
+                            {props.selectedCount.toLocaleString()} selected
+                        </span>
+                    )}
+                    {selectAll && !selectAll.progress && (
+                        <button type="button" className="dgp-link-button" onClick={selectAll.onStart}>
+                            {selectAll.capped ? "Select first" : "Select all"} {selectAll.total.toLocaleString()}
+                        </button>
+                    )}
+                    {/* Hidden while select all runs, so an action can't start on half the rows. */}
                     <div
+                        style={selectAll?.progress ? { display: "none" } : undefined}
                         className="dgp-toolbar-content"
                         onClickCapture={event => {
                             if ((event.target as HTMLElement).closest("button, a, [role='button']")) {
@@ -75,6 +118,30 @@ export function Toolbar(props: ToolbarProps): ReactElement | null {
                     )}
                 </div>
             )}
+            {props.chips.length > 0 && (
+                <div className="dgp-chips" role="group" aria-label="Active filters">
+                    {props.chips.map(chip => (
+                        <span key={chip.id} className="dgp-chip">
+                            <span className="dgp-chip-text">
+                                <span className="dgp-chip-name">{chip.name}</span> {chip.text}
+                            </span>
+                            <button
+                                type="button"
+                                className="dgp-icon-button"
+                                aria-label={`Remove filter ${chip.name} ${chip.text}`}
+                                onClick={chip.onRemove}
+                            >
+                                ×
+                            </button>
+                        </span>
+                    ))}
+                    {props.chips.length > 1 && (
+                        <button type="button" className="dgp-link-button" onClick={props.onClearFilters}>
+                            Clear filters
+                        </button>
+                    )}
+                </div>
+            )}
         </div>
     );
 }
@@ -101,6 +168,21 @@ function useMenu(): [open: boolean, setOpen: (open: boolean) => void, ref: RefOb
         };
     }, [open]);
     return [open, setOpen, ref];
+}
+
+function SelectAllProgressBar(props: { progress: SelectAllProgress; onCancel(): void }): ReactElement {
+    const { loaded, target } = props.progress;
+    return (
+        <span className="dgp-select-all" role="status">
+            <span>
+                Selecting {loaded.toLocaleString()} of {target.toLocaleString()}
+            </span>
+            <progress className="dgp-select-all-bar" value={loaded} max={Math.max(target, 1)} />
+            <button type="button" className="dgp-link-button" onClick={props.onCancel}>
+                Cancel
+            </button>
+        </span>
+    );
 }
 
 /** Waits for typing to pause before searching, so each keystroke doesn't start a request. */

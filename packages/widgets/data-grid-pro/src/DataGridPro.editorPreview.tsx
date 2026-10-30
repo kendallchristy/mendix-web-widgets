@@ -55,6 +55,17 @@ export function preview(props: DataGridProPreviewProps): ReactElement {
                         ))}
                     </div>
                 </div>
+                {props.showHeaderFilters && (
+                    <div className="dgp-cells dgp-filter-row" style={{ "--dgp-filter-height": "36px" } as never}>
+                        {(columns ?? []).map((column, i) => (
+                            <div key={i} className="dgp-fcell">
+                                {column.showContentAs === "attribute" && column.filterable && (
+                                    <span className="dgp-filter-input">Filter</span>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                )}
                 {Array.from({ length: PREVIEW_ROWS }, (_, row) => (
                     <div key={row} className="dgp-row" style={{ position: "static" }}>
                         <div className="dgp-cells">
