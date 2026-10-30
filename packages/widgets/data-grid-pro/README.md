@@ -10,7 +10,9 @@ A fast, high-density data grid for Mendix 11. It is built for lists of thousands
 - **Cell styles.** Text, colored badges and progress bars, plus custom widgets per cell. A column can widen on hover to show more detail.
 - **Expandable rows.** Put widgets in _Row details_ and rows open a panel below them, like an accordion.
 - **Selection.** Single or multi selection, with shift-click ranges, select all, and bulk actions in the toolbar.
-- **User settings.** Sort, column widths, hidden columns and density, saved in the browser or in an attribute.
+- **Search.** One search box in the toolbar that looks in the columns you choose.
+- **Column reordering.** Users drag headers, or use the column menu, to change the column order.
+- **User settings.** Sort, column order, widths, hidden columns and density, saved in the browser or in an attribute.
 - **Keyboard.** Arrow keys, Page Up and Page Down, Home and End move between cells. Enter runs the row action or opens the details, and Space selects.
 
 ## Usage
@@ -45,16 +47,30 @@ Place widgets in **Row details** to make rows expandable. The widgets get the ro
 
 Clicks on buttons, links and inputs inside a row, and anywhere inside the open details, don't toggle the row. If the row also has a single-click _On click action_, both happen on the same click, so Studio Pro warns about it. A double-click action works alongside row-click expanding.
 
+### Search box
+
+Turn on **Search box** on the Toolbar tab to show one search field in the toolbar. It looks in every column with **Can search** on (the default) that shows an attribute:
+
+- Text attributes match when they contain the typed text, ignoring case.
+- Enumeration attributes match when their caption contains the text.
+- Number attributes match when the text is that number, so "1200" or "1,200" finds 1200.
+
+Booleans, dates, dynamic text, custom content and related objects columns are skipped. Searching starts once typing pauses, or right away on Enter. Escape or the × clears it. The search runs in the database, on top of the data source's own constraints.
+
+### Column order
+
+With **Can reorder columns** on (the default), users drag a header left or right to move the column. The column menu also has move buttons for keyboard users and a **Reset columns** button that brings back the Studio Pro order, widths and hidden columns. The order is saved with the user's other settings. The first column in the user's order is the pinned one.
+
 ### Bulk actions
 
 Set **Selection** to Single or Multi and place buttons in **Bulk actions**. They replace the toolbar widgets while rows are selected, next to an "N selected" label and a Clear button.
 
 To act on the selected rows, have a button call a microflow or nanoflow with a parameter of the grid's entity: a list for Multi selection, a single object for Single selection. In the button's call settings, pass the grid's selection as that parameter (Studio Pro lists it under the grid's name and maps it automatically when it's the only match). This works from any button on the page, not only from Bulk actions.
 
-| Setting                     | Effect                                                                                                                                                                                                        |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Keep selection**          | On (default): rows stay selected when the user sorts. Off: sorting clears the selection. Rows always stay selected while scrolling and when the data refreshes, so the action gets every row the user picked. |
-| **Clear after bulk action** | On (default): once a Bulk actions button has run and the grid's data has refreshed, the selection is cleared. Actions that change no data, like an export, leave it as it is.                                 |
+| Setting                     | Effect                                                                                                                                                                                                                                 |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Keep selection**          | On (default): rows stay selected when the user sorts or searches. Off: sorting or searching clears the selection. Rows always stay selected while scrolling and when the data refreshes, so the action gets every row the user picked. |
+| **Clear after bulk action** | On (default): once a Bulk actions button has run and the grid's data has refreshed, the selection is cleared. Actions that change no data, like an export, leave it as it is.                                                          |
 
 Escape on a focused row also clears the selection.
 

@@ -41,6 +41,9 @@ export function getProperties(values: DataGridProPreviewProps, defaultProperties
         if (column.showContentAs !== "attribute") {
             hide.push("sortable");
         }
+        if (column.showContentAs !== "attribute" || !values.showSearch) {
+            hide.push("searchable");
+        }
         if (column.widthMode === "fixed") {
             hide.push("fillWeight", "minWidth");
         } else {
@@ -73,6 +76,9 @@ export function getProperties(values: DataGridProPreviewProps, defaultProperties
     }
     if (values.configurationStorage !== "attribute") {
         hidePropertyIn(defaultProperties, values, "configurationAttribute");
+    }
+    if (!values.showSearch) {
+        hidePropertyIn(defaultProperties, values, "searchPlaceholder");
     }
     return defaultProperties;
 }
@@ -120,6 +126,17 @@ export function check(values: DataGridProPreviewProps): Problem[] {
             severity: "warning",
             message:
                 "A single click both expands the row and runs the on click action. Use a double click trigger for the action to keep them apart."
+        });
+    }
+    if (
+        values.showSearch &&
+        !values.columns.some(column => column.showContentAs === "attribute" && column.attribute && column.searchable)
+    ) {
+        problems.push({
+            property: "showSearch",
+            severity: "warning",
+            message:
+                "The search box has no column to look in. Turn on Can search for a column that shows a text, enumeration or number attribute."
         });
     }
     if ((values.pageSize ?? 0) < 1) {

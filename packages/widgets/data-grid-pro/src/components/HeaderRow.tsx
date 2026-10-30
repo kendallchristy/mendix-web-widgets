@@ -1,5 +1,5 @@
 import classNames from "classnames";
-import { useRef, type PointerEvent, type ReactElement } from "react";
+import { useRef, useState, type MouseEvent, type PointerEvent, type ReactElement } from "react";
 
 import type { ColumnModel, SortState } from "../model/types";
 import { SortIcon } from "./icons";
@@ -14,13 +14,97 @@ interface HeaderRowProps {
     sort: SortState | undefined;
     onSort(columnId: string): void;
     onResize(columnId: string, width: number): void;
+    /** Moves a column in front of another, or to the end. Undefined turns dragging off. */
+    onReorder: ((columnId: string, beforeId: string | undefined) => void) | undefined;
+}
+
+/** Pixels the pointer must travel before a press on a header becomes a drag rather than a click. */
+const DRAG_THRESHOLD = 5;
+
+/** The column a header dropped at this x position would land in front of, or undefined for the end. */
+function dropTarget(row: HTMLElement, clientX: number): string | undefined {
+    for (const cell of row.querySelectorAll<HTMLElement>(".dgp-hcell[data-col]")) {
+        const rect = cell.getBoundingClientRect();
+        if (clientX < rect.left + rect.width / 2) {
+            return cell.dataset.col;
+        }
+    }
+    return undefined;
 }
 
 export function HeaderRow(props: HeaderRowProps): ReactElement {
-    const { columns, sort } = props;
+    const { columns, sort, onReorder } = props;
+    const press = useRef<{ id: string; x: number; dragging: boolean } | undefined>(undefined);
+    const [drag, setDrag] = useState<{ id: string; before: string | undefined } | undefined>();
+    const swallowClick = useRef(false);
+
+    const onPointerDown = (event: PointerEvent<HTMLDivElement>): void => {
+        const target = event.target as HTMLElement;
+        const id = target.closest<HTMLElement>(".dgp-hcell[data-col]")?.dataset.col;
+        if (!onReorder || !id || event.button !== 0 || target.closest(".dgp-resizer")) {
+            return;
+        }
+        press.current = { id, x: event.clientX, dragging: false };
+    };
+
+    const onPointerMove = (event: PointerEvent<HTMLDivElement>): void => {
+        const current = press.current;
+        if (!current) {
+            return;
+        }
+        if (!current.dragging) {
+            if (Math.abs(event.clientX - current.x) < DRAG_THRESHOLD) {
+                return;
+            }
+            current.dragging = true;
+            event.currentTarget.setPointerCapture?.(event.pointerId);
+        }
+        const before = dropTarget(event.currentTarget, event.clientX);
+        if (drag?.id !== current.id || drag.before !== before) {
+            setDrag({ id: current.id, before });
+        }
+    };
+
+    const onPointerUp = (event: PointerEvent<HTMLDivElement>): void => {
+        const current = press.current;
+        press.current = undefined;
+        if (!current?.dragging) {
+            return;
+        }
+        // The release would otherwise count as a click on the header and sort the column.
+        swallowClick.current = true;
+        setTimeout(() => {
+            swallowClick.current = false;
+        });
+        setDrag(undefined);
+        onReorder?.(current.id, dropTarget(event.currentTarget, event.clientX));
+    };
+
+    const onPointerCancel = (): void => {
+        press.current = undefined;
+        setDrag(undefined);
+    };
+
+    const onClickCapture = (event: MouseEvent<HTMLDivElement>): void => {
+        if (swallowClick.current) {
+            swallowClick.current = false;
+            event.stopPropagation();
+            event.preventDefault();
+        }
+    };
+
     return (
         <div className="dgp-head" role="rowgroup">
-            <div className="dgp-cells" role="row" aria-rowindex={1}>
+            <div
+                className={classNames("dgp-cells", { "dgp-cells--dragging": drag !== undefined })}
+                role="row"
+                aria-rowindex={1}
+                onPointerDown={onPointerDown}
+                onPointerMove={onPointerMove}
+                onPointerUp={onPointerUp}
+                onPointerCancel={onPointerCancel}
+                onClickCapture={onClickCapture}
+            >
                 {props.leadingWidth > 0 && (
                     <div role="columnheader" className="dgp-hcell dgp-leading dgp-pin">
                         {props.selectionMode === "multi" && (
@@ -52,7 +136,12 @@ export function HeaderRow(props: HeaderRowProps): ReactElement {
                             }
                             className={classNames("dgp-hcell", `dgp-cell--${column.align}`, {
                                 "dgp-pin dgp-pin--first": index === 0,
-                                "dgp-hcell--sorted": direction !== undefined
+                                "dgp-hcell--sorted": direction !== undefined,
+                                "dgp-hcell--draggable": onReorder !== undefined,
+                                "dgp-hcell--dragging": drag?.id === column.id,
+                                "dgp-hcell--drop-before": drag !== undefined && drag.before === column.id,
+                                "dgp-hcell--drop-after":
+                                    drag !== undefined && drag.before === undefined && index === columns.length - 1
                             })}
                         >
                             {sortable ? (

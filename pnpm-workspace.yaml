@@ -11,6 +11,8 @@ catalog:
     "@testing-library/jest-dom": "^6.9.1"
     "@testing-library/react": "^16.3.2"
     "@testing-library/user-event": "^14.6.1"
+    # Decimal numbers. Mendix provides it at runtime, so the widget build leaves it out of the bundle.
+    big.js: "6.2.2"
     classnames: "^2.5.1"
     # Charting library for the chart widgets (packages/shared/chart-core)
     echarts: "^6.1.0"

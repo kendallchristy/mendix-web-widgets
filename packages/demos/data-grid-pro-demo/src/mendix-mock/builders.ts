@@ -3,12 +3,19 @@ import type { MockItem } from "./list";
 
 export type Expr =
     | { type: "association"; id: string }
-    | { type: "literal"; value: MockItem | MockItem[] | string | number | boolean }
-    | { type: "function"; name: "=" | "contains" | "or" | "and"; args: Expr[] };
+    | { type: "attribute"; id: string }
+    | { type: "literal"; value: MockItem | MockItem[] | string | number | boolean | undefined }
+    | { type: "function"; name: "=" | "!=" | "contains" | "or" | "and"; args: Expr[] };
 
 export const association = (id: string): Expr => ({ type: "association", id });
-export const literal = (value: MockItem | MockItem[] | string | number | boolean): Expr => ({ type: "literal", value });
+export const attribute = (id: string): Expr => ({ type: "attribute", id });
+export const empty = (): Expr => ({ type: "literal", value: undefined });
+export const literal = (value: MockItem | MockItem[] | string | number | boolean | undefined): Expr => ({
+    type: "literal",
+    value
+});
 export const equals = (a: Expr, b: Expr): Expr => ({ type: "function", name: "=", args: [a, b] });
+export const notEqual = (a: Expr, b: Expr): Expr => ({ type: "function", name: "!=", args: [a, b] });
 export const contains = (a: Expr, b: Expr): Expr => ({ type: "function", name: "contains", args: [a, b] });
 export const or = (...args: Expr[]): Expr => ({ type: "function", name: "or", args });
 export const and = (...args: Expr[]): Expr => ({ type: "function", name: "and", args });

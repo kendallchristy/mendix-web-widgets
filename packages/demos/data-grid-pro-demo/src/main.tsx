@@ -33,6 +33,7 @@ const column = (overrides: Record<string, unknown>): unknown => ({
     sortable: true,
     resizable: true,
     hidable: "yes",
+    searchable: true,
     widthMode: "fill",
     fillWeight: 1,
     fixedWidth: 120,
@@ -115,6 +116,9 @@ function App(): ReactElement {
             </button>
         ),
         showColumnMenu: true,
+        columnsDraggable: true,
+        showSearch: true,
+        searchPlaceholder: dynamic("Search domains"),
         showDensityToggle: true,
         pagination: params.get("pages") ? "pages" : "virtualScrolling",
         pageSize: 50,

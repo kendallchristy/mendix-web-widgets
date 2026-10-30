@@ -19,7 +19,13 @@ function parse(json: string | undefined, columnCount: number): GridSettings | un
         if (stored.columns !== columnCount) {
             return undefined;
         }
-        return { hidden: stored.hidden ?? [], widths: stored.widths ?? {}, sort: stored.sort, density: stored.density };
+        return {
+            order: stored.order,
+            hidden: stored.hidden ?? [],
+            widths: stored.widths ?? {},
+            sort: stored.sort,
+            density: stored.density
+        };
     } catch {
         return undefined;
     }
@@ -42,7 +48,7 @@ function writeBrowser(key: string, value: string): void {
 }
 
 /**
- * Column widths, hidden columns, sort and density for the current user, kept in the browser or in an attribute.
+ * Column order, widths, hidden columns, sort and density for the current user, kept in the browser or in an attribute.
  * `ready` turns true once stored settings have been read, so the grid can apply the saved sort before loading.
  */
 export function useGridSettings(

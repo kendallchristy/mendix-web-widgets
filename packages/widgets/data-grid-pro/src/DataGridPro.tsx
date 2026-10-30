@@ -1,12 +1,14 @@
 import classNames from "classnames";
 import type { ObjectItem } from "mendix";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, type ReactElement } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactElement } from "react";
 
 import type { DataGridProContainerProps } from "../typings/DataGridProProps";
 import { Footer } from "./components/Footer";
 import { Grid } from "./components/Grid";
 import { Toolbar } from "./components/Toolbar";
 import { buildColumns } from "./model/columns";
+import { applyOrder, moveColumn } from "./model/order";
+import { searchFilter } from "./model/search";
 import { ROW_HEIGHT, type Density, type GridSettings } from "./model/types";
 import { useGridData } from "./model/useGridData";
 import { useGridSettings } from "./model/useGridSettings";
@@ -49,9 +51,13 @@ export function DataGridPro(props: DataGridProContainerProps): ReactElement {
         props.columns.length,
         initialSettings
     );
+    const orderedColumns = useMemo(
+        () => (props.columnsDraggable ? applyOrder(allColumns, settings.order) : allColumns),
+        [allColumns, props.columnsDraggable, settings.order]
+    );
     const columns = useMemo(
-        () => allColumns.filter(column => !settings.hidden.includes(column.id)),
-        [allColumns, settings.hidden]
+        () => orderedColumns.filter(column => !settings.hidden.includes(column.id)),
+        [orderedColumns, settings.hidden]
     );
 
     // Apply the sort order. Runs once saved settings are known, and again whenever the user sorts.
@@ -90,6 +96,23 @@ export function DataGridPro(props: DataGridProContainerProps): ReactElement {
         }
     }, [data.refreshes]);
 
+    // Search. The text arrives already debounced from the search box.
+    const [search, setSearch] = useState("");
+    const appliedSearch = useRef("");
+    useEffect(() => {
+        if (search === appliedSearch.current) {
+            return;
+        }
+        appliedSearch.current = search;
+        if (!keepSelection) {
+            clearSelection.current();
+        }
+        datasource.setFilter(searchFilter(props.columns, search));
+        resetData();
+        // Runs when the search text changes; columns and datasource change identity on every Mendix update.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [search]);
+
     const refreshSeconds = props.refreshInterval;
     useEffect(() => {
         if (refreshSeconds <= 0) {
@@ -124,6 +147,28 @@ export function DataGridPro(props: DataGridProContainerProps): ReactElement {
         }
     };
 
+    const onReorder = useCallback(
+        (columnId: string, beforeId: string | undefined) =>
+            update({
+                order: moveColumn(
+                    orderedColumns.map(c => c.id),
+                    columnId,
+                    beforeId
+                )
+            }),
+        [orderedColumns, update]
+    );
+
+    const onMoveColumn = (columnId: string, delta: -1 | 1): void => {
+        const ids = orderedColumns.map(c => c.id);
+        const index = ids.indexOf(columnId);
+        if (delta < 0 && index > 0) {
+            update({ order: moveColumn(ids, columnId, ids[index - 1]) });
+        } else if (delta > 0 && index < ids.length - 1) {
+            update({ order: moveColumn(ids, columnId, ids[index + 2]) });
+        }
+    };
+
     const density: Density = settings.density ?? props.density;
     const { onClick, detailContent, rowClass } = props;
     const onRowAction = useMemo(
@@ -144,7 +189,10 @@ export function DataGridPro(props: DataGridProContainerProps): ReactElement {
     );
     const getRowClass = useCallback((item: ObjectItem) => rowClass?.get(item).value, [rowClass]);
 
-    const hidableColumns = allColumns.some(c => c.hidable) ? allColumns : undefined;
+    const menuColumns =
+        props.showColumnMenu && (props.columnsDraggable || allColumns.some(c => c.hidable))
+            ? orderedColumns
+            : undefined;
 
     return (
         <div
@@ -159,9 +207,16 @@ export function DataGridPro(props: DataGridProContainerProps): ReactElement {
                 bulkActions={props.bulkActions}
                 onClearSelection={selection.clear}
                 onBulkAction={onBulkAction}
-                columns={props.showColumnMenu ? hidableColumns : undefined}
+                columns={menuColumns}
                 hidden={settings.hidden}
                 onToggleColumn={onToggleColumn}
+                onMoveColumn={props.columnsDraggable ? onMoveColumn : undefined}
+                onResetColumns={() => update({ order: undefined, hidden: initialSettings.hidden, widths: {} })}
+                search={
+                    props.showSearch
+                        ? { placeholder: props.searchPlaceholder?.value || "Search", onSearch: setSearch }
+                        : undefined
+                }
                 density={props.showDensityToggle ? density : undefined}
                 onDensity={value => update({ density: value })}
             />
@@ -171,6 +226,7 @@ export function DataGridPro(props: DataGridProContainerProps): ReactElement {
                 rowHeight={ROW_HEIGHT[density]}
                 widths={settings.widths}
                 onResize={onResize}
+                onReorder={props.columnsDraggable ? onReorder : undefined}
                 sort={settings.sort}
                 onSort={onSort}
                 selection={selection}
@@ -183,7 +239,7 @@ export function DataGridPro(props: DataGridProContainerProps): ReactElement {
                 stripes={props.stripes}
                 pinFirstColumn={props.pinFirstColumn}
                 empty={props.emptyPlaceholder ?? <span className="dgp-empty-text">No results</span>}
-                scrollResetKey={`${sortAttribute}:${sortDirection}`}
+                scrollResetKey={`${sortAttribute}:${sortDirection}:${search}`}
                 ariaLabel={props.title?.value}
             />
             {props.pagination === "pages" && (

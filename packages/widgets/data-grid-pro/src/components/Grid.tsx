@@ -27,6 +27,7 @@ export interface GridProps {
     rowHeight: number;
     widths: Record<string, number>;
     onResize(columnId: string, width: number): void;
+    onReorder: ((columnId: string, beforeId: string | undefined) => void) | undefined;
     sort: SortState | undefined;
     onSort(columnId: string): void;
     selection: Selection;
@@ -316,6 +317,7 @@ export function Grid(props: GridProps): ReactElement {
                 sort={props.sort}
                 onSort={props.onSort}
                 onResize={props.onResize}
+                onReorder={props.onReorder}
             />
             <div className="dgp-body" role="rowgroup" style={{ height: virtualizer.getTotalSize() }}>
                 {virtualRows.map(virtualRow => {

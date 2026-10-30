@@ -21,6 +21,7 @@
     },
     "dependencies": {
         "@tanstack/react-virtual": "^3.14.22",
+        "big.js": "catalog:",
         "classnames": "catalog:"
     },
     "devDependencies": {

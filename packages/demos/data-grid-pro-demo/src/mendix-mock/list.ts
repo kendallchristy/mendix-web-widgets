@@ -100,6 +100,18 @@ export class MockList<R extends MockItem> {
             return expr.args.every(arg => this.matches(row, arg));
         }
         const [left, right] = expr.args;
+        if (left.type === "attribute" && right.type === "literal") {
+            const value = this.options.sortValue(row, left.id);
+            const wanted = right.value;
+            switch (expr.name) {
+                case "contains":
+                    return String(value).toLowerCase().includes(String(wanted).toLowerCase());
+                case "=":
+                    return wanted === undefined ? value === undefined : String(value) === String(wanted);
+                case "!=":
+                    return wanted === undefined ? value !== undefined : String(value) !== String(wanted);
+            }
+        }
         if (left.type !== "association" || right.type !== "literal") {
             return true;
         }
