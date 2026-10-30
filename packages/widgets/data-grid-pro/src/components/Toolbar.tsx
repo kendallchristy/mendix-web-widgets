@@ -10,6 +10,8 @@ interface ToolbarProps {
     selectedCount: number;
     bulkActions: ReactNode;
     onClearSelection(): void;
+    /** Called when something in the bulk actions is clicked. */
+    onBulkAction: (() => void) | undefined;
     columns: ColumnModel[] | undefined;
     hidden: string[];
     onToggleColumn(columnId: string): void;
@@ -33,8 +35,19 @@ export function Toolbar(props: ToolbarProps): ReactElement | null {
             )}
             {selecting ? (
                 <div className="dgp-bulk" role="region" aria-label="Bulk actions">
-                    <span className="dgp-bulk-count">{props.selectedCount.toLocaleString()} selected</span>
-                    <div className="dgp-toolbar-content">{props.bulkActions}</div>
+                    <span className="dgp-bulk-count" aria-live="polite">
+                        {props.selectedCount.toLocaleString()} selected
+                    </span>
+                    <div
+                        className="dgp-toolbar-content"
+                        onClickCapture={event => {
+                            if ((event.target as HTMLElement).closest("button, a, [role='button']")) {
+                                props.onBulkAction?.();
+                            }
+                        }}
+                    >
+                        {props.bulkActions}
+                    </div>
                     <button type="button" className="dgp-link-button" onClick={props.onClearSelection}>
                         Clear
                     </button>

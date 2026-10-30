@@ -38,7 +38,8 @@ export function gridData(rows: ObjectItem[]): GridData {
         page: 0,
         pageCount: 1,
         setPage: () => undefined,
-        reset: () => undefined
+        reset: () => undefined,
+        refreshes: 0
     };
 }
 
