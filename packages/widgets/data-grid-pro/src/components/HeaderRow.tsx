@@ -103,7 +103,7 @@ export function HeaderRow(props: HeaderRowProps): ReactElement {
     };
 
     return (
-        <div className="dgp-head" role="rowgroup">
+        <div className={classNames("dgp-head", { "dgp-head--filters": props.filters !== undefined })} role="rowgroup">
             <div
                 className={classNames("dgp-cells", { "dgp-cells--dragging": drag !== undefined })}
                 role="row"

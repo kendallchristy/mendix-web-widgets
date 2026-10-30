@@ -312,8 +312,16 @@
     background: var(--dgp-header-bg);
 }
 
-.dgp-filter-row {
-    border-top: 1px solid var(--dgp-border);
+// With filters, the titles sit low and the filters right under them, inside the header's bottom border, so each
+// filter reads as part of its column title.
+.dgp-head--filters .dgp-hcell {
+    align-items: flex-end;
+    padding-bottom: 2px;
+}
+
+.dgp-filter-row .dgp-fcell {
+    align-items: flex-start;
+    padding-top: 4px;
 }
 
 .dgp-filter-input {
