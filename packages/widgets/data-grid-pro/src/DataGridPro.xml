@@ -244,6 +244,14 @@
                     <caption>On selection change</caption>
                     <description />
                 </property>
+                <property key="keepSelection" type="boolean" defaultValue="true">
+                    <caption>Keep selection</caption>
+                    <description>Keep rows selected when the user sorts. Off clears the selection then. Rows always stay selected while scrolling and when the data refreshes.</description>
+                </property>
+                <property key="clearAfterBulkAction" type="boolean" defaultValue="true">
+                    <caption>Clear after bulk action</caption>
+                    <description>Clear the selection once a button in Bulk actions has run and the grid's data has refreshed, for example after the selected rows were approved or deleted.</description>
+                </property>
             </propertyGroup>
         </propertyGroup>
         <propertyGroup caption="Toolbar">
@@ -262,7 +270,7 @@
                 </property>
                 <property key="bulkActions" type="widgets" required="false">
                     <caption>Bulk actions</caption>
-                    <description>Widgets shown in place of the toolbar while rows are selected.</description>
+                    <description>Widgets shown in place of the toolbar widgets while rows are selected. A button here can pass the grid's selection to a microflow or nanoflow with a list parameter.</description>
                 </property>
                 <property key="showColumnMenu" type="boolean" defaultValue="true">
                     <caption>Column menu</caption>

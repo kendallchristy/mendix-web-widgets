@@ -45,6 +45,19 @@ Place widgets in **Row details** to make rows expandable. The widgets get the ro
 
 Clicks on buttons, links and inputs inside a row, and anywhere inside the open details, don't toggle the row. If the row also has a single-click _On click action_, both happen on the same click, so Studio Pro warns about it. A double-click action works alongside row-click expanding.
 
+### Bulk actions
+
+Set **Selection** to Single or Multi and place buttons in **Bulk actions**. They replace the toolbar widgets while rows are selected, next to an "N selected" label and a Clear button.
+
+To act on the selected rows, have a button call a microflow or nanoflow with a parameter of the grid's entity: a list for Multi selection, a single object for Single selection. In the button's call settings, pass the grid's selection as that parameter (Studio Pro lists it under the grid's name and maps it automatically when it's the only match). This works from any button on the page, not only from Bulk actions.
+
+| Setting                     | Effect                                                                                                                                                                                                        |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Keep selection**          | On (default): rows stay selected when the user sorts. Off: sorting clears the selection. Rows always stay selected while scrolling and when the data refreshes, so the action gets every row the user picked. |
+| **Clear after bulk action** | On (default): once a Bulk actions button has run and the grid's data has refreshed, the selection is cleared. Actions that change no data, like an export, leave it as it is.                                 |
+
+Escape on a focused row also clears the selection.
+
 ### Loading and height
 
 - **Virtual scrolling** (default) loads rows as you scroll. Give the grid a fixed height, or let it fill its container.

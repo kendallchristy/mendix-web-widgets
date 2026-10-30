@@ -123,3 +123,14 @@ describe("Grid sorting", () => {
         errors.mockRestore();
     });
 });
+
+describe("Grid selection", () => {
+    it("clears the selection with Escape", () => {
+        const clear = jest.fn();
+        renderGrid({ selection: { ...noSelection, mode: "multi", count: 2, clear } });
+        const cell = screen.getByText("Row 2");
+        cell.focus();
+        fireEvent.keyDown(cell, { key: "Escape" });
+        expect(clear).toHaveBeenCalled();
+    });
+});
