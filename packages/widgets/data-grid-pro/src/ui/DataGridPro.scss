@@ -292,6 +292,7 @@
 
 .dgp-hcell {
     position: relative;
+    box-sizing: border-box;
     display: flex;
     align-items: center;
     min-width: 0;
@@ -304,6 +305,7 @@
 }
 
 .dgp-fcell {
+    box-sizing: border-box;
     display: flex;
     align-items: center;
     min-width: 0;
