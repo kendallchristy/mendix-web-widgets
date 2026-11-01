@@ -25,7 +25,7 @@
     "devDependencies": {
         "@changesets/changelog-github": "^1.0.1",
         "@changesets/cli": "^3.0.3",
-        "@eslint-react/eslint-plugin": "^5.28.6",
+        "@eslint-react/eslint-plugin": "^5.28.8",
         "@eslint/js": "^10.0.1",
         "@mendix/pluggable-widgets-tools": "catalog:",
         "@prettier/plugin-xml": "^3.4.2",
@@ -36,7 +36,7 @@
         "prettier": "^3.9.10",
         "turbo": "^2.11.10",
         "typescript": "catalog:",
-        "typescript-eslint": "^8.72.0"
+        "typescript-eslint": "^8.72.1"
     },
     "packageManager": "pnpm@10.33.4",
     "engines": {

@@ -20,7 +20,7 @@
         "typecheck": "tsc --noEmit"
     },
     "dependencies": {
-        "@tanstack/react-virtual": "^3.14.22",
+        "@tanstack/react-virtual": "^3.14.23",
         "classnames": "catalog:"
     },
     "devDependencies": {
