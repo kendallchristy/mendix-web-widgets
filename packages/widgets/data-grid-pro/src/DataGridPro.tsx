@@ -1,6 +1,6 @@
 import classNames from "classnames";
 import type { ObjectItem } from "mendix";
-import { useCallback, useEffect, useMemo, type ReactElement } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, type ReactElement } from "react";
 
 import type { DataGridProContainerProps } from "../typings/DataGridProProps";
 import { Footer } from "./components/Footer";
@@ -20,6 +20,18 @@ export function DataGridPro(props: DataGridProContainerProps): ReactElement {
     const related = useRelatedObjects(props.columns, data.items);
     const allColumns = useMemo(() => buildColumns(props.columns, related), [props.columns, related]);
     const selection = useSelection(props.itemSelection);
+    // Effects below clear the selection without re-running whenever the selection changes.
+    const clearSelection = useRef(selection.clear);
+    useLayoutEffect(() => {
+        clearSelection.current = selection.clear;
+    });
+
+    // By default Mendix drops selected rows that aren't in the latest response, and with virtual scrolling every
+    // window move is a new response. Keep them, so a bulk action gets every row the user picked.
+    const setKeepSelection = props.itemSelection?.setKeepSelection;
+    useEffect(() => {
+        setKeepSelection?.(() => true);
+    }, [setKeepSelection]);
 
     const initialSettings = useMemo(
         (): GridSettings => ({
@@ -46,15 +58,37 @@ export function DataGridPro(props: DataGridProContainerProps): ReactElement {
     const sortAttribute = allColumns.find(c => c.id === settings.sort?.columnId)?.sortAttribute;
     const sortDirection = settings.sort?.direction;
     const resetData = data.reset;
+    const appliedSort = useRef<string | undefined>(undefined);
+    const keepSelection = props.keepSelection;
     useEffect(() => {
         if (!ready) {
             return;
         }
+        const sortKey = `${sortAttribute}:${sortDirection}`;
+        if (!keepSelection && appliedSort.current !== undefined && appliedSort.current !== sortKey) {
+            clearSelection.current();
+        }
+        appliedSort.current = sortKey;
         datasource.setSortOrder(sortAttribute && sortDirection ? [[sortAttribute, sortDirection]] : undefined);
         resetData();
         // datasource changes identity on every update; only the sort itself matters here.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [ready, sortAttribute, sortDirection]);
+
+    // After a bulk action, clear the selection once its changes come back, so the bar doesn't linger over rows
+    // that were just processed. Actions that change nothing, like an export, leave the selection as it is.
+    const bulkActionRan = useRef(false);
+    const onBulkAction = props.clearAfterBulkAction
+        ? () => {
+              bulkActionRan.current = true;
+          }
+        : undefined;
+    useEffect(() => {
+        if (bulkActionRan.current) {
+            bulkActionRan.current = false;
+            clearSelection.current();
+        }
+    }, [data.refreshes]);
 
     const refreshSeconds = props.refreshInterval;
     useEffect(() => {
@@ -124,6 +158,7 @@ export function DataGridPro(props: DataGridProContainerProps): ReactElement {
                 selectedCount={selection.count}
                 bulkActions={props.bulkActions}
                 onClearSelection={selection.clear}
+                onBulkAction={onBulkAction}
                 columns={props.showColumnMenu ? hidableColumns : undefined}
                 hidden={settings.hidden}
                 onToggleColumn={onToggleColumn}

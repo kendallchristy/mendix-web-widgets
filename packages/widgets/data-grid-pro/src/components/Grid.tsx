@@ -228,6 +228,12 @@ export function Grid(props: GridProps): ReactElement {
                 }
                 event.preventDefault();
                 return;
+            case "Escape":
+                if (selection.count > 0) {
+                    selection.clear();
+                    event.preventDefault();
+                }
+                return;
             case " ":
                 if (item && selection.mode === "multi") {
                     selectWithRange(row, item, event.shiftKey);

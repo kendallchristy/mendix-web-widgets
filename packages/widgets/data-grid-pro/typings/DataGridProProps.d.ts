@@ -116,6 +116,8 @@ export interface DataGridProContainerProps {
     expandTrigger: ExpandTriggerEnum;
     singleExpand: boolean;
     itemSelection?: SelectionSingleValue | SelectionMultiValue;
+    keepSelection: boolean;
+    clearAfterBulkAction: boolean;
     title?: DynamicValue<string>;
     showCount: boolean;
     toolbarContent?: ReactNode;
@@ -156,6 +158,8 @@ export interface DataGridProPreviewProps {
     singleExpand: boolean;
     itemSelection: "None" | "Single" | "Multi";
     onSelectionChange: {} | null;
+    keepSelection: boolean;
+    clearAfterBulkAction: boolean;
     title: string;
     showCount: boolean;
     toolbarContent: { widgetCount: number; renderer: ComponentType<{ children: ReactNode; caption?: string }> };

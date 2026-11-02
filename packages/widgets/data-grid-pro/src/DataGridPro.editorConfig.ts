@@ -56,7 +56,14 @@ export function getProperties(values: DataGridProPreviewProps, defaultProperties
         hidePropertiesIn(defaultProperties, values, ["expandTrigger", "singleExpand"]);
     }
     if (values.itemSelection === "None") {
-        hidePropertiesIn(defaultProperties, values, ["onSelectionChange", "bulkActions"]);
+        hidePropertiesIn(defaultProperties, values, [
+            "onSelectionChange",
+            "keepSelection",
+            "clearAfterBulkAction",
+            "bulkActions"
+        ]);
+    } else if (values.bulkActions.widgetCount === 0) {
+        hidePropertyIn(defaultProperties, values, "clearAfterBulkAction");
     }
     if (values.pagination === "pages") {
         hidePropertyIn(defaultProperties, values, "heightMode");
@@ -150,7 +157,9 @@ export function getPreview(values: DataGridProPreviewProps): StructurePreviewPro
         row,
         row,
         dropzone("Row details: place widgets here to make rows expandable")(values.detailContent),
-        ...(values.itemSelection !== "None" ? [dropzone("Bulk actions")(values.bulkActions)] : []),
+        ...(values.itemSelection !== "None"
+            ? [dropzone("Bulk actions: buttons here can pass the grid's selection to a microflow")(values.bulkActions)]
+            : []),
         dropzone("Empty message")(values.emptyPlaceholder)
     );
 }

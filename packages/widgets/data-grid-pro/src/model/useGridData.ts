@@ -17,6 +17,11 @@ export interface GridData {
     setPage(page: number): void;
     /** Call after the sort order changes. */
     reset(): void;
+    /**
+     * Counts reloads of the same rows, for example after a refresh or after a microflow changed them.
+     * Loading another window while scrolling doesn't count.
+     */
+    refreshes: number;
 }
 
 /** Skeleton rows shown before the first response arrives. */
@@ -48,12 +53,20 @@ export function useGridData(ds: ListValue, mode: "virtualScrolling" | "pages", p
 
     // The items on screen and the offset they were fetched at. While a new window loads, Mendix keeps serving
     // the previous items, so the offset is only taken over once the new items are available.
-    const [loaded, setLoaded] = useState<{ items: ObjectItem[] | undefined; offset: number }>({
-        items: undefined,
-        offset: 0
-    });
+    const [loaded, setLoaded] = useState<{
+        items: ObjectItem[] | undefined;
+        offset: number;
+        limit: number;
+        refreshes: number;
+    }>({ items: undefined, offset: 0, limit: 0, refreshes: 0 });
     if (ds.status === "available" && ds.items !== loaded.items) {
-        setLoaded({ items: ds.items, offset: ds.offset });
+        const sameWindow = loaded.items !== undefined && ds.offset === loaded.offset && ds.limit === loaded.limit;
+        setLoaded({
+            items: ds.items,
+            offset: ds.offset,
+            limit: ds.limit,
+            refreshes: loaded.refreshes + (sameWindow ? 1 : 0)
+        });
     }
     const items = useMemo(() => loaded.items ?? ds.items ?? [], [loaded.items, ds.items]);
     const itemsOffset = loaded.offset;
@@ -140,6 +153,7 @@ export function useGridData(ds: ListValue, mode: "virtualScrolling" | "pages", p
         page,
         pageCount: total !== undefined ? Math.max(1, Math.ceil(total / size)) : page + (ds.hasMoreItems ? 2 : 1),
         setPage,
-        reset
+        reset,
+        refreshes: loaded.refreshes
     };
 }

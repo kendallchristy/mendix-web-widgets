@@ -88,7 +88,9 @@ function App(): ReactElement {
                 </div>
             </div>
         )),
-        itemSelection: { type: "Multi", selection, setSelection },
+        itemSelection: { type: "Multi", selection, setSelection, setKeepSelection: () => undefined },
+        keepSelection: true,
+        clearAfterBulkAction: true,
         title: dynamic("Competitors"),
         showCount: true,
         toolbarContent: (
