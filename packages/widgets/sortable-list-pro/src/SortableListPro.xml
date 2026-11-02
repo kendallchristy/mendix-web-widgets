@@ -91,7 +91,7 @@
                 </property>
                 <property key="listName" type="expression" required="false">
                     <caption>List name</caption>
-                    <description>Identifies this list to the On receive and On remove actions of other lists, for example 'Backlog'.</description>
+                    <description>Identifies this list, for example 'Backlog'. Passed as To list to On move to another list when an object moves here.</description>
                     <returnType type="String" />
                 </property>
                 <property key="canReceive" type="expression" defaultValue="true">
@@ -100,8 +100,8 @@
                     <returnType type="Boolean" />
                 </property>
                 <property key="receiveAttribute" type="attribute" dataSource="datasource" required="false">
-                    <caption>Value on receive: attribute</caption>
-                    <description>Optional. When an item arrives from another list, the widget writes the value below to this attribute, for example Status. Items whose value differs are hidden from this list until the data refreshes.</description>
+                    <caption>List attribute</caption>
+                    <description>Optional, for lists that share one data source, for example Status. This list shows only the objects whose attribute matches the list value below.</description>
                     <attributeTypes>
                         <attributeType name="Enum" />
                         <attributeType name="String" />
@@ -109,8 +109,8 @@
                     </attributeTypes>
                 </property>
                 <property key="receiveValue" type="expression" required="false">
-                    <caption>Value on receive: value</caption>
-                    <description>The value for this list, as text: an enumeration key such as 'Done', text, or true or false.</description>
+                    <caption>List value</caption>
+                    <description>This list's value, as text: an enumeration key such as 'Done', text, or true or false. Passed as To value when an object moves here.</description>
                     <returnType type="String" />
                 </property>
             </propertyGroup>
@@ -119,27 +119,23 @@
             <propertyGroup caption="Events">
                 <property key="onMove" type="action" dataSource="datasource" required="false">
                     <caption>On move</caption>
-                    <description>Runs for every object whose sort value changed, usually a nanoflow that commits it. The dragged object gets Moved = true; objects renumbered to make room get Moved = false. Positions start at 1.</description>
+                    <description>Saves a move. Mendix doesn't let widgets change attributes, so this nanoflow sets the sort attribute to New sort value and commits. Give the nanoflow parameters named like the variables (newSortValue, moved, oldPosition, newPosition) to receive them. It runs for every object whose place changed: the dragged object gets Moved = true; objects renumbered to make room get Moved = false. Positions start at 1.</description>
                     <actionVariables>
                         <actionVariable key="moved" type="Boolean" caption="Moved" />
+                        <actionVariable key="newSortValue" type="Decimal" caption="New sort value" />
                         <actionVariable key="oldPosition" type="Integer" caption="Old position" />
-                        <actionVariable key="newPosition" type="Integer" caption="New position" />
-                    </actionVariables>
-                </property>
-                <property key="onReceive" type="action" dataSource="datasource" required="false">
-                    <caption>On receive</caption>
-                    <description>Runs for an object dropped here from another list, after its sort value is set. Use it to set an association to this list's object and commit.</description>
-                    <actionVariables>
-                        <actionVariable key="fromList" type="String" caption="From list" />
                         <actionVariable key="newPosition" type="Integer" caption="New position" />
                     </actionVariables>
                 </property>
                 <property key="onRemove" type="action" dataSource="datasource" required="false">
-                    <caption>On remove</caption>
-                    <description>Runs for an object dragged from this list into another one.</description>
+                    <caption>On move to another list</caption>
+                    <description>Saves an object dragged from this list into another list of the group: set the sort attribute to New sort value, set the list attribute (or association) from To value or To list, and commit. Give the nanoflow parameters named like the variables (toList, toValue, newSortValue, oldPosition, newPosition) to receive them.</description>
                     <actionVariables>
                         <actionVariable key="toList" type="String" caption="To list" />
+                        <actionVariable key="toValue" type="String" caption="To value" />
+                        <actionVariable key="newSortValue" type="Decimal" caption="New sort value" />
                         <actionVariable key="oldPosition" type="Integer" caption="Old position" />
+                        <actionVariable key="newPosition" type="Integer" caption="New position" />
                     </actionVariables>
                 </property>
                 <property key="onDragStart" type="action" dataSource="datasource" required="false">

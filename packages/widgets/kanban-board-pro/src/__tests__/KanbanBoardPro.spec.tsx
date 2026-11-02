@@ -81,11 +81,11 @@ describe("KanbanBoardPro", () => {
                 fireEvent.keyDown(bravo, { key });
             });
         }
-        expect(data.rows.get("b")!.status).toBe("Doing");
-        expect(data.rows.get("b")!.sort!.toString()).toBe("2");
-        expect(data.log).toContain(
-            'onCardMove b {"moved":"true","fromColumn":"Backlog","toColumn":"Doing","newPosition":"2"}'
-        );
+        // On card move saves the move; the widget shows the card in its new place meanwhile.
+        expect(data.log).toEqual([
+            'onCardMove b {"moved":"true","newSortValue":"2","fromColumn":"Backlog","toColumn":"Doing","newPosition":"2"}'
+        ]);
+        expect(data.rows.get("b")!.status).toBe("Backlog");
         expect(cardsIn("Backlog")).toEqual(["Alpha"]);
         expect(cardsIn("Doing")).toEqual(["Charlie", "Bravo"]);
     });

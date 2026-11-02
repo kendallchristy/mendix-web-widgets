@@ -60,7 +60,7 @@ describe("SortableListPro", () => {
         expect(titles()).toEqual(["Bravo", "Alpha", "Charlie"]);
     });
 
-    it("moves an item with the keyboard and saves the new sort value", async () => {
+    it("moves an item with the keyboard and passes the new sort value to On move", async () => {
         const { data, props } = setup();
         render(<SortableListPro {...props} />);
         const bravo = screen.getByLabelText("Bravo");
@@ -77,8 +77,9 @@ describe("SortableListPro", () => {
         act(() => {
             fireEvent.keyDown(bravo, { key: " " });
         });
-        expect(data.rows.get("b")!.sort!.toString()).toBe("4");
-        expect(data.log).toContain('onMove b {"moved":"true","oldPosition":"1","newPosition":"3"}');
+        // Mendix doesn't let widgets write attributes: On move saves the value, the widget holds the order meanwhile.
+        expect(data.log).toEqual(['onMove b {"moved":"true","newSortValue":"4","oldPosition":"1","newPosition":"3"}']);
+        expect(data.rows.get("b")!.sort!.toString()).toBe("1");
         expect(titles()).toEqual(["Alpha", "Charlie", "Bravo"]);
         await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("Dropped Bravo at position 3 of 3."));
     });

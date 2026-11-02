@@ -89,7 +89,7 @@
                 </property>
                 <property key="cardStatus" type="attribute" dataSource="cards" required="false">
                     <caption>Column attribute</caption>
-                    <description>The enumeration that puts a card in a column. The widget changes it when a card moves.</description>
+                    <description>The enumeration that puts a card in a column. On card move sets it from To column.</description>
                     <attributeTypes>
                         <attributeType name="Enum" />
                     </attributeTypes>
@@ -118,9 +118,11 @@
             <propertyGroup caption="Events">
                 <property key="onCardMove" type="action" dataSource="cards" required="false">
                     <caption>On card move</caption>
-                    <description>Runs for every card whose column or sort value changed, usually a nanoflow that commits it. The dragged card gets Moved = true; cards renumbered to make room get Moved = false. Positions start at 1.</description>
+                    <description
+                    >Saves a move. Mendix doesn't let widgets change attributes, so this nanoflow sets the card sort attribute to New sort value, sets the card's column from To column when it changed, and commits. Give the nanoflow parameters named like the variables (newSortValue, toColumn, fromColumn, moved, newPosition) to receive them. It runs for every card whose place changed: the dragged card gets Moved = true; cards renumbered to make room get Moved = false. Positions start at 1.</description>
                     <actionVariables>
                         <actionVariable key="moved" type="Boolean" caption="Moved" />
+                        <actionVariable key="newSortValue" type="Decimal" caption="New sort value" />
                         <actionVariable key="fromColumn" type="String" caption="From column" />
                         <actionVariable key="toColumn" type="String" caption="To column" />
                         <actionVariable key="newPosition" type="Integer" caption="New position" />
@@ -128,9 +130,10 @@
                 </property>
                 <property key="onColumnMove" type="action" dataSource="columns" required="false">
                     <caption>On column move</caption>
-                    <description>Runs for every column whose sort value changed, usually a nanoflow that commits it.</description>
+                    <description>Saves a column move: set the column sort attribute to New sort value and commit. Give the nanoflow a Decimal parameter named newSortValue to receive it. Runs for every column whose place changed.</description>
                     <actionVariables>
                         <actionVariable key="moved" type="Boolean" caption="Moved" />
+                        <actionVariable key="newSortValue" type="Decimal" caption="New sort value" />
                         <actionVariable key="newPosition" type="Integer" caption="New position" />
                     </actionVariables>
                 </property>

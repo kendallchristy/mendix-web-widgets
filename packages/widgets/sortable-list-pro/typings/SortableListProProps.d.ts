@@ -49,9 +49,19 @@ export interface SortableListProContainerProps {
     canReceive: DynamicValue<boolean>;
     receiveAttribute?: ListAttributeValue<string | boolean>;
     receiveValue?: DynamicValue<string>;
-    onMove?: ListActionValue<{ moved: Option<boolean>; oldPosition: Option<Big>; newPosition: Option<Big> }>;
-    onReceive?: ListActionValue<{ fromList: Option<string>; newPosition: Option<Big> }>;
-    onRemove?: ListActionValue<{ toList: Option<string>; oldPosition: Option<Big> }>;
+    onMove?: ListActionValue<{
+        moved: Option<boolean>;
+        newSortValue: Option<Big>;
+        oldPosition: Option<Big>;
+        newPosition: Option<Big>;
+    }>;
+    onRemove?: ListActionValue<{
+        toList: Option<string>;
+        toValue: Option<string>;
+        newSortValue: Option<Big>;
+        oldPosition: Option<Big>;
+        newPosition: Option<Big>;
+    }>;
     onDragStart?: ListActionValue;
     indicator: IndicatorEnum;
     animation: AnimationEnum;
@@ -93,7 +103,6 @@ export interface SortableListProPreviewProps {
     receiveAttribute: string;
     receiveValue: string;
     onMove: {} | null;
-    onReceive: {} | null;
     onRemove: {} | null;
     onDragStart: {} | null;
     indicator: IndicatorEnum;

@@ -13,9 +13,26 @@ The simplest board: one column per value of an enumeration on the card entity, i
 1. Choose the **Card data source** and the widgets for each card in **Card content**.
 2. Set **Column attribute** to the enumeration, for example Status.
 3. Set **Card sort attribute**: Decimal is best, Integer or Long also work.
-4. Add an **On card move** nanoflow that commits the card.
+4. Add an **On card move** nanoflow that saves the move (see below). Studio Pro shows an error until it's set.
 
-When a card moves, the widget sets the enumeration and the sort value; On card move saves them.
+### Saving a move
+
+Mendix doesn't let widgets change attributes of objects from a list data source, so the widget works out where the card goes and On card move saves it. Mendix passes each action variable to the nanoflow parameter with the same name and type, so give the nanoflow these parameters:
+
+| Parameter      | Type    | Value                                                            |
+| -------------- | ------- | ---------------------------------------------------------------- |
+| (the card)     | Entity  | The card that moved.                                             |
+| `newSortValue` | Decimal | Its new sort value.                                              |
+| `toColumn`     | String  | The key of the column it's in now.                               |
+| `fromColumn`   | String  | Optional. The key of the column it came from.                    |
+| `moved`        | Boolean | Optional. True for the dragged card, false for cards renumbered. |
+| `newPosition`  | Integer | Optional. Its place in the column, from 1.                       |
+
+With enumeration columns the nanoflow is one **Change object** and a commit:
+
+- Sort attribute = `$newSortValue` (with Integer or Long, `round($newSortValue)`).
+- Column attribute = the enumeration value for `$toColumn`, for example `if $toColumn = 'Doing' then MyModule.Status.Doing else if $toColumn = 'Done' then MyModule.Status.Done else MyModule.Status.Backlog`. `$toColumn` is the enumeration key (its name, not its caption).
+- Commit: Yes.
 
 ### Columns from a data source
 
@@ -24,11 +41,11 @@ Columns are objects of their own, for example Stage, and each card has an associ
 1. Choose the **Column data source**, its **Title**, and optionally a **Column key** (a unique name or code; defaults to the title).
 2. Choose the **Card data source**, **Card content** and **Card sort attribute**.
 3. Set **Column association** to the card's association to its column.
-4. Add an **On card move** nanoflow. Mendix doesn't let widgets change associations, so the nanoflow sets it: when **Moved** is true and **From column** differs from **To column**, retrieve the column whose key is To column, set the association, and commit.
+4. Add an **On card move** nanoflow with the parameters above. It sets the sort attribute to `$newSortValue`; when `$fromColumn` differs from `$toColumn`, it retrieves the column whose key is `$toColumn` and sets the association; then it commits.
 
-The card stays in its new column while the nanoflow runs and the data refreshes. If the association isn't changed within 10 seconds, the card goes back.
+The card stays in its new column while the nanoflow runs and the data refreshes. If the column isn't changed within 10 seconds, the card goes back.
 
-To let users reorder columns, set a **Column sort attribute** and an **On column move** nanoflow that commits the column. Columns are then dragged by their header.
+To let users reorder columns, set a **Column sort attribute** and an **On column move** nanoflow with a Decimal parameter `newSortValue` that sets the column's sort attribute to it and commits. Columns are then dragged by their header.
 
 ## Columns
 
@@ -45,19 +62,19 @@ To let users reorder columns, set a **Column sort attribute** and an **On column
 
 All cards load in one request (up to **Maximum cards**, 2,000 by default) and are grouped into columns in the browser. With **Height** set to Fixed or Fill, each column scrolls on its own and long columns draw only the cards on screen.
 
-**Can drag** (an expression per card) locks cards that shouldn't move. Cards whose sort attribute is read-only for the user can't be dragged either. **On card click** runs when a card is clicked outside its own buttons, links and inputs.
+**Can drag** (an expression per card) locks cards that shouldn't move. **On card click** runs when a card is clicked outside its own buttons, links and inputs.
 
 ## Events
 
-| Event          | Variables                                   | Runs                                                                     |
-| -------------- | ------------------------------------------- | ------------------------------------------------------------------------ |
-| On card move   | Moved, From column, To column, New position | For every card whose column or sort value changed. Positions start at 1. |
-| On column move | Moved, New position                         | For every column whose sort value changed.                               |
-| On card click  | none                                        | When a card is clicked, or Enter is pressed on it.                       |
+| Event          | Variables                                              | Runs                                                                     |
+| -------------- | ------------------------------------------------------ | ------------------------------------------------------------------------ |
+| On card move   | moved, newSortValue, fromColumn, toColumn, newPosition | For every card whose column or sort value changed. Positions start at 1. |
+| On column move | moved, newSortValue, newPosition                       | For every column whose sort value changed.                               |
+| On card click  | none                                                   | When a card is clicked, or Enter is pressed on it.                       |
 
-With a Decimal sort attribute a move normally changes only the dragged card. With Integer or Long, cards may be renumbered to make room; they get **Moved** = false.
+With a Decimal sort attribute a move normally changes only the dragged card. With Integer or Long, cards may be renumbered to make room; they get `moved` = false.
 
-From column and To column are the column keys: the enumeration key with enumeration columns, the Column key (or title) with data source columns.
+`fromColumn` and `toColumn` are the column keys: the enumeration key with enumeration columns, the Column key (or title) with data source columns.
 
 ## Keyboard and screen readers
 

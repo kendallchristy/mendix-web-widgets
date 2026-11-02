@@ -16,27 +16,6 @@ export function readValue<T extends string | boolean | Big>(
     }
 }
 
-/** Writes an attribute. Returns false when Mendix doesn't allow it (read-only, or an item it doesn't know). */
-export function writeValue<T extends string | boolean | Big>(
-    attribute: ListAttributeValue<T> | undefined,
-    item: ObjectItem,
-    value: T
-): boolean {
-    if (!attribute) {
-        return false;
-    }
-    try {
-        const editable = attribute.get(item);
-        if (editable.readOnly) {
-            return false;
-        }
-        editable.setValue(value);
-        return true;
-    } catch {
-        return false;
-    }
-}
-
 interface Runnable {
     canExecute: boolean;
     execute: (...args: never[]) => void;
@@ -51,15 +30,5 @@ export function run(action: Runnable | undefined, args?: Record<string, unknown>
         (action.execute as (variables?: Record<string, unknown>) => void)(args);
     } catch (error) {
         console.error("The action could not run.", error);
-    }
-}
-
-const warned = new Set<string>();
-
-/** Logs a setup problem to the browser console once per page load, so a locked widget says why. */
-export function warnOnce(message: string): void {
-    if (!warned.has(message)) {
-        warned.add(message);
-        console.warn(message);
     }
 }

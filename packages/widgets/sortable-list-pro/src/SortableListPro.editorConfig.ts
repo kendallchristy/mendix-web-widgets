@@ -14,7 +14,7 @@ export function getProperties(values: SortableListProPreviewProps, defaultProper
         hide(["height"]);
     }
     if (!values.group) {
-        hide(["listName", "canReceive", "receiveAttribute", "receiveValue", "onReceive", "onRemove"]);
+        hide(["listName", "canReceive", "receiveAttribute", "receiveValue", "onRemove"]);
     } else if (!values.receiveAttribute) {
         hide(["receiveValue"]);
     }
@@ -26,7 +26,21 @@ export function check(values: SortableListProPreviewProps): Problem[] {
     if (values.group && values.receiveAttribute && !values.receiveValue) {
         problems.push({
             property: "receiveValue",
-            message: "Enter the value this list writes to the attribute when an item arrives."
+            message: "Enter this list's value for the list attribute."
+        });
+    }
+    if (!values.onMove) {
+        problems.push({
+            property: "onMove",
+            message:
+                "Add On move to save moves. Mendix doesn't let widgets change attributes, so it sets the sort attribute to New sort value and commits."
+        });
+    }
+    if (values.group && !values.onRemove) {
+        problems.push({
+            property: "onRemove",
+            message:
+                "Add On move to another list to save objects dragged out of this list: set the sort attribute to New sort value, the list attribute from To value, and commit."
         });
     }
     if (values.heightMode === "fixed" && (values.height ?? 0) < 80) {

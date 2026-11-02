@@ -45,10 +45,24 @@ export function check(values: KanbanBoardProPreviewProps): Problem[] {
         if (!values.columnTitle) {
             problems.push({ property: "columnTitle", message: "Enter a title for the columns." });
         }
+        if (values.columnSortAttribute && !values.onColumnMove) {
+            problems.push({
+                property: "onColumnMove",
+                message:
+                    "Add On column move to save column moves: set the column sort attribute to New sort value and commit."
+            });
+        }
     } else if (!values.cardStatus) {
         problems.push({
             property: "cardStatus",
             message: "Choose the enumeration attribute that sets a card's column."
+        });
+    }
+    if (!values.onCardMove) {
+        problems.push({
+            property: "onCardMove",
+            message:
+                "Add On card move to save moves. Mendix doesn't let widgets change attributes, so it sets the card sort attribute to New sort value, the column from To column, and commits."
         });
     }
     if (values.heightMode === "fixed" && (values.height ?? 0) < 160) {

@@ -8,9 +8,25 @@ Reorder a list, row or grid of objects by dragging, and move them between lists.
 2. Add Sortable List Pro to a page and choose its **Data source**. The widget sorts the objects by the sort attribute itself, smallest first.
 3. Put the widgets for each object in **Content**.
 4. Pick the **Sort attribute**.
-5. Add an **On move** nanoflow or microflow that commits the object. The widget sets the new sort value; the action saves it.
+5. Add an **On move** nanoflow that saves the move (see below). Studio Pro shows an error until it's set.
 
-With a Decimal attribute a move normally changes only the dragged object: it gets the midpoint of its new neighbours (for example 2.5 between 2 and 3). With Integer or Long, when there's no whole number between the neighbours, the objects after it are renumbered as far as needed, and On move runs for each of them with **Moved** = false.
+### Saving a move
+
+Mendix doesn't let widgets change attributes of objects from a list data source, so the widget works out the new sort value and your nanoflow saves it. Mendix passes each action variable to the nanoflow parameter with the same name and type, so give On move these parameters:
+
+| Parameter      | Type    | Value                                                      |
+| -------------- | ------- | ---------------------------------------------------------- |
+| (the object)   | Entity  | The object that moved.                                     |
+| `newSortValue` | Decimal | Its new sort value.                                        |
+| `moved`        | Boolean | True for the dragged object, false for objects renumbered. |
+| `oldPosition`  | Integer | Optional. Its place before the move, from 1.               |
+| `newPosition`  | Integer | Optional. Its place after the move, from 1.                |
+
+The nanoflow needs two steps: **Change object** to set the sort attribute to `$newSortValue` (with an Integer or Long attribute, `round($newSortValue)`), then **Commit**.
+
+With a Decimal attribute a move normally changes only the dragged object: it gets the midpoint of its new neighbours (for example 2.5 between 2 and 3). With Integer or Long, when there's no whole number between the neighbours, the objects after it are renumbered as far as needed, and On move runs for each of them with `moved` = false.
+
+The object stays in its new place while the nanoflow runs and the data source refreshes, so nothing jumps back.
 
 Objects with an empty sort attribute go to the end. The first time one of them is moved, it and anything around it that needs a value get one.
 
@@ -32,27 +48,29 @@ Buttons, links and inputs inside the content keep working: a drag never starts f
 
 Lists on the same page with the same **Group** exchange objects. They must show the same entity.
 
-When an object arrives:
+Each list can show its own data source, or several lists can share one data source and split it with **List attribute** and **List value**: each list then shows only the objects whose attribute matches its value, for example Status = `'Done'`. A few lists over one data source make a simple board.
 
-1. The widget gives it a sort value for its new place.
-2. With **Value on receive**, it writes a value to an attribute, for example Status = `'Done'`. Each list then shows only the objects with its own value, so a few lists over one data source make a simple board.
-3. **On receive** runs on this list for the object. Use it to set an association to this list's owner and commit; widgets can't change associations themselves.
-4. **On remove** runs on the list it came from.
+When an object moves to another list, **On move to another list** runs on the list it came from (Mendix only runs a list's actions for its own objects). Its nanoflow saves the move:
 
-**List name** identifies a list to the other list's actions (`From list`, `To list`). **Can drop here** turns drops on or off, for example when a list is full.
+1. Set the sort attribute to `$newSortValue`.
+2. Set the list attribute from `$toValue` (the target's List value), or set an association using `$toList` (the target's **List name**).
+3. Commit.
 
-The object stays on screen in its new list while the actions run and the data sources refresh, so nothing jumps back.
+Give it parameters named `toList` and `toValue` (String), `newSortValue` (Decimal), and optionally `oldPosition` and `newPosition` (Integer). Studio Pro shows an error when a list has a Group but no On move to another list.
+
+Objects in the target list that are renumbered to make room run that list's On move. **Can drop here** turns drops on or off, for example when a list is full.
+
+The object stays on screen in its new list while the nanoflow runs and the data sources refresh, so nothing jumps back. If Mendix doesn't move it within 10 seconds, it goes back.
 
 ## Events
 
-| Event         | Variables                         | Runs                                                             |
-| ------------- | --------------------------------- | ---------------------------------------------------------------- |
-| On move       | Moved, Old position, New position | For every object whose sort value changed. Positions start at 1. |
-| On receive    | From list, New position           | For an object dropped here from another list.                    |
-| On remove     | To list, Old position             | For an object dragged from this list to another one.             |
-| On drag start | none                              | When a drag starts.                                              |
+| Event                   | Variables                                               | Runs                                                                 |
+| ----------------------- | ------------------------------------------------------- | -------------------------------------------------------------------- |
+| On move                 | moved, newSortValue, oldPosition, newPosition           | For every object in this list whose place changed.                   |
+| On move to another list | toList, toValue, newSortValue, oldPosition, newPosition | For an object dragged from this list into another list of the group. |
+| On drag start           | none                                                    | When a drag starts.                                                  |
 
-**Can drag** (an expression per object) locks objects that shouldn't move. Objects whose sort attribute is read-only for the user can't be dragged either.
+**Can drag** (an expression per object) locks objects that shouldn't move.
 
 ## Keyboard and screen readers
 
@@ -72,4 +90,4 @@ The colors are CSS variables on `.slp` (`--kdnd-accent`, `--kdnd-surface`, `--kd
 ## Limits
 
 - The widget sorts in the browser, so the sort attribute must be one the data source can read. Database, XPath and association data sources all work.
-- Mendix doesn't let widgets set associations. Moving between lists that differ by an association needs On receive.
+- Mendix doesn't let widgets change attributes or associations of list objects, so every move is saved by a nanoflow.

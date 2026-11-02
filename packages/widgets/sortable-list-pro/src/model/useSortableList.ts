@@ -8,11 +8,9 @@ import {
     sortByValue,
     useListController,
     useOverrides,
-    warnOnce,
     type DropResult,
     type ListController,
-    type SortKind,
-    writeValue
+    type SortKind
 } from "@kendallchristy/dnd-core";
 import Big from "big.js";
 import type { ObjectItem } from "mendix";
@@ -61,17 +59,6 @@ export function useSortableList(props: SortableListProContainerProps, listId: st
         const item = byId.get(id);
         return item ? readValue(sortAttribute, item) : undefined;
     });
-    // Items dragged to another list: hidden here until the data source drops them.
-    const removed = useOverrides<"here" | "away">(
-        (a, b) => a === b,
-        id => (byId.has(id) ? "here" : "away")
-    );
-    // Items dragged in from another list: shown here until the data source includes them.
-    const incoming = useOverrides<ObjectItem>(
-        (a, b) => a.id === b.id,
-        id => byId.get(id)
-    );
-
     const receiveValue = props.receiveValue?.value;
     const kind: SortKind = sortAttribute.type === "Decimal" ? "decimal" : "integer";
 
@@ -82,13 +69,29 @@ export function useSortableList(props: SortableListProContainerProps, listId: st
         const value = readValue(receiveAttribute, item);
         return value === undefined || String(value) === receiveValue;
     };
+    /** Whether Mendix currently puts the object in this list: in the data source, with this list's value. */
+    const isHere = (id: string): boolean => {
+        const item = byId.get(id);
+        return item !== undefined && belongsHere(item);
+    };
+
+    // Items dragged to another list: hidden here until Mendix moves them (the data source or list attribute).
+    const removed = useOverrides<"here" | "away">(
+        (a, b) => a === b,
+        id => (isHere(id) ? "here" : "away")
+    );
+    // Items dragged in from another list: shown here until Mendix puts them here too.
+    const incoming = useOverrides<ObjectItem>(
+        (a, b) => a.id === b.id,
+        id => (isHere(id) ? byId.get(id) : undefined)
+    );
 
     const arrivingItems = incoming
         .entries()
-        .filter(([id]) => !byId.has(id))
+        .filter(([id]) => !isHere(id))
         .map(([, item]) => item);
     const arriving = new Set(arrivingItems.map(item => item.id as string));
-    const visible = items.filter(item => removed.resolve(item.id, "here") === "here" && belongsHere(item));
+    const visible = items.filter(item => isHere(item.id as string) && removed.resolve(item.id, "here") === "here");
     const valueOf = (item: ObjectItem): Big | undefined =>
         sortOverrides.resolve(item.id, readValue(sortAttribute, item));
     const order = sortByValue([...visible, ...arrivingItems], valueOf);
@@ -128,25 +131,6 @@ export function useSortableList(props: SortableListProContainerProps, listId: st
         return fillText(template ?? "", { item: name, position, count });
     };
 
-    const writeSorts = (
-        changes: Array<{ id: string; value: Big }>,
-        foreign?: { id: string; write: () => void }
-    ): void => {
-        changes.forEach(change => {
-            const item = findItem(change.id);
-            if (!item) {
-                return;
-            }
-            if (!writeValue(sortAttribute, item, change.value)) {
-                if (foreign && foreign.id === change.id) {
-                    foreign.write();
-                } else {
-                    console.warn("Sortable List Pro: the sort attribute is read-only for an object.");
-                }
-            }
-        });
-    };
-
     const handleDrop = (result: DropResult): void => {
         const current = orderRef.current;
         const positions = (list: ObjectItem[]): Map<string, number> =>
@@ -165,13 +149,13 @@ export function useSortableList(props: SortableListProContainerProps, listId: st
             }
             // eslint-disable-next-line @eslint-react/dom-no-flush-sync -- the new order must be on screen before the drop animation measures it.
             flushSync(() => sortOverrides.set(plan.map(change => [change.id, change.value])));
-            writeSorts(plan);
             const after = positions(next);
             plan.forEach(change => {
                 const item = findItem(change.id);
                 if (item) {
                     run(props.onMove?.get(item), {
                         moved: change.id === result.itemId,
+                        newSortValue: change.value,
                         oldPosition: new Big(before.get(change.id) ?? 0),
                         newPosition: new Big(after.get(change.id) ?? 0)
                     });
@@ -197,24 +181,24 @@ export function useSortableList(props: SortableListProContainerProps, listId: st
             incoming.set([[item.id as string, item]]);
             sortOverrides.set(plan.map(change => [change.id, change.value]));
         });
-        const own = plan.find(change => change.id === result.itemId);
-        writeSorts(plan, own && { id: own.id, write: () => source.writeSort(item, own.value) });
-        if (receiveAttribute && receiveValue !== undefined && receiveValue !== "") {
-            const value = receiveAttribute.type === "Boolean" ? receiveValue === "true" : receiveValue;
-            if (!writeValue(receiveAttribute, item, value)) {
-                console.warn("Sortable List Pro: could not set the value on receive.");
-            }
-        }
         const after = positions(next);
-        run(props.onReceive?.get(item), {
-            fromList: source.name(),
-            newPosition: new Big(after.get(item.id as string) ?? result.toIndex + 1)
-        });
+        const own = plan.find(change => change.id === result.itemId);
+        if (own) {
+            source.moveOut(item, {
+                toList: listName(),
+                toValue: receiveValue ?? "",
+                oldPosition: result.fromIndex + 1,
+                newPosition: after.get(own.id) ?? result.toIndex + 1,
+                newSortValue: own.value
+            });
+        }
+        // Objects renumbered in this list to make room.
         plan.forEach(change => {
             const neighbour = change.id === result.itemId ? undefined : findItem(change.id);
             if (neighbour) {
                 run(props.onMove?.get(neighbour), {
                     moved: false,
+                    newSortValue: change.value,
                     oldPosition: new Big(before.get(change.id) ?? 0),
                     newPosition: new Big(after.get(change.id) ?? 0)
                 });
@@ -229,10 +213,6 @@ export function useSortableList(props: SortableListProContainerProps, listId: st
         }
         // eslint-disable-next-line @eslint-react/dom-no-flush-sync -- the new order must be on screen before the drop animation measures it.
         flushSync(() => removed.set([[result.itemId, "away"]]));
-        run(props.onRemove?.get(item), {
-            toList: lists.get(result.toListId)?.name() ?? "",
-            oldPosition: new Big(result.fromIndex + 1)
-        });
     };
 
     const scope = props.group ? `slp:group:${props.group}` : `slp:${listId}`;
@@ -250,16 +230,7 @@ export function useSortableList(props: SortableListProContainerProps, listId: st
                 return false;
             }
             try {
-                if (props.canDrag.get(item).value === false) {
-                    return false;
-                }
-                if (sortAttribute.get(item).readOnly) {
-                    warnOnce(
-                        "Sortable List Pro: items can't be dragged because the sort attribute is read-only. Give the user's role write access to it, and check that the widget isn't inside a data view whose Editable setting is No."
-                    );
-                    return false;
-                }
-                return true;
+                return props.canDrag.get(item).value !== false;
             } catch {
                 return false;
             }
@@ -279,7 +250,14 @@ export function useSortableList(props: SortableListProContainerProps, listId: st
     useEffect(() => {
         lists.set(listId, {
             getItem: findItem,
-            writeSort: (item, value) => writeValue(sortAttribute, item, value),
+            moveOut: (item, move) =>
+                run(props.onRemove?.get(item), {
+                    toList: move.toList,
+                    toValue: move.toValue,
+                    newSortValue: move.newSortValue,
+                    oldPosition: new Big(move.oldPosition),
+                    newPosition: new Big(move.newPosition)
+                }),
             label: id => {
                 const item = findItem(id);
                 return item ? label(item) : "";

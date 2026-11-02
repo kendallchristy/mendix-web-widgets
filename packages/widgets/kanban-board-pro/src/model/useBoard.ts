@@ -7,8 +7,6 @@ import {
     run,
     sortByValue,
     useOverrides,
-    warnOnce,
-    writeValue,
     type DropResult,
     type SortKind
 } from "@kendallchristy/dnd-core";
@@ -190,17 +188,9 @@ export function useBoard(props: KanbanBoardProContainerProps, boardId: string): 
                 cardGroup.set([[result.itemId, toKey]]);
             }
         });
-        plan.forEach(change => {
-            const target = cardsById.get(change.id);
-            if (target && !writeValue(cardSortAttribute, target, change.value)) {
-                console.warn("Kanban Board Pro: the card sort attribute is read-only for a card.");
-            }
-        });
-        if (!sameColumn && enumMode && !writeValue(props.cardStatus, card, toKey)) {
-            console.warn("Kanban Board Pro: the column attribute is read-only for a card.");
-        }
         const positions = new Map(next.map((c, i) => [c.id as string, i + 1]));
-        const changed = new Set(plan.map(change => change.id));
+        const planned = new Map(plan.map(change => [change.id, change.value]));
+        const changed = new Set(planned.keys());
         changed.add(result.itemId);
         changed.forEach(id => {
             const target = cardsById.get(id);
@@ -210,6 +200,7 @@ export function useBoard(props: KanbanBoardProContainerProps, boardId: string): 
             const moved = id === result.itemId;
             run(props.onCardMove?.get(target), {
                 moved,
+                newSortValue: planned.get(id) ?? cardValue(target) ?? new Big(0),
                 fromColumn: moved ? from.actionKey : to.actionKey,
                 toColumn: to.actionKey,
                 newPosition: new Big(positions.get(id) ?? 0)
@@ -242,9 +233,9 @@ export function useBoard(props: KanbanBoardProContainerProps, boardId: string): 
             if (!column) {
                 return;
             }
-            writeValue(columnSortAttribute, column, change.value);
             run(props.onColumnMove?.get(column), {
                 moved: change.id === result.itemId,
+                newSortValue: change.value,
                 newPosition: new Big(positions.get(change.id) ?? 0)
             });
         });
@@ -261,16 +252,7 @@ export function useBoard(props: KanbanBoardProContainerProps, boardId: string): 
         moveColumn,
         canDragCard: card => {
             try {
-                if (props.canDragCard.get(card).value === false) {
-                    return false;
-                }
-                if (cardSortAttribute.get(card).readOnly) {
-                    warnOnce(
-                        "Kanban Board Pro: cards can't be dragged because the card sort attribute is read-only. Give the user's role write access to it, and check that the widget isn't inside a data view whose Editable setting is No."
-                    );
-                    return false;
-                }
-                return true;
+                return props.canDragCard.get(card).value !== false;
             } catch {
                 return false;
             }

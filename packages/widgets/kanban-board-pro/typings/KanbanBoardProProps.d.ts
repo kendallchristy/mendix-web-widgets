@@ -53,11 +53,12 @@ export interface KanbanBoardProContainerProps {
     maxCards: number;
     onCardMove?: ListActionValue<{
         moved: Option<boolean>;
+        newSortValue: Option<Big>;
         fromColumn: Option<string>;
         toColumn: Option<string>;
         newPosition: Option<Big>;
     }>;
-    onColumnMove?: ListActionValue<{ moved: Option<boolean>; newPosition: Option<Big> }>;
+    onColumnMove?: ListActionValue<{ moved: Option<boolean>; newSortValue: Option<Big>; newPosition: Option<Big> }>;
     onCardClick?: ListActionValue;
     columnWidth: number;
     heightMode: HeightModeEnum;
