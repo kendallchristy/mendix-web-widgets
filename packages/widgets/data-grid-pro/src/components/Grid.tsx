@@ -17,7 +17,7 @@ import { gridTemplate, minGridWidth } from "../model/layout";
 import type { ColumnModel, SortState } from "../model/types";
 import type { GridData } from "../model/useGridData";
 import type { Selection } from "../model/useSelection";
-import { HeaderRow } from "./HeaderRow";
+import { HeaderRow, type HeaderFilters } from "./HeaderRow";
 import { Row } from "./Row";
 import { Tooltip, useTooltip } from "./Tooltip";
 
@@ -28,6 +28,8 @@ export interface GridProps {
     widths: Record<string, number>;
     onResize(columnId: string, width: number): void;
     onReorder: ((columnId: string, beforeId: string | undefined) => void) | undefined;
+    /** Header filter values. Undefined leaves out the filter row. */
+    filters: HeaderFilters | undefined;
     sort: SortState | undefined;
     onSort(columnId: string): void;
     selection: Selection;
@@ -65,6 +67,7 @@ export function Grid(props: GridProps): ReactElement {
     const expandable = renderDetail !== undefined;
     const leadingWidth = (expandable ? LEADING_ITEM_WIDTH : 0) + (selection.mode === "multi" ? LEADING_ITEM_WIDTH : 0);
     const headerHeight = rowHeight + 4;
+    const filterHeight = props.filters ? rowHeight + 4 : 0;
 
     // The virtualizer recalculates every row position when getItemKey changes, which costs time in
     // proportion to the row count. Keep it stable between scroll frames; it changes only when a new window loads.
@@ -85,7 +88,7 @@ export function Grid(props: GridProps): ReactElement {
                 callback({ width: rect.width, height: Math.min(rect.height, window.innerHeight) })
             ),
         overscan: 8,
-        scrollMargin: headerHeight
+        scrollMargin: headerHeight + filterHeight
     });
 
     const virtualRows = virtualizer.getVirtualItems();
@@ -269,7 +272,8 @@ export function Grid(props: GridProps): ReactElement {
         "--dgp-min-width": `${minGridWidth(columns, props.widths, leadingWidth)}px`,
         "--dgp-leading": `${leadingWidth}px`,
         "--dgp-row-height": `${rowHeight}px`,
-        "--dgp-header-height": `${headerHeight}px`
+        "--dgp-header-height": `${headerHeight}px`,
+        "--dgp-filter-height": `${filterHeight}px`
     } as CSSProperties;
 
     const loadedItems = data.items;
@@ -318,6 +322,7 @@ export function Grid(props: GridProps): ReactElement {
                 onSort={props.onSort}
                 onResize={props.onResize}
                 onReorder={props.onReorder}
+                filters={props.filters}
             />
             <div className="dgp-body" role="rowgroup" style={{ height: virtualizer.getTotalSize() }}>
                 {virtualRows.map(virtualRow => {

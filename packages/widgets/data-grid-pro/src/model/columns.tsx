@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import type { ColumnsType } from "../../typings/DataGridProProps";
 import { BooleanMark, Badge, Pills, Progress, type Pill } from "../components/cells";
 import { resolveColor } from "./colors";
+import { columnFilter } from "./filters";
 import type { ColumnModel } from "./types";
 
 /** Related objects per row id, for each related-objects column (keyed by column id). */
@@ -34,6 +35,7 @@ export function buildColumns(columns: ColumnsType[], related: RelatedMap): Colum
                 fixedWidth: column.fixedWidth,
                 minWidth: column.minWidth,
                 expandedWidth: column.expandedWidth,
+                filter: column.filterable && column.showContentAs === "attribute" ? columnFilter(attribute) : undefined,
                 renderCell: cellRenderer(column, related.get(id)),
                 renderExpanded: column.expandedText ? item => column.expandedText?.get(item).value : undefined,
                 cellClass: item => column.columnClass?.get(item).value

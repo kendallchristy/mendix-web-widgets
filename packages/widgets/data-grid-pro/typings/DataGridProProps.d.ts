@@ -52,6 +52,7 @@ export interface ColumnsType {
     relatedColor?: ListExpressionValue<string>;
     sortable: boolean;
     resizable: boolean;
+    filterable: boolean;
     searchable: boolean;
     hidable: HidableEnum;
     widthMode: WidthModeEnum;
@@ -92,6 +93,7 @@ export interface ColumnsPreviewType {
     relatedColor: string;
     sortable: boolean;
     resizable: boolean;
+    filterable: boolean;
     searchable: boolean;
     hidable: HidableEnum;
     widthMode: WidthModeEnum;
@@ -109,6 +111,7 @@ export interface DataGridProContainerProps {
     refreshInterval: number;
     columns: ColumnsType[];
     columnsDraggable: boolean;
+    showHeaderFilters: boolean;
     pinFirstColumn: boolean;
     density: DensityEnum;
     stripes: boolean;
@@ -119,6 +122,8 @@ export interface DataGridProContainerProps {
     expandTrigger: ExpandTriggerEnum;
     singleExpand: boolean;
     itemSelection?: SelectionSingleValue | SelectionMultiValue;
+    selectAllPages: boolean;
+    selectAllMax: number;
     keepSelection: boolean;
     clearAfterBulkAction: boolean;
     title?: DynamicValue<string>;
@@ -153,6 +158,7 @@ export interface DataGridProPreviewProps {
     refreshInterval: number | null;
     columns: ColumnsPreviewType[];
     columnsDraggable: boolean;
+    showHeaderFilters: boolean;
     pinFirstColumn: boolean;
     density: DensityEnum;
     stripes: boolean;
@@ -164,6 +170,8 @@ export interface DataGridProPreviewProps {
     singleExpand: boolean;
     itemSelection: "None" | "Single" | "Multi";
     onSelectionChange: {} | null;
+    selectAllPages: boolean;
+    selectAllMax: number | null;
     keepSelection: boolean;
     clearAfterBulkAction: boolean;
     title: string;

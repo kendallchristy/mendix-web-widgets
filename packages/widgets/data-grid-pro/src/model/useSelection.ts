@@ -9,6 +9,8 @@ export interface Selection {
     select(item: ObjectItem): void;
     /** Selects or deselects all given items, keeping the rest of the selection. */
     setMany(items: ObjectItem[], selected: boolean): void;
+    /** Replaces the whole selection. Multi selection only. */
+    setAll(items: ObjectItem[]): void;
     clear(): void;
 }
 
@@ -23,6 +25,7 @@ export function useSelection(value: SelectionSingleValue | SelectionMultiValue |
                 toggle: noop,
                 select: noop,
                 setMany: noop,
+                setAll: noop,
                 clear: noop
             };
         }
@@ -35,6 +38,7 @@ export function useSelection(value: SelectionSingleValue | SelectionMultiValue |
                 toggle: item => value.setSelection(current?.id === item.id ? undefined : item),
                 select: item => value.setSelection(item),
                 setMany: () => undefined,
+                setAll: () => undefined,
                 clear: () => value.setSelection(undefined)
             };
         }
@@ -52,6 +56,7 @@ export function useSelection(value: SelectionSingleValue | SelectionMultiValue |
                 const rest = current.filter(item => !changing.has(item.id));
                 value.setSelection(selected ? [...rest, ...items] : rest);
             },
+            setAll: items => value.setSelection(items),
             clear: () => value.setSelection([])
         };
     }, [value]);

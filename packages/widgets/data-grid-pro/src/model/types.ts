@@ -1,6 +1,8 @@
 import type { ListAttributeValue, ObjectItem } from "mendix";
 import type { ReactNode } from "react";
 
+import type { ColumnFilter } from "./filters";
+
 export type Density = "compact" | "default" | "comfortable";
 export type SortDirection = "asc" | "desc";
 
@@ -19,6 +21,8 @@ export interface ColumnModel {
     fillWeight: number;
     fixedWidth: number;
     minWidth: number;
+    /** The header filter this column offers, if any. */
+    filter?: ColumnFilter;
     /** Width the column grows to while hovered, or 0. */
     expandedWidth: number;
     renderCell(item: ObjectItem): ReactNode;

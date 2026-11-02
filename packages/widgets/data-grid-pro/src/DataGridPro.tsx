@@ -7,21 +7,35 @@ import { Footer } from "./components/Footer";
 import { Grid } from "./components/Grid";
 import { Toolbar } from "./components/Toolbar";
 import { buildColumns } from "./model/columns";
+import { describeFilter, filterCondition, isActive, type FilterValue } from "./model/filters";
 import { applyOrder, moveColumn } from "./model/order";
 import { searchFilter } from "./model/search";
+import { and } from "mendix/filters/builders";
+import type { FilterCondition } from "mendix/filters";
 import { ROW_HEIGHT, type Density, type GridSettings } from "./model/types";
 import { useGridData } from "./model/useGridData";
 import { useGridSettings } from "./model/useGridSettings";
 import { useRelatedObjects } from "./model/useRelatedObjects";
+import { useSelectAll } from "./model/useSelectAll";
 import { useSelection } from "./model/useSelection";
 import "./ui/DataGridPro.scss";
 
 export function DataGridPro(props: DataGridProContainerProps): ReactElement {
     const { datasource } = props;
-    const data = useGridData(datasource, props.pagination, props.pageSize);
+    const selection = useSelection(props.itemSelection);
+    const restoreWindow = useRef<() => void>(() => undefined);
+    const selectAll = useSelectAll(
+        datasource,
+        props.selectAllMax,
+        items => selection.setAll(items),
+        () => restoreWindow.current()
+    );
+    const data = useGridData(datasource, props.pagination, props.pageSize, selectAll.progress !== undefined);
+    useLayoutEffect(() => {
+        restoreWindow.current = data.restore;
+    });
     const related = useRelatedObjects(props.columns, data.items);
     const allColumns = useMemo(() => buildColumns(props.columns, related), [props.columns, related]);
-    const selection = useSelection(props.itemSelection);
     // Effects below clear the selection without re-running whenever the selection changes.
     const clearSelection = useRef(selection.clear);
     useLayoutEffect(() => {
@@ -96,22 +110,58 @@ export function DataGridPro(props: DataGridProContainerProps): ReactElement {
         }
     }, [data.refreshes]);
 
-    // Search. The text arrives already debounced from the search box.
+    // Search and header filters. Text arrives already debounced from the inputs.
     const [search, setSearch] = useState("");
-    const appliedSearch = useRef("");
+    const [filterValues, setFilterValues] = useState<Record<string, FilterValue>>({});
+    const activeFilters = allColumns.flatMap(column => {
+        const value = filterValues[column.id];
+        return props.showHeaderFilters && column.filter && isActive(value)
+            ? [{ column, filter: column.filter, value }]
+            : [];
+    });
+    const filterKey = JSON.stringify([search, activeFilters.map(f => [f.column.id, f.value])]);
+    const appliedFilterKey = useRef(filterKey);
     useEffect(() => {
-        if (search === appliedSearch.current) {
+        if (filterKey === appliedFilterKey.current) {
             return;
         }
-        appliedSearch.current = search;
+        appliedFilterKey.current = filterKey;
         if (!keepSelection) {
             clearSelection.current();
         }
-        datasource.setFilter(searchFilter(props.columns, search));
+        const conditions = [
+            searchFilter(props.columns, search),
+            ...activeFilters.map(f => filterCondition(f.filter, f.value))
+        ].filter((condition): condition is FilterCondition => condition !== undefined);
+        datasource.setFilter(conditions.length > 1 ? and(...conditions) : conditions[0]);
         resetData();
-        // Runs when the search text changes; columns and datasource change identity on every Mendix update.
+        // Runs when what the user typed or picked changes; columns and datasource change identity on every
+        // Mendix update.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [search]);
+    }, [filterKey]);
+
+    const onFilterChange = useCallback((columnId: string, value: FilterValue | undefined) => {
+        setFilterValues(previous => {
+            const next = { ...previous };
+            if (value) {
+                next[columnId] = value;
+            } else {
+                delete next[columnId];
+            }
+            return next;
+        });
+    }, []);
+    const headerFilters = useMemo(
+        () => (props.showHeaderFilters ? { values: filterValues, onChange: onFilterChange } : undefined),
+        [filterValues, onFilterChange, props.showHeaderFilters]
+    );
+    const dateFormat = useMemo(() => new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }), []);
+    const chips = activeFilters.map(({ column, filter, value }) => ({
+        id: column.id,
+        name: column.header || column.id,
+        text: describeFilter(filter, value, date => dateFormat.format(date)),
+        onRemove: () => onFilterChange(column.id, undefined)
+    }));
 
     const refreshSeconds = props.refreshInterval;
     useEffect(() => {
@@ -189,6 +239,15 @@ export function DataGridPro(props: DataGridProContainerProps): ReactElement {
     );
     const getRowClass = useCallback((item: ObjectItem) => rowClass?.get(item).value, [rowClass]);
 
+    // Offer to select the whole data source once every loaded row is selected and more rows exist.
+    const selectAllTarget = Math.min(data.total ?? 0, Math.max(props.selectAllMax, 1));
+    const offerSelectAll =
+        props.selectAllPages &&
+        selection.mode === "multi" &&
+        selection.count < selectAllTarget &&
+        data.items.length > 0 &&
+        data.items.every(item => selection.isSelected(item));
+
     const menuColumns =
         props.showColumnMenu && (props.columnsDraggable || allColumns.some(c => c.hidable))
             ? orderedColumns
@@ -207,11 +266,24 @@ export function DataGridPro(props: DataGridProContainerProps): ReactElement {
                 bulkActions={props.bulkActions}
                 onClearSelection={selection.clear}
                 onBulkAction={onBulkAction}
+                selectAll={
+                    selectAll.progress || offerSelectAll
+                        ? {
+                              total: selectAllTarget,
+                              capped: (data.total ?? 0) > selectAllTarget,
+                              progress: selectAll.progress,
+                              onStart: selectAll.start,
+                              onCancel: selectAll.cancel
+                          }
+                        : undefined
+                }
                 columns={menuColumns}
                 hidden={settings.hidden}
                 onToggleColumn={onToggleColumn}
                 onMoveColumn={props.columnsDraggable ? onMoveColumn : undefined}
                 onResetColumns={() => update({ order: undefined, hidden: initialSettings.hidden, widths: {} })}
+                chips={chips}
+                onClearFilters={() => setFilterValues({})}
                 search={
                     props.showSearch
                         ? { placeholder: props.searchPlaceholder?.value || "Search", onSearch: setSearch }
@@ -227,6 +299,7 @@ export function DataGridPro(props: DataGridProContainerProps): ReactElement {
                 widths={settings.widths}
                 onResize={onResize}
                 onReorder={props.columnsDraggable ? onReorder : undefined}
+                filters={headerFilters}
                 sort={settings.sort}
                 onSort={onSort}
                 selection={selection}
@@ -239,7 +312,7 @@ export function DataGridPro(props: DataGridProContainerProps): ReactElement {
                 stripes={props.stripes}
                 pinFirstColumn={props.pinFirstColumn}
                 empty={props.emptyPlaceholder ?? <span className="dgp-empty-text">No results</span>}
-                scrollResetKey={`${sortAttribute}:${sortDirection}:${search}`}
+                scrollResetKey={`${sortAttribute}:${sortDirection}:${filterKey}`}
                 ariaLabel={props.title?.value}
             />
             {props.pagination === "pages" && (

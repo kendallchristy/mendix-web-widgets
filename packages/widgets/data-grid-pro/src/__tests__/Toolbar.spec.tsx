@@ -12,12 +12,15 @@ function toolbar(overrides: Partial<Parameters<typeof Toolbar>[0]> = {}): Parame
         bulkActions: undefined,
         onClearSelection: () => undefined,
         onBulkAction: undefined,
+        selectAll: undefined,
         columns: undefined,
         hidden: [],
         onToggleColumn: () => undefined,
         onMoveColumn: undefined,
         onResetColumns: () => undefined,
         search: undefined,
+        chips: [],
+        onClearFilters: () => undefined,
         density: undefined,
         onDensity: () => undefined,
         ...overrides
@@ -75,5 +78,43 @@ describe("Toolbar column menu", () => {
         render(<Toolbar {...toolbar({ columns: [column()] })} />);
         fireEvent.click(screen.getByRole("button", { name: "Columns" }));
         expect(screen.queryByRole("button", { name: /Move/ })).not.toBeInTheDocument();
+    });
+});
+
+describe("Toolbar select all", () => {
+    it("offers to select every row", () => {
+        const onStart = jest.fn();
+        render(
+            <Toolbar
+                {...toolbar({
+                    selectedCount: 150,
+                    selectAll: { total: 20000, capped: false, progress: undefined, onStart, onCancel: jest.fn() }
+                })}
+            />
+        );
+        expect(screen.getByText("150 selected")).toBeInTheDocument();
+        fireEvent.click(screen.getByRole("button", { name: "Select all 20,000" }));
+        expect(onStart).toHaveBeenCalled();
+    });
+
+    it("shows progress with a way to cancel", () => {
+        const onCancel = jest.fn();
+        render(
+            <Toolbar
+                {...toolbar({
+                    selectedCount: 150,
+                    selectAll: {
+                        total: 50000,
+                        capped: true,
+                        progress: { loaded: 1500, target: 50000 },
+                        onStart: jest.fn(),
+                        onCancel
+                    }
+                })}
+            />
+        );
+        expect(screen.getByRole("status")).toHaveTextContent("Selecting 1,500 of 50,000");
+        fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+        expect(onCancel).toHaveBeenCalled();
     });
 });

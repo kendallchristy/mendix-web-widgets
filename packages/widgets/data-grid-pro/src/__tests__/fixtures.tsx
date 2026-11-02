@@ -39,7 +39,8 @@ export function gridData(rows: ObjectItem[]): GridData {
         pageCount: 1,
         setPage: () => undefined,
         reset: () => undefined,
-        refreshes: 0
+        refreshes: 0,
+        restore: () => undefined
     };
 }
 
@@ -50,5 +51,6 @@ export const noSelection: Selection = {
     toggle: () => undefined,
     select: () => undefined,
     setMany: () => undefined,
+    setAll: () => undefined,
     clear: () => undefined
 };

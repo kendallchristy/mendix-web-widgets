@@ -143,6 +143,10 @@
                                 <caption>Can resize</caption>
                                 <description />
                             </property>
+                            <property key="filterable" type="boolean" defaultValue="true">
+                                <caption>Can filter</caption>
+                                <description>Show a filter under this column's header when Header filters is on. Needs an attribute.</description>
+                            </property>
                             <property key="searchable" type="boolean" defaultValue="true">
                                 <caption>Can search</caption>
                                 <description>Include this column in the toolbar search box. Works for text, enumeration and number attributes.</description>
@@ -184,6 +188,10 @@
                 <property key="columnsDraggable" type="boolean" defaultValue="true">
                     <caption>Can reorder columns</caption>
                     <description>Users drag column headers, or use the column menu, to change the column order. The order is saved with their settings.</description>
+                </property>
+                <property key="showHeaderFilters" type="boolean" defaultValue="false">
+                    <caption>Header filters</caption>
+                    <description>A filter under each column header that has Can filter on. It fits the attribute: text, number, date, enumeration or yes/no. Active filters show as chips in the toolbar.</description>
                 </property>
                 <property key="pinFirstColumn" type="boolean" defaultValue="true">
                     <caption>Pin first column</caption>
@@ -252,9 +260,17 @@
                     <caption>On selection change</caption>
                     <description />
                 </property>
+                <property key="selectAllPages" type="boolean" defaultValue="true">
+                    <caption>Select all pages</caption>
+                    <description>Once the header checkbox has selected the loaded rows, offer a link that selects every row in the data source. Rows are fetched in batches of 500, with progress.</description>
+                </property>
+                <property key="selectAllMax" type="integer" defaultValue="50000">
+                    <caption>Select all maximum</caption>
+                    <description>Select all stops after this many rows.</description>
+                </property>
                 <property key="keepSelection" type="boolean" defaultValue="true">
                     <caption>Keep selection</caption>
-                    <description>Keep rows selected when the user sorts or searches. Off clears the selection then. Rows always stay selected while scrolling and when the data refreshes.</description>
+                    <description>Keep rows selected when the user sorts, searches or filters. Off clears the selection then. Rows always stay selected while scrolling and when the data refreshes.</description>
                 </property>
                 <property key="clearAfterBulkAction" type="boolean" defaultValue="true">
                     <caption>Clear after bulk action</caption>

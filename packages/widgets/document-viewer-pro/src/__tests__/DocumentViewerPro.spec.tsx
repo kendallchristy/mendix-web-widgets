@@ -149,8 +149,8 @@ describe("DocumentViewerPro", () => {
 
     it("searches the text and counts the matches", async () => {
         render(<DocumentViewerPro {...props()} />);
-        await screen.findByText(/First line about revenue/);
-        fireEvent.click(screen.getByRole("button", { name: defaultLabels.search }));
+        // The text can render a moment before loading finishes and the toolbar shows the search button.
+        fireEvent.click(await screen.findByRole("button", { name: defaultLabels.search }));
         jest.useFakeTimers();
         fireEvent.change(screen.getByPlaceholderText(defaultLabels.searchPlaceholder), {
             target: { value: "revenue" }
