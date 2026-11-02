@@ -589,7 +589,9 @@
     }
 }
 
-.dgp-cell + .dgp-cell:not(.dgp-leading + .dgp-cell) {
+.dgp-cell + .dgp-cell:not(.dgp-leading + .dgp-cell),
+.dgp-hcell + .dgp-hcell:not(.dgp-leading + .dgp-hcell),
+.dgp-fcell + .dgp-fcell:not(.dgp-leading + .dgp-fcell) {
     border-left: 1px solid var(--dgp-border);
 }
 
