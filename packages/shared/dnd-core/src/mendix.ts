@@ -1,0 +1,34 @@
+import type { Big } from "big.js";
+import type { ListAttributeValue, ObjectItem } from "mendix";
+
+/** Reads an attribute without throwing, for items that may come from another list's data source. */
+export function readValue<T extends string | boolean | Big>(
+    attribute: ListAttributeValue<T> | undefined,
+    item: ObjectItem
+): T | undefined {
+    if (!attribute) {
+        return undefined;
+    }
+    try {
+        return attribute.get(item).value;
+    } catch {
+        return undefined;
+    }
+}
+
+interface Runnable {
+    canExecute: boolean;
+    execute: (...args: never[]) => void;
+}
+
+/** Runs an action when it can run, passing its variables. */
+export function run(action: Runnable | undefined, args?: Record<string, unknown>): void {
+    if (!action?.canExecute) {
+        return;
+    }
+    try {
+        (action.execute as (variables?: Record<string, unknown>) => void)(args);
+    } catch (error) {
+        console.error("The action could not run.", error);
+    }
+}

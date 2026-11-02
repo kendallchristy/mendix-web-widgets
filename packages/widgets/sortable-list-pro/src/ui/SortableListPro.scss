@@ -1,0 +1,131 @@
+@import "../../../../shared/dnd-core/src/ui/dnd-core";
+
+.slp {
+    --slp-gap: 8px;
+    --slp-tile: 220px;
+
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    color: inherit;
+}
+
+.slp--height-fixed,
+.slp--height-fill {
+    min-height: 0;
+}
+
+.slp--height-fill {
+    flex: 1 1 auto;
+    height: 100%;
+    // Without a parent height, keep it scrollable instead of drawing every item.
+    max-height: 100vh;
+}
+
+.slp-scroll {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+
+    .slp--height-fixed > &,
+    .slp--height-fill > & {
+        overflow: auto;
+        overscroll-behavior: contain;
+    }
+
+    .slp--horizontal > & {
+        overflow-x: auto;
+        overflow-y: hidden;
+    }
+}
+
+.slp-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slp-gap);
+    min-height: 48px;
+
+    .slp--horizontal & {
+        flex-direction: row;
+        align-items: stretch;
+        width: max-content;
+        min-width: 100%;
+    }
+
+    .slp--grid & {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(min(var(--slp-tile), 100%), 1fr));
+        align-items: start;
+    }
+
+    .slp--grid &.slp-list--windowed {
+        display: block;
+    }
+}
+
+.slp-list--windowed {
+    display: block;
+}
+
+.slp-row {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    display: grid;
+    gap: var(--slp-gap);
+    align-items: start;
+}
+
+.slp-slot--row {
+    flex: 0 0 auto;
+}
+
+.slp-arriving {
+    min-height: 40px;
+    border-radius: 8px;
+    background: var(--kdnd-accent-soft);
+}
+
+.slp-empty {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 48px;
+    color: var(--kdnd-text-muted);
+}
+
+.slp-sentinel {
+    height: 1px;
+}
+
+.slp-loading {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slp-gap);
+
+    span {
+        display: block;
+        height: 40px;
+        border-radius: 8px;
+        background: linear-gradient(90deg, var(--kdnd-border) 0%, var(--kdnd-accent-soft) 50%, var(--kdnd-border) 100%);
+        background-size: 200% 100%;
+        animation: slp-shimmer 1.4s linear infinite;
+        opacity: 0.6;
+    }
+}
+
+@keyframes slp-shimmer {
+    from {
+        background-position: 200% 0;
+    }
+    to {
+        background-position: -200% 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .slp-loading span {
+        animation: none;
+    }
+}

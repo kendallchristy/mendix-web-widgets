@@ -1,0 +1,299 @@
+@import "../../../../shared/dnd-core/src/ui/dnd-core";
+
+// Theme tokens. Override any --kbp-* variable in your app's theme to restyle the board.
+.kbp {
+    --kbp-column-width: 280px;
+    --kbp-column-bg: #f4f5f7;
+    --kbp-card-bg: #ffffff;
+    --kbp-card-border: #e5e7eb;
+    --kbp-card-shadow: 0 1px 2px rgba(17, 24, 39, 0.06);
+    --kbp-card-hover-shadow: 0 4px 12px rgba(17, 24, 39, 0.1);
+    --kbp-title: #111827;
+    --kbp-muted: #6b7280;
+    --kbp-count-bg: rgba(17, 24, 39, 0.06);
+    --kbp-warning: #b45309;
+    --kbp-warning-bg: #fef3c7;
+    --kbp-danger: #b91c1c;
+    --kbp-danger-bg: #fee2e2;
+    --kbp-radius: 10px;
+
+    .dark-mode & {
+        --kbp-column-bg: #111827;
+        --kbp-card-bg: #1f2937;
+        --kbp-card-border: #374151;
+        --kbp-card-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+        --kbp-card-hover-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        --kbp-title: #f3f4f6;
+        --kbp-muted: #9ca3af;
+        --kbp-count-bg: rgba(255, 255, 255, 0.08);
+        --kbp-warning: #fbbf24;
+        --kbp-warning-bg: rgba(251, 191, 36, 0.15);
+        --kbp-danger: #f87171;
+        --kbp-danger-bg: rgba(248, 113, 113, 0.15);
+    }
+
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    color: var(--kbp-title);
+}
+
+.kbp--height-fixed,
+.kbp--height-fill {
+    min-height: 0;
+}
+
+.kbp--height-fill {
+    flex: 1 1 auto;
+    height: 100%;
+    max-height: 100vh;
+}
+
+.kbp-board-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+
+    .kbp--height-auto > & {
+        overflow-y: visible;
+    }
+}
+
+.kbp-columns {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    width: max-content;
+    min-width: 100%;
+    height: 100%;
+    padding-bottom: 4px;
+
+    .kbp--height-fixed &,
+    .kbp--height-fill & {
+        align-items: stretch;
+    }
+}
+
+.kbp-column-slot {
+    flex: 0 0 auto;
+    display: flex;
+    width: var(--kbp-column-width);
+    max-height: 100%;
+}
+
+.kbp-column-slot--collapsed {
+    width: 48px;
+}
+
+.kbp-column {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    max-height: 100%;
+    border-radius: var(--kbp-radius);
+    background: var(--kbp-column-bg);
+    cursor: auto;
+
+    > .kdnd-item-content {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+    }
+}
+
+.kbp-column-head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    padding: 8px 10px 4px 12px;
+
+    &.dnd-handle {
+        cursor: grab;
+    }
+
+    .kbp-column--collapsed & {
+        flex-direction: column;
+        padding: 8px 4px;
+    }
+}
+
+.kbp-column-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.3;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--kbp-title);
+
+    .kbp-column--collapsed & {
+        flex: 0 0 auto;
+        writing-mode: vertical-rl;
+        max-height: 240px;
+    }
+}
+
+.kbp-count {
+    flex: 0 0 auto;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: var(--kbp-count-bg);
+    color: var(--kbp-muted);
+    font-size: 12px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+}
+
+.kbp-count--full {
+    background: var(--kbp-warning-bg);
+    color: var(--kbp-warning);
+}
+
+.kbp-count--over {
+    background: var(--kbp-danger-bg);
+    color: var(--kbp-danger);
+}
+
+.kbp-column-tools {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.kbp-icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--kbp-muted);
+    cursor: pointer;
+
+    &:hover {
+        background: var(--kbp-count-bg);
+        color: var(--kbp-title);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--kdnd-focus);
+        outline-offset: 1px;
+    }
+}
+
+.kbp-column-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: 4px 8px 8px;
+
+    .kbp--height-fixed &,
+    .kbp--height-fill & {
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+}
+
+.kbp-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 64px;
+}
+
+.kbp-cards--windowed {
+    display: block;
+}
+
+.kbp-card {
+    border-radius: 8px;
+    background: var(--kbp-card-bg);
+    border: 1px solid var(--kbp-card-border);
+    box-shadow: var(--kbp-card-shadow);
+    transition: box-shadow 120ms ease;
+
+    > .kdnd-item-content {
+        padding: 10px 12px;
+    }
+
+    &:hover {
+        box-shadow: var(--kbp-card-hover-shadow);
+    }
+
+    .kdnd-active &:hover {
+        box-shadow: var(--kbp-card-shadow);
+    }
+}
+
+.kbp-card--plain {
+    border: none;
+    background: transparent;
+    box-shadow: none;
+
+    > .kdnd-item-content {
+        padding: 0;
+    }
+
+    &:hover {
+        box-shadow: none;
+    }
+}
+
+// Keep the transform transition from the drag engine alongside the hover shadow.
+.kdnd-active .kbp-card {
+    transition:
+        transform var(--kdnd-duration) var(--kdnd-ease),
+        box-shadow 120ms ease;
+}
+
+.kbp-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 64px;
+    border: 1px dashed var(--kbp-card-border);
+    border-radius: 8px;
+    color: var(--kbp-muted);
+    font-size: 13px;
+}
+
+.kbp-column-foot {
+    padding: 0 8px 8px;
+}
+
+.kbp-collapsed-drop {
+    flex: 1 1 auto;
+    min-height: 120px;
+}
+
+.kbp-loading {
+    display: flex;
+    gap: 12px;
+}
+
+.kbp-loading-column {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: var(--kbp-column-width);
+    padding: 12px;
+    border-radius: var(--kbp-radius);
+    background: var(--kbp-column-bg);
+
+    span {
+        display: block;
+        height: 64px;
+        border-radius: 8px;
+        background: var(--kbp-card-bg);
+        opacity: 0.7;
+    }
+}
