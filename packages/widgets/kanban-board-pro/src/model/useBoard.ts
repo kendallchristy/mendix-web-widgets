@@ -7,6 +7,7 @@ import {
     run,
     sortByValue,
     useOverrides,
+    warnOnce,
     writeValue,
     type DropResult,
     type SortKind
@@ -260,7 +261,16 @@ export function useBoard(props: KanbanBoardProContainerProps, boardId: string): 
         moveColumn,
         canDragCard: card => {
             try {
-                return props.canDragCard.get(card).value !== false && !cardSortAttribute.get(card).readOnly;
+                if (props.canDragCard.get(card).value === false) {
+                    return false;
+                }
+                if (cardSortAttribute.get(card).readOnly) {
+                    warnOnce(
+                        "Kanban Board Pro: cards can't be dragged because the card sort attribute is read-only. Give the user's role write access to it, and check that the widget isn't inside a data view whose Editable setting is No."
+                    );
+                    return false;
+                }
+                return true;
             } catch {
                 return false;
             }

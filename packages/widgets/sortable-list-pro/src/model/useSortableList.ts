@@ -8,6 +8,7 @@ import {
     sortByValue,
     useListController,
     useOverrides,
+    warnOnce,
     type DropResult,
     type ListController,
     type SortKind,
@@ -249,7 +250,16 @@ export function useSortableList(props: SortableListProContainerProps, listId: st
                 return false;
             }
             try {
-                return props.canDrag.get(item).value !== false && !sortAttribute.get(item).readOnly;
+                if (props.canDrag.get(item).value === false) {
+                    return false;
+                }
+                if (sortAttribute.get(item).readOnly) {
+                    warnOnce(
+                        "Sortable List Pro: items can't be dragged because the sort attribute is read-only. Give the user's role write access to it, and check that the widget isn't inside a data view whose Editable setting is No."
+                    );
+                    return false;
+                }
+                return true;
             } catch {
                 return false;
             }

@@ -53,3 +53,13 @@ export function run(action: Runnable | undefined, args?: Record<string, unknown>
         console.error("The action could not run.", error);
     }
 }
+
+const warned = new Set<string>();
+
+/** Logs a setup problem to the browser console once per page load, so a locked widget says why. */
+export function warnOnce(message: string): void {
+    if (!warned.has(message)) {
+        warned.add(message);
+        console.warn(message);
+    }
+}
