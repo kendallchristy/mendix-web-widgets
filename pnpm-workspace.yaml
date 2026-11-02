@@ -22,7 +22,7 @@ catalog:
     # Charting library for the chart widgets (packages/shared/chart-core)
     echarts: "^6.1.0"
     # Widget API types. Keep in step with the tools version.
-    mendix: "11.15.0"
+    mendix: "11.16.0"
     # The Mendix widget tooling targets TypeScript 5.x
     typescript: "~5.9.3"
 

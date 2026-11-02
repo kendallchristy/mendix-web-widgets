@@ -37,8 +37,8 @@ catalogs:
       specifier: ^6.1.0
       version: 6.1.0
     mendix:
-      specifier: 11.15.0
-      version: 11.15.0
+      specifier: 11.16.0
+      version: 11.16.0
     typescript:
       specifier: ~5.9.3
       version: 5.9.3
@@ -148,7 +148,7 @@ importers:
         version: 16.3.3(@testing-library/dom@10.4.2)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       mendix:
         specifier: 'catalog:'
-        version: 11.15.0
+        version: 11.16.0
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -179,7 +179,7 @@ importers:
         version: 16.3.3(@testing-library/dom@10.4.2)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       mendix:
         specifier: 'catalog:'
-        version: 11.15.0
+        version: 11.16.0
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -204,7 +204,7 @@ importers:
         version: 14.6.8(@testing-library/dom@10.4.2)
       mendix:
         specifier: 'catalog:'
-        version: 11.15.0
+        version: 11.16.0
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -235,7 +235,7 @@ importers:
         version: 14.6.8(@testing-library/dom@10.4.2)
       mendix:
         specifier: 'catalog:'
-        version: 11.15.0
+        version: 11.16.0
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -266,7 +266,7 @@ importers:
         version: 14.6.8(@testing-library/dom@10.4.2)
       mendix:
         specifier: 'catalog:'
-        version: 11.15.0
+        version: 11.16.0
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -297,7 +297,7 @@ importers:
         version: 14.6.8(@testing-library/dom@10.4.2)
       mendix:
         specifier: 'catalog:'
-        version: 11.15.0
+        version: 11.16.0
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -328,7 +328,7 @@ importers:
         version: 14.6.8(@testing-library/dom@10.4.2)
       mendix:
         specifier: 'catalog:'
-        version: 11.15.0
+        version: 11.16.0
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -359,7 +359,7 @@ importers:
         version: 14.6.8(@testing-library/dom@10.4.2)
       mendix:
         specifier: 'catalog:'
-        version: 11.15.0
+        version: 11.16.0
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -393,7 +393,7 @@ importers:
         version: 14.6.8(@testing-library/dom@10.4.2)
       mendix:
         specifier: 'catalog:'
-        version: 11.15.0
+        version: 11.16.0
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -460,7 +460,7 @@ importers:
         version: 14.6.8(@testing-library/dom@10.4.2)
       mendix:
         specifier: 'catalog:'
-        version: 11.15.0
+        version: 11.16.0
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -491,7 +491,7 @@ importers:
         version: 14.6.8(@testing-library/dom@10.4.2)
       mendix:
         specifier: 'catalog:'
-        version: 11.15.0
+        version: 11.16.0
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -522,7 +522,7 @@ importers:
         version: 14.6.8(@testing-library/dom@10.4.2)
       mendix:
         specifier: 'catalog:'
-        version: 11.15.0
+        version: 11.16.0
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -553,7 +553,7 @@ importers:
         version: 14.6.8(@testing-library/dom@10.4.2)
       mendix:
         specifier: 'catalog:'
-        version: 11.15.0
+        version: 11.16.0
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -593,7 +593,7 @@ importers:
         version: 14.6.8(@testing-library/dom@10.4.2)
       mendix:
         specifier: 'catalog:'
-        version: 11.15.0
+        version: 11.16.0
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -624,7 +624,7 @@ importers:
         version: 14.6.8(@testing-library/dom@10.4.2)
       mendix:
         specifier: 'catalog:'
-        version: 11.15.0
+        version: 11.16.0
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -655,7 +655,7 @@ importers:
         version: 14.6.8(@testing-library/dom@10.4.2)
       mendix:
         specifier: 'catalog:'
-        version: 11.15.0
+        version: 11.16.0
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -686,7 +686,7 @@ importers:
         version: 14.6.8(@testing-library/dom@10.4.2)
       mendix:
         specifier: 'catalog:'
-        version: 11.15.0
+        version: 11.16.0
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -717,7 +717,7 @@ importers:
         version: 14.6.8(@testing-library/dom@10.4.2)
       mendix:
         specifier: 'catalog:'
-        version: 11.15.0
+        version: 11.16.0
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -757,7 +757,7 @@ importers:
         version: 14.6.8(@testing-library/dom@10.4.2)
       mendix:
         specifier: 'catalog:'
-        version: 11.15.0
+        version: 11.16.0
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -788,7 +788,7 @@ importers:
         version: 14.6.8(@testing-library/dom@10.4.2)
       mendix:
         specifier: 'catalog:'
-        version: 11.15.0
+        version: 11.16.0
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -813,7 +813,7 @@ importers:
         version: 14.6.8(@testing-library/dom@10.4.2)
       mendix:
         specifier: 'catalog:'
-        version: 11.15.0
+        version: 11.16.0
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -5258,8 +5258,8 @@ packages:
   memoize-one@5.2.1:
     resolution: {integrity: sha512-zYiwtZUcYyXKo/np96AGZAckk+FWWsUdJ3cHGGmld7+AhvcWmQyGCYUh1hc4Q/pkOhb65dQR/pqCyK0cOaHz4Q==}
 
-  mendix@11.15.0:
-    resolution: {integrity: sha512-LX0sreXwbRF/9cGbDwaRHBGkcjdweQsoyWPmVnCS96VpeSLm2tcg0bJUDCEAkkxyJ+GG+DMTRUxRilYtG6Fyeg==}
+  mendix@11.16.0:
+    resolution: {integrity: sha512-WDR5UHprsGOR4+uPdT9Z8ckZFKZ0NXFHgOwWKsiqJxMBO8b7PbQVN2DF8ofBYELC5oUzQeq+D2u0LCd+iFid8g==}
 
   merge-stream@2.0.0:
     resolution: {integrity: sha512-abv/qOcuPfk3URPfDzmZU1LKmuw8kT+0nIHvKrKgFrwifol/doWcdA4ZqsWQ8ENrFKkd67Mfpo/LovbIUsbt3w==}
@@ -8692,7 +8692,7 @@ snapshots:
       jest-jasmine2: 30.5.2
       jest-junit: 17.0.0
       make-dir: 5.1.0
-      mendix: 11.15.0
+      mendix: 11.16.0
       mime: 4.1.1
       postcss: 8.5.31
       postcss-import: 14.1.0(postcss@8.5.31)
@@ -12285,7 +12285,7 @@ snapshots:
 
   memoize-one@5.2.1: {}
 
-  mendix@11.15.0:
+  mendix@11.16.0:
     dependencies:
       '@types/big.js': 6.2.2
       '@types/react': 19.3.0
