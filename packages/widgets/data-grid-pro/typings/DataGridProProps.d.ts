@@ -4,6 +4,7 @@
  * @author Mendix Widgets Framework Team
  */
 import {
+    ActionValue,
     DynamicValue,
     EditableValue,
     ListActionValue,
@@ -46,6 +47,7 @@ export interface ColumnsType {
     expandedWidth: number;
     alignment: AlignmentEnum;
     columnClass?: ListExpressionValue<string>;
+    exportValue?: ListExpressionValue<string>;
     relatedSource?: ListValue;
     relatedParent?: ListReferenceValue | ListReferenceSetValue;
     relatedCaption?: ListExpressionValue<string>;
@@ -67,6 +69,8 @@ export type OnClickTriggerEnum = "single" | "double";
 
 export type ExpandTriggerEnum = "chevron" | "row";
 
+export type ExportRowsEnum = "all" | "selection";
+
 export type PaginationEnum = "virtualScrolling" | "pages";
 
 export type HeightModeEnum = "fixed" | "fill";
@@ -87,6 +91,7 @@ export interface ColumnsPreviewType {
     expandedWidth: number | null;
     alignment: AlignmentEnum;
     columnClass: string;
+    exportValue: string;
     relatedSource: {} | { caption: string } | { type: string } | null;
     relatedParent: string;
     relatedCaption: string;
@@ -134,6 +139,12 @@ export interface DataGridProContainerProps {
     bulkActions?: ReactNode;
     showColumnMenu: boolean;
     showDensityToggle: boolean;
+    showExport: boolean;
+    exportFileName?: DynamicValue<string>;
+    exportRows: ExportRowsEnum;
+    exportMax: number;
+    onBeforeExport?: ActionValue;
+    onAfterExport?: ActionValue;
     pagination: PaginationEnum;
     pageSize: number;
     heightMode: HeightModeEnum;
@@ -182,6 +193,12 @@ export interface DataGridProPreviewProps {
     bulkActions: { widgetCount: number; renderer: ComponentType<{ children: ReactNode; caption?: string }> };
     showColumnMenu: boolean;
     showDensityToggle: boolean;
+    showExport: boolean;
+    exportFileName: string;
+    exportRows: ExportRowsEnum;
+    exportMax: number | null;
+    onBeforeExport: {} | null;
+    onAfterExport: {} | null;
     pagination: PaginationEnum;
     pageSize: number | null;
     heightMode: HeightModeEnum;

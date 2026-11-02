@@ -1,5 +1,5 @@
 import classNames from "classnames";
-import type { ObjectItem } from "mendix";
+import type { ActionValue, ObjectItem } from "mendix";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactElement } from "react";
 
 import type { DataGridProContainerProps } from "../typings/DataGridProProps";
@@ -16,7 +16,9 @@ import { ROW_HEIGHT, type Density, type GridSettings } from "./model/types";
 import { useGridData } from "./model/useGridData";
 import { useGridSettings } from "./model/useGridSettings";
 import { useRelatedObjects } from "./model/useRelatedObjects";
-import { useSelectAll } from "./model/useSelectAll";
+import { download, exportFileName, exportValue, isExportable } from "./model/exportColumns";
+import { useBatchLoader } from "./model/useBatchLoader";
+import { buildXlsx, type CellValue } from "./model/xlsx";
 import { useSelection } from "./model/useSelection";
 import "./ui/DataGridPro.scss";
 
@@ -24,13 +26,8 @@ export function DataGridPro(props: DataGridProContainerProps): ReactElement {
     const { datasource } = props;
     const selection = useSelection(props.itemSelection);
     const restoreWindow = useRef<() => void>(() => undefined);
-    const selectAll = useSelectAll(
-        datasource,
-        props.selectAllMax,
-        items => selection.setAll(items),
-        () => restoreWindow.current()
-    );
-    const data = useGridData(datasource, props.pagination, props.pageSize, selectAll.progress !== undefined);
+    const loader = useBatchLoader(datasource, () => restoreWindow.current());
+    const data = useGridData(datasource, props.pagination, props.pageSize, loader.progress !== undefined);
     useLayoutEffect(() => {
         restoreWindow.current = data.restore;
     });
@@ -239,6 +236,53 @@ export function DataGridPro(props: DataGridProContainerProps): ReactElement {
     );
     const getRowClass = useCallback((item: ObjectItem) => rowClass?.get(item).value, [rowClass]);
 
+    // Select all and export read the newest props while they page through the data source.
+    const latest = useRef({ props, selection, columns });
+    useLayoutEffect(() => {
+        latest.current = { props, selection, columns };
+    });
+
+    const startSelectAll = (): void => {
+        const all: ObjectItem[] = [];
+        void loader
+            .run("select", props.selectAllMax, items => all.push(...items))
+            .then(done => {
+                if (done) {
+                    latest.current.selection.setAll(all);
+                }
+            });
+    };
+
+    const startExport = async (): Promise<void> => {
+        const { props: current, selection: selected, columns: shown } = latest.current;
+        runAction(current.onBeforeExport);
+        // Columns by their index in Studio Pro, so each batch can read them from the newest props.
+        const exported = shown
+            .map(column => Number(column.id.slice(1)))
+            .filter(index => current.columns[index] && isExportable(current.columns[index]));
+        const onlySelected = current.exportRows === "selection" && selected.count > 0;
+        const rows: CellValue[][] = [];
+        const done = await loader.run("export", current.exportMax, items => {
+            const { columns: definitions } = latest.current.props;
+            for (const item of items) {
+                if (!onlySelected || selected.isSelected(item)) {
+                    rows.push(exported.map(index => exportValue(definitions[index], item)));
+                }
+            }
+        });
+        if (!done) {
+            return;
+        }
+        const headers = exported.map(index => shown.find(c => c.id === `c${index}`)?.header || `Column ${index + 1}`);
+        const blob = await buildXlsx({
+            name: current.title?.value || "Export",
+            columns: headers.map((header, i) => ({ header, width: columnWidth(header, rows, i) })),
+            rows
+        });
+        download(blob, exportFileName(current.exportFileName?.value || current.title?.value));
+        runAction(latest.current.props.onAfterExport);
+    };
+
     // Offer to select the whole data source once every loaded row is selected and more rows exist.
     const selectAllTarget = Math.min(data.total ?? 0, Math.max(props.selectAllMax, 1));
     const offerSelectAll =
@@ -267,16 +311,16 @@ export function DataGridPro(props: DataGridProContainerProps): ReactElement {
                 onClearSelection={selection.clear}
                 onBulkAction={onBulkAction}
                 selectAll={
-                    selectAll.progress || offerSelectAll
+                    offerSelectAll
                         ? {
                               total: selectAllTarget,
                               capped: (data.total ?? 0) > selectAllTarget,
-                              progress: selectAll.progress,
-                              onStart: selectAll.start,
-                              onCancel: selectAll.cancel
+                              onStart: startSelectAll
                           }
                         : undefined
                 }
+                progress={loader.progress ? { value: loader.progress, onCancel: loader.cancel } : undefined}
+                onExport={props.showExport ? () => void startExport() : undefined}
                 columns={menuColumns}
                 hidden={settings.hidden}
                 onToggleColumn={onToggleColumn}
@@ -327,4 +371,21 @@ export function DataGridPro(props: DataGridProContainerProps): ReactElement {
             )}
         </div>
     );
+}
+
+function runAction(action: ActionValue | undefined): void {
+    if (action?.canExecute && !action.isExecuting) {
+        action.execute();
+    }
+}
+
+/** A column width in characters that fits the header and the first rows. */
+function columnWidth(header: string, rows: CellValue[][], index: number): number {
+    let width = header.length + 2;
+    for (let r = 0; r < Math.min(rows.length, 200); r++) {
+        const value = rows[r][index];
+        const text = value instanceof Date ? "yyyy-mm-dd hh:mm" : value === undefined ? "" : String(value);
+        width = Math.max(width, text.length + 2);
+    }
+    return Math.min(width, 60);
 }

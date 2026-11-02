@@ -13,6 +13,8 @@ function toolbar(overrides: Partial<Parameters<typeof Toolbar>[0]> = {}): Parame
         onClearSelection: () => undefined,
         onBulkAction: undefined,
         selectAll: undefined,
+        progress: undefined,
+        onExport: undefined,
         columns: undefined,
         hidden: [],
         onToggleColumn: () => undefined,
@@ -88,7 +90,7 @@ describe("Toolbar select all", () => {
             <Toolbar
                 {...toolbar({
                     selectedCount: 150,
-                    selectAll: { total: 20000, capped: false, progress: undefined, onStart, onCancel: jest.fn() }
+                    selectAll: { total: 20000, capped: false, onStart }
                 })}
             />
         );
@@ -103,18 +105,30 @@ describe("Toolbar select all", () => {
             <Toolbar
                 {...toolbar({
                     selectedCount: 150,
-                    selectAll: {
-                        total: 50000,
-                        capped: true,
-                        progress: { loaded: 1500, target: 50000 },
-                        onStart: jest.fn(),
-                        onCancel
-                    }
+                    progress: { value: { task: "select", loaded: 1500, target: 50000 }, onCancel }
                 })}
             />
         );
         expect(screen.getByRole("status")).toHaveTextContent("Selecting 1,500 of 50,000");
         fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
         expect(onCancel).toHaveBeenCalled();
+    });
+});
+
+describe("Toolbar export", () => {
+    it("shows export progress in place of the bulk actions", () => {
+        render(
+            <Toolbar
+                {...toolbar({
+                    selectedCount: 3,
+                    bulkActions: <button type="button">Approve</button>,
+                    progress: { value: { task: "export", loaded: 500, target: 1200 }, onCancel: jest.fn() },
+                    onExport: jest.fn()
+                })}
+            />
+        );
+        expect(screen.getByRole("status")).toHaveTextContent("Exporting 500 of 1,200");
+        expect(screen.queryByRole("button", { name: "Approve" })).not.toBeInTheDocument();
+        expect(screen.getByRole("button", { name: "Export" })).toBeDisabled();
     });
 });

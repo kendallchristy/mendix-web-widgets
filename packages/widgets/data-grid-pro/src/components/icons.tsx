@@ -65,3 +65,17 @@ export function ArrowIcon({ direction }: { direction: "up" | "down" }): ReactEle
         </svg>
     );
 }
+
+export function ExportIcon(): ReactElement {
+    return (
+        <svg {...common}>
+            <path
+                d="M8 2.5v7M5 6.5l3 3 3-3M3 11v1.5A1.5 1.5 0 004.5 14h7a1.5 1.5 0 001.5-1.5V11"
+                stroke="currentColor"
+                strokeWidth="1.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            />
+        </svg>
+    );
+}

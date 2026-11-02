@@ -11,6 +11,7 @@ A fast, high-density data grid for Mendix 11. It is built for lists of thousands
 - **Expandable rows.** Put widgets in _Row details_ and rows open a panel below them, like an accordion.
 - **Selection.** Single or multi selection, with shift-click ranges, select all (including rows that aren't loaded), and bulk actions in the toolbar.
 - **Search.** One search box in the toolbar that looks in the columns you choose.
+- **Excel export.** An Export button that downloads the grid as .xlsx, with before and after export actions.
 - **Header filters.** A filter under each column header that fits its attribute, with active filters shown as chips.
 - **Column reordering.** Users drag headers, or use the column menu, to change the column order.
 - **User settings.** Sort, column order, widths, hidden columns and density, saved in the browser or in an attribute.
@@ -71,6 +72,20 @@ Turn on **Header filters** in the Columns group to add a row of filters under th
 | Boolean                | Any, Yes or No.                                                                            |
 
 Filters combine with each other and with the search box: a row must match all of them. Each active filter shows as a chip in the toolbar; its × removes it, and **Clear filters** removes them all. Filters run in the database on top of the data source's own constraints, and they last for the page visit.
+
+### Excel export
+
+Turn on **Export button** on the Export tab. The button downloads an .xlsx file with the columns the user sees, in their order, and every row that matches the current search, filters and sort, not only the loaded ones. Rows are fetched in batches of 500 with a progress bar and a Cancel button.
+
+| Setting              | Effect                                                                                                |
+| -------------------- | ----------------------------------------------------------------------------------------------------- |
+| **File name**        | The file's name. Empty uses the title, or "Export".                                                   |
+| **Rows**             | _All rows_, or _Selected rows, or all rows when none are selected_ (Multi selection).                 |
+| **Maximum rows**     | The export stops after this many rows (default 100,000).                                              |
+| **On before export** | An action that runs when the user clicks Export, before rows are fetched.                             |
+| **On after export**  | An action that runs once the file has been handed to the browser. It doesn't run if the user cancels. |
+
+Attribute columns keep their type, so numbers, dates and yes/no values stay numbers, dates and booleans in Excel, and enumerations export their caption. Dynamic text exports its text. Custom content and related objects columns are exported only when their **Export value** (a text template in the column's Export group) is set; that setting also overrides what any other column exports. The header row is bold, stays in view while scrolling, and has filter buttons.
 
 ### Column order
 

@@ -47,6 +47,9 @@ export function getProperties(values: DataGridProPreviewProps, defaultProperties
         if (column.showContentAs !== "attribute" || !values.showHeaderFilters) {
             hide.push("filterable");
         }
+        if (!values.showExport) {
+            hide.push("exportValue");
+        }
         if (column.widthMode === "fixed") {
             hide.push("fillWeight", "minWidth");
         } else {
@@ -91,6 +94,17 @@ export function getProperties(values: DataGridProPreviewProps, defaultProperties
     }
     if (!values.showSearch) {
         hidePropertyIn(defaultProperties, values, "searchPlaceholder");
+    }
+    if (!values.showExport) {
+        hidePropertiesIn(defaultProperties, values, [
+            "exportFileName",
+            "exportRows",
+            "exportMax",
+            "onBeforeExport",
+            "onAfterExport"
+        ]);
+    } else if (values.itemSelection !== "Multi") {
+        hidePropertyIn(defaultProperties, values, "exportRows");
     }
     return defaultProperties;
 }

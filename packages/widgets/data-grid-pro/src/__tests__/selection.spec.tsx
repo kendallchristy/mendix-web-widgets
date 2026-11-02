@@ -133,3 +133,46 @@ describe("Selection for bulk actions", () => {
         expect(screen.getByText("4 selected")).toBeInTheDocument();
     });
 });
+
+describe("Excel export", () => {
+    it("runs the before and after actions around the download", async () => {
+        const onBeforeExport = { canExecute: true, isExecuting: false, execute: jest.fn() };
+        const onAfterExport = { canExecute: true, isExecuting: false, execute: jest.fn() };
+        const createObjectURL = jest.fn(() => "blob:x");
+        Object.assign(URL, { createObjectURL, revokeObjectURL: jest.fn() });
+        const click = jest.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined);
+        const rows = items(3);
+        const column = {
+            showContentAs: "dynamicText",
+            dynamicText: { get: (item: ObjectItem) => ({ value: `Row ${item.id}` }) },
+            header: { value: "Name" },
+            visible: { value: true },
+            alignment: "left",
+            hidable: "yes",
+            widthMode: "fill"
+        };
+        const exportProps = {
+            showExport: true,
+            exportRows: "all",
+            exportMax: 1000,
+            onBeforeExport,
+            onAfterExport,
+            columns: [column],
+            datasource: datasource(rows, { offset: 0, limit: 3 })
+        } as unknown as Partial<DataGridProContainerProps>;
+        const { rerender } = render(<DataGridPro {...props(exportProps)} />);
+        fireEvent.click(screen.getByRole("button", { name: "Export" }));
+        expect(onBeforeExport.execute).toHaveBeenCalled();
+        // The data source answers the batch request on the next update.
+        const answered = { ...exportProps, datasource: datasource(rows, { offset: 0, limit: 3 }) };
+        for (let i = 0; i < 10 && !onAfterExport.execute.mock.calls.length; i++) {
+            await act(async () => {
+                rerender(<DataGridPro {...props(answered)} />);
+                await new Promise(resolve => setTimeout(resolve, 0));
+            });
+        }
+        expect(click).toHaveBeenCalled();
+        expect(onAfterExport.execute).toHaveBeenCalled();
+        click.mockRestore();
+    });
+});

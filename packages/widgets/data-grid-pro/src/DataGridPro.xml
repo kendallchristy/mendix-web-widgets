@@ -111,6 +111,12 @@
                                 <returnType type="String" />
                             </property>
                         </propertyGroup>
+                        <propertyGroup caption="Export">
+                            <property key="exportValue" type="textTemplate" dataSource="../datasource" required="false">
+                                <caption>Export value</caption>
+                                <description>What this column puts in an Excel export. Leave empty to export the attribute or dynamic text, keeping numbers, dates and yes/no as such. Custom content and related objects columns are only exported when this is set.</description>
+                            </property>
+                        </propertyGroup>
                         <propertyGroup caption="Related objects">
                             <property key="relatedSource" type="datasource" isList="true" required="false">
                                 <caption>Related data source</caption>
@@ -311,6 +317,38 @@
                 <property key="showDensityToggle" type="boolean" defaultValue="false">
                     <caption>Density toggle</caption>
                     <description>A button that lets users change the row height.</description>
+                </property>
+            </propertyGroup>
+        </propertyGroup>
+        <propertyGroup caption="Export">
+            <propertyGroup caption="Excel export">
+                <property key="showExport" type="boolean" defaultValue="false">
+                    <caption>Export button</caption>
+                    <description>A button in the toolbar that downloads the grid as an Excel file: the columns the user sees, in their order, with the current search, filters and sort.</description>
+                </property>
+                <property key="exportFileName" type="textTemplate" required="false">
+                    <caption>File name</caption>
+                    <description>Leave empty to use the title, or "Export".</description>
+                </property>
+                <property key="exportRows" type="enumeration" defaultValue="all">
+                    <caption>Rows</caption>
+                    <description />
+                    <enumerationValues>
+                        <enumerationValue key="all">All rows</enumerationValue>
+                        <enumerationValue key="selection">Selected rows, or all rows when none are selected</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="exportMax" type="integer" defaultValue="100000">
+                    <caption>Maximum rows</caption>
+                    <description>The export stops after this many rows.</description>
+                </property>
+                <property key="onBeforeExport" type="action" required="false">
+                    <caption>On before export</caption>
+                    <description>Runs when the user clicks Export, before any rows are fetched.</description>
+                </property>
+                <property key="onAfterExport" type="action" required="false">
+                    <caption>On after export</caption>
+                    <description>Runs once the file has been handed to the browser to download. Not run when the user cancels.</description>
                 </property>
             </propertyGroup>
         </propertyGroup>

@@ -1,7 +1,7 @@
 import { act, renderHook } from "@testing-library/react";
 import type { ListValue, ObjectItem } from "mendix";
 
-import { useSelectAll } from "../model/useSelectAll";
+import { useBatchLoader } from "../model/useBatchLoader";
 import { items } from "./fixtures";
 
 /** A data source over `rows` whose setOffset and setLimit take effect on the next rerender. */
@@ -36,22 +36,26 @@ async function settle(rerender: () => void, rounds = 20): Promise<void> {
     }
 }
 
-describe("Select all across pages", () => {
-    it("fetches the data source in batches, selects every row and restores the window", async () => {
+describe("Batch loader", () => {
+    it("pages through the data source and restores the window", async () => {
         const rows = items(1200);
         const ds = source(rows);
-        const onDone = jest.fn();
         const restore = jest.fn();
-        const { result, rerender } = renderHook(() => useSelectAll(ds.value(), 50000, onDone, restore));
-        act(() => result.current.start());
-        expect(result.current.progress).toEqual({ loaded: 0, target: 1200 });
+        const seen: ObjectItem[] = [];
+        const { result, rerender } = renderHook(() => useBatchLoader(ds.value(), restore));
+        let done: Promise<boolean> | undefined;
+        act(() => {
+            done = result.current.run("select", 50000, batch => seen.push(...batch));
+        });
+        expect(result.current.progress).toEqual({ task: "select", loaded: 0, target: 1200 });
         await settle(() => rerender());
+        await expect(done).resolves.toBe(true);
         expect(ds.requests).toEqual([
             [0, 500],
             [500, 500],
             [1000, 200]
         ]);
-        expect(onDone).toHaveBeenCalledWith(rows);
+        expect(seen).toEqual(rows);
         expect(restore).toHaveBeenCalled();
         expect(result.current.progress).toBeUndefined();
     });
@@ -59,22 +63,28 @@ describe("Select all across pages", () => {
     it("stops at the maximum", async () => {
         const rows = items(1200);
         const ds = source(rows);
-        const onDone = jest.fn();
-        const { result, rerender } = renderHook(() => useSelectAll(ds.value(), 700, onDone, () => undefined));
-        act(() => result.current.start());
+        const seen: ObjectItem[] = [];
+        const { result, rerender } = renderHook(() => useBatchLoader(ds.value(), () => undefined));
+        act(() => {
+            void result.current.run("export", 700, batch => seen.push(...batch));
+        });
         await settle(() => rerender());
-        expect(onDone).toHaveBeenCalledWith(rows.slice(0, 700));
+        expect(seen).toEqual(rows.slice(0, 700));
     });
 
-    it("selects nothing when cancelled", async () => {
+    it("reports a cancelled run", async () => {
         const ds = source(items(1200));
-        const onDone = jest.fn();
         const restore = jest.fn();
-        const { result, rerender } = renderHook(() => useSelectAll(ds.value(), 50000, onDone, restore));
-        act(() => result.current.start());
+        const onBatch = jest.fn();
+        const { result, rerender } = renderHook(() => useBatchLoader(ds.value(), restore));
+        let done: Promise<boolean> | undefined;
+        act(() => {
+            done = result.current.run("select", 50000, onBatch);
+        });
         act(() => result.current.cancel());
         await settle(() => rerender());
-        expect(onDone).not.toHaveBeenCalled();
+        await expect(done).resolves.toBe(false);
+        expect(onBatch).not.toHaveBeenCalled();
         expect(restore).toHaveBeenCalled();
         expect(result.current.progress).toBeUndefined();
     });
