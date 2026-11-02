@@ -24,7 +24,7 @@ catalog:
     # Widget API types. Keep in step with the tools version.
     mendix: "11.15.0"
     # The Mendix widget tooling targets TypeScript 5.x
-    typescript: "~5.9.3"
+    typescript: "~6.0.3"
 
 # The widget tooling brings React 19 types. Keep a single copy so React types from
 # different packages stay compatible with each other.
