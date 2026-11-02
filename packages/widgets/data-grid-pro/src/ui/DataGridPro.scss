@@ -149,6 +149,73 @@
     box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
 }
 
+.dgp-menu-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    .dgp-menu-item {
+        flex: 1 1 auto;
+    }
+}
+
+.dgp-menu-move {
+    display: inline-flex;
+    opacity: 0.6;
+
+    .dgp-menu-row:hover &,
+    &:focus-within {
+        opacity: 1;
+    }
+}
+
+.dgp-menu-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 4px;
+    padding-top: 4px;
+    border-top: 1px solid var(--dgp-border);
+}
+
+.dgp-search {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 30px;
+    padding: 0 6px 0 10px;
+    border: 1px solid var(--dgp-border-strong);
+    border-radius: 6px;
+    background: var(--dgp-bg);
+    color: var(--dgp-text-muted);
+
+    &:focus-within {
+        border-color: var(--dgp-focus);
+        box-shadow: 0 0 0 2px color-mix(in srgb, var(--dgp-focus) 20%, transparent);
+    }
+}
+
+.dgp-search-input {
+    width: 180px;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    outline: none;
+    background: none;
+    color: var(--dgp-text);
+    font: inherit;
+
+    &::placeholder {
+        color: var(--dgp-text-muted);
+    }
+}
+
+.dgp-search-clear {
+    width: 20px;
+    height: 20px;
+    font-size: 16px;
+    line-height: 1;
+}
+
 .dgp-menu-item {
     display: flex;
     align-items: center;
@@ -245,6 +312,41 @@
     .dgp-sort-icon {
         opacity: 1;
     }
+}
+
+.dgp-hcell--draggable {
+    cursor: grab;
+    user-select: none;
+}
+
+.dgp-cells--dragging,
+.dgp-cells--dragging .dgp-hbutton {
+    cursor: grabbing;
+}
+
+.dgp-hcell--dragging {
+    opacity: 0.45;
+}
+
+// A pseudo-element, so the line also shows on the pinned first column, which uses box-shadow for its edge.
+.dgp-hcell--drop-before::before,
+.dgp-hcell--drop-after::after {
+    content: "";
+    position: absolute;
+    top: 6px;
+    bottom: 6px;
+    z-index: 2;
+    width: 2px;
+    border-radius: 1px;
+    background: var(--dgp-accent);
+}
+
+.dgp-hcell--drop-before::before {
+    left: 0;
+}
+
+.dgp-hcell--drop-after::after {
+    right: 0;
 }
 
 .dgp-resizer {
@@ -388,9 +490,14 @@
     color: var(--dgp-text-muted);
     cursor: pointer;
 
-    &:hover {
+    &:hover:not(:disabled) {
         background: rgba(15, 23, 42, 0.06);
         color: var(--dgp-text);
+    }
+
+    &:disabled {
+        opacity: 0.35;
+        cursor: default;
     }
 }
 

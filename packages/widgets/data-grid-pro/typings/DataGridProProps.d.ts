@@ -52,6 +52,7 @@ export interface ColumnsType {
     relatedColor?: ListExpressionValue<string>;
     sortable: boolean;
     resizable: boolean;
+    searchable: boolean;
     hidable: HidableEnum;
     widthMode: WidthModeEnum;
     fillWeight: number;
@@ -91,6 +92,7 @@ export interface ColumnsPreviewType {
     relatedColor: string;
     sortable: boolean;
     resizable: boolean;
+    searchable: boolean;
     hidable: HidableEnum;
     widthMode: WidthModeEnum;
     fillWeight: number | null;
@@ -106,6 +108,7 @@ export interface DataGridProContainerProps {
     datasource: ListValue;
     refreshInterval: number;
     columns: ColumnsType[];
+    columnsDraggable: boolean;
     pinFirstColumn: boolean;
     density: DensityEnum;
     stripes: boolean;
@@ -120,6 +123,8 @@ export interface DataGridProContainerProps {
     clearAfterBulkAction: boolean;
     title?: DynamicValue<string>;
     showCount: boolean;
+    showSearch: boolean;
+    searchPlaceholder?: DynamicValue<string>;
     toolbarContent?: ReactNode;
     bulkActions?: ReactNode;
     showColumnMenu: boolean;
@@ -147,6 +152,7 @@ export interface DataGridProPreviewProps {
     datasource: {} | { caption: string } | { type: string } | null;
     refreshInterval: number | null;
     columns: ColumnsPreviewType[];
+    columnsDraggable: boolean;
     pinFirstColumn: boolean;
     density: DensityEnum;
     stripes: boolean;
@@ -162,6 +168,8 @@ export interface DataGridProPreviewProps {
     clearAfterBulkAction: boolean;
     title: string;
     showCount: boolean;
+    showSearch: boolean;
+    searchPlaceholder: string;
     toolbarContent: { widgetCount: number; renderer: ComponentType<{ children: ReactNode; caption?: string }> };
     bulkActions: { widgetCount: number; renderer: ComponentType<{ children: ReactNode; caption?: string }> };
     showColumnMenu: boolean;

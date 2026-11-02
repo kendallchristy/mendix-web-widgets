@@ -41,3 +41,27 @@ export function DensityIcon(): ReactElement {
         </svg>
     );
 }
+
+export function SearchIcon(): ReactElement {
+    return (
+        <svg {...common} className="dgp-search-icon">
+            <circle cx="7" cy="7" r="4.25" stroke="currentColor" strokeWidth="1.4" />
+            <path d="M10.2 10.2L13 13" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+        </svg>
+    );
+}
+
+/** Up and down arrows; the column menu lists columns top to bottom in their left to right order. */
+export function ArrowIcon({ direction }: { direction: "up" | "down" }): ReactElement {
+    return (
+        <svg {...common}>
+            <path
+                d={direction === "up" ? "M8 12V4M4.5 7.5L8 4l3.5 3.5" : "M8 4v8M4.5 8.5L8 12l3.5-3.5"}
+                stroke="currentColor"
+                strokeWidth="1.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            />
+        </svg>
+    );
+}

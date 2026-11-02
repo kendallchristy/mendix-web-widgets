@@ -18,6 +18,9 @@ catalogs:
     '@testing-library/user-event':
       specifier: ^14.6.1
       version: 14.6.8
+    big.js:
+      specifier: 6.2.2
+      version: 6.2.2
     classnames:
       specifier: ^2.5.1
       version: 2.5.1
@@ -295,6 +298,9 @@ importers:
       '@tanstack/react-virtual':
         specifier: ^3.14.22
         version: 3.14.22(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      big.js:
+        specifier: 'catalog:'
+        version: 6.2.2
       classnames:
         specifier: 'catalog:'
         version: 2.5.1
@@ -358,7 +364,7 @@ importers:
         specifier: 1.29.0
         version: 1.29.0
       big.js:
-        specifier: 6.2.2
+        specifier: 'catalog:'
         version: 6.2.2
       chart.js:
         specifier: 4.5.1

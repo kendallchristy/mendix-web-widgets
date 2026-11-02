@@ -143,6 +143,10 @@
                                 <caption>Can resize</caption>
                                 <description />
                             </property>
+                            <property key="searchable" type="boolean" defaultValue="true">
+                                <caption>Can search</caption>
+                                <description>Include this column in the toolbar search box. Works for text, enumeration and number attributes.</description>
+                            </property>
                             <property key="hidable" type="enumeration" defaultValue="yes">
                                 <caption>Can hide</caption>
                                 <description />
@@ -176,6 +180,10 @@
                             </property>
                         </propertyGroup>
                     </properties>
+                </property>
+                <property key="columnsDraggable" type="boolean" defaultValue="true">
+                    <caption>Can reorder columns</caption>
+                    <description>Users drag column headers, or use the column menu, to change the column order. The order is saved with their settings.</description>
                 </property>
                 <property key="pinFirstColumn" type="boolean" defaultValue="true">
                     <caption>Pin first column</caption>
@@ -246,7 +254,7 @@
                 </property>
                 <property key="keepSelection" type="boolean" defaultValue="true">
                     <caption>Keep selection</caption>
-                    <description>Keep rows selected when the user sorts. Off clears the selection then. Rows always stay selected while scrolling and when the data refreshes.</description>
+                    <description>Keep rows selected when the user sorts or searches. Off clears the selection then. Rows always stay selected while scrolling and when the data refreshes.</description>
                 </property>
                 <property key="clearAfterBulkAction" type="boolean" defaultValue="true">
                     <caption>Clear after bulk action</caption>
@@ -263,6 +271,14 @@
                 <property key="showCount" type="boolean" defaultValue="true">
                     <caption>Show row count</caption>
                     <description>Shows the total number of rows next to the title.</description>
+                </property>
+                <property key="showSearch" type="boolean" defaultValue="false">
+                    <caption>Search box</caption>
+                    <description>One search field that looks in every column marked Can search.</description>
+                </property>
+                <property key="searchPlaceholder" type="textTemplate" required="false">
+                    <caption>Search placeholder</caption>
+                    <description>Leave empty for "Search".</description>
                 </property>
                 <property key="toolbarContent" type="widgets" required="false">
                     <caption>Toolbar widgets</caption>
@@ -322,7 +338,7 @@
             <propertyGroup caption="Personalization">
                 <property key="configurationStorage" type="enumeration" defaultValue="browser">
                     <caption>Store user settings</caption>
-                    <description>Column widths, hidden columns, sort order and density.</description>
+                    <description>Column order, widths, hidden columns, sort order and density.</description>
                     <enumerationValues>
                         <enumerationValue key="none">Don't store</enumerationValue>
                         <enumerationValue key="browser">In the browser</enumerationValue>

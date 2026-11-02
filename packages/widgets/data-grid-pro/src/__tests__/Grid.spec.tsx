@@ -23,6 +23,7 @@ function grid(overrides: Partial<GridProps> = {}): ReactElement {
             rowHeight={32}
             widths={{}}
             onResize={() => undefined}
+            onReorder={undefined}
             sort={undefined}
             onSort={() => undefined}
             selection={noSelection}
@@ -132,5 +133,84 @@ describe("Grid selection", () => {
         cell.focus();
         fireEvent.keyDown(cell, { key: "Escape" });
         expect(clear).toHaveBeenCalled();
+    });
+});
+
+describe("Grid column reordering", () => {
+    // jsdom has no PointerEvent, so pointer events would lose their coordinates and button.
+    beforeAll(() => {
+        if (!("PointerEvent" in window)) {
+            class PointerEvent extends MouseEvent {
+                readonly pointerId: number;
+                constructor(type: string, init: PointerEventInit = {}) {
+                    super(type, init);
+                    this.pointerId = init.pointerId ?? 0;
+                }
+            }
+            Object.assign(window, { PointerEvent });
+        }
+    });
+
+    function rect(left: number, width: number): DOMRect {
+        return { left, width, right: left + width, top: 0, bottom: 32, height: 32, x: left, y: 0 } as DOMRect;
+    }
+
+    function renderThreeColumns(onReorder: jest.Mock, onSort = jest.fn()): HTMLElement[] {
+        renderGrid({
+            columns: [
+                column({ id: "c0", header: "A", sortAttribute: "a" as never }),
+                column({ id: "c1", header: "B" }),
+                column({ id: "c2", header: "C" })
+            ],
+            onReorder,
+            onSort
+        });
+        const cells = ["c0", "c1", "c2"].map(id =>
+            document.querySelector<HTMLElement>(`.dgp-hcell[data-col="${id}"]`)!
+        );
+        cells.forEach((cell, i) => jest.spyOn(cell, "getBoundingClientRect").mockReturnValue(rect(i * 100, 100)));
+        return cells;
+    }
+
+    it("drops a dragged header in front of the column under the pointer", () => {
+        const onReorder = jest.fn();
+        const cells = renderThreeColumns(onReorder);
+        fireEvent.pointerDown(cells[0], { button: 0, clientX: 20, pointerId: 1 });
+        fireEvent.pointerMove(cells[0], { clientX: 160, pointerId: 1 });
+        expect(cells[2]).toHaveClass("dgp-hcell--drop-before");
+        fireEvent.pointerUp(cells[0], { clientX: 160, pointerId: 1 });
+        expect(onReorder).toHaveBeenCalledWith("c0", "c2");
+    });
+
+    it("drops at the end past the last column's middle", () => {
+        const onReorder = jest.fn();
+        const cells = renderThreeColumns(onReorder);
+        fireEvent.pointerDown(cells[0], { button: 0, clientX: 20, pointerId: 1 });
+        fireEvent.pointerMove(cells[0], { clientX: 290, pointerId: 1 });
+        fireEvent.pointerUp(cells[0], { clientX: 290, pointerId: 1 });
+        expect(onReorder).toHaveBeenCalledWith("c0", undefined);
+    });
+
+    it("doesn't sort when a drag ends on the header", () => {
+        const onReorder = jest.fn();
+        const onSort = jest.fn();
+        const cells = renderThreeColumns(onReorder, onSort);
+        const button = screen.getByRole("button", { name: /A/ });
+        fireEvent.pointerDown(button, { button: 0, clientX: 20, pointerId: 1 });
+        fireEvent.pointerMove(button, { clientX: 160, pointerId: 1 });
+        fireEvent.pointerUp(button, { clientX: 160, pointerId: 1 });
+        fireEvent.click(button);
+        expect(onSort).not.toHaveBeenCalled();
+        expect(cells[0]).toBeInTheDocument();
+    });
+
+    it("still sorts on a plain click", () => {
+        const onSort = jest.fn();
+        renderThreeColumns(jest.fn(), onSort);
+        const button = screen.getByRole("button", { name: /A/ });
+        fireEvent.pointerDown(button, { button: 0, clientX: 20, pointerId: 1 });
+        fireEvent.pointerUp(button, { clientX: 21, pointerId: 1 });
+        fireEvent.click(button);
+        expect(onSort).toHaveBeenCalledWith("c0");
     });
 });

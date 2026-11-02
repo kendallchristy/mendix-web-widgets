@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactElement, type ReactNode, type RefObject } from "react";
 
 import type { ColumnModel, Density } from "../model/types";
-import { ColumnsIcon, DensityIcon } from "./icons";
+import { ArrowIcon, ColumnsIcon, DensityIcon, SearchIcon } from "./icons";
 
 interface ToolbarProps {
     title: string | undefined;
@@ -12,16 +12,21 @@ interface ToolbarProps {
     onClearSelection(): void;
     /** Called when something in the bulk actions is clicked. */
     onBulkAction: (() => void) | undefined;
+    /** Columns listed in the column menu, in their current order. Undefined hides the menu. */
     columns: ColumnModel[] | undefined;
     hidden: string[];
     onToggleColumn(columnId: string): void;
+    /** Moves a column one place left (-1) or right (1). Undefined when users can't reorder columns. */
+    onMoveColumn: ((columnId: string, delta: -1 | 1) => void) | undefined;
+    onResetColumns(): void;
+    search: { placeholder: string; onSearch(text: string): void } | undefined;
     density: Density | undefined;
     onDensity(density: Density): void;
 }
 
 export function Toolbar(props: ToolbarProps): ReactElement | null {
     const selecting = props.selectedCount > 0 && props.bulkActions !== undefined;
-    const hasTools = props.columns !== undefined || props.density !== undefined;
+    const hasTools = props.columns !== undefined || props.density !== undefined || props.search !== undefined;
     if (!props.title && props.total === undefined && !props.content && !selecting && !hasTools) {
         return null;
     }
@@ -57,9 +62,16 @@ export function Toolbar(props: ToolbarProps): ReactElement | null {
             )}
             {hasTools && (
                 <div className="dgp-tools">
+                    {props.search && <SearchBox {...props.search} />}
                     {props.density && <DensityMenu value={props.density} onChange={props.onDensity} />}
                     {props.columns && (
-                        <ColumnMenu columns={props.columns} hidden={props.hidden} onToggle={props.onToggleColumn} />
+                        <ColumnMenu
+                            columns={props.columns}
+                            hidden={props.hidden}
+                            onToggle={props.onToggleColumn}
+                            onMove={props.onMoveColumn}
+                            onReset={props.onResetColumns}
+                        />
                     )}
                 </div>
             )}
@@ -91,8 +103,70 @@ function useMenu(): [open: boolean, setOpen: (open: boolean) => void, ref: RefOb
     return [open, setOpen, ref];
 }
 
-function ColumnMenu(props: { columns: ColumnModel[]; hidden: string[]; onToggle(id: string): void }): ReactElement {
+/** Waits for typing to pause before searching, so each keystroke doesn't start a request. */
+const SEARCH_DELAY = 300;
+
+function SearchBox(props: { placeholder: string; onSearch(text: string): void }): ReactElement {
+    const [text, setText] = useState("");
+    const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
+    const onSearch = useRef(props.onSearch);
+    useEffect(() => {
+        onSearch.current = props.onSearch;
+    });
+    useEffect(() => () => clearTimeout(timer.current), []);
+
+    const change = (value: string, delay: number): void => {
+        setText(value);
+        clearTimeout(timer.current);
+        if (delay > 0) {
+            timer.current = setTimeout(() => onSearch.current(value), delay);
+        } else {
+            onSearch.current(value);
+        }
+    };
+
+    return (
+        <div className="dgp-search" role="search">
+            <SearchIcon />
+            <input
+                type="text"
+                className="dgp-search-input"
+                aria-label={props.placeholder}
+                placeholder={props.placeholder}
+                value={text}
+                onChange={event => change(event.target.value, SEARCH_DELAY)}
+                onKeyDown={event => {
+                    if (event.key === "Escape" && text) {
+                        event.stopPropagation();
+                        change("", 0);
+                    } else if (event.key === "Enter") {
+                        change(text, 0);
+                    }
+                }}
+            />
+            {text && (
+                <button
+                    type="button"
+                    className="dgp-icon-button dgp-search-clear"
+                    aria-label="Clear search"
+                    onClick={() => change("", 0)}
+                >
+                    ×
+                </button>
+            )}
+        </div>
+    );
+}
+
+function ColumnMenu(props: {
+    columns: ColumnModel[];
+    hidden: string[];
+    onToggle(id: string): void;
+    onMove: ((id: string, delta: -1 | 1) => void) | undefined;
+    onReset(): void;
+}): ReactElement {
     const [open, setOpen, ref] = useMenu();
+    const { onMove } = props;
     return (
         <div className="dgp-menu" ref={ref}>
             <button
@@ -106,19 +180,51 @@ function ColumnMenu(props: { columns: ColumnModel[]; hidden: string[]; onToggle(
                 <span>Columns</span>
             </button>
             {open && (
-                <div className="dgp-menu-panel" role="group" aria-label="Visible columns">
-                    {props.columns.map(column => (
-                        <label key={column.id} className="dgp-menu-item">
-                            <input
-                                type="checkbox"
-                                className="dgp-checkbox"
-                                disabled={!column.hidable}
-                                checked={!props.hidden.includes(column.id)}
-                                onChange={() => props.onToggle(column.id)}
-                            />
-                            {column.header || column.id}
-                        </label>
-                    ))}
+                <div className="dgp-menu-panel" role="group" aria-label="Columns">
+                    {props.columns.map((column, index) => {
+                        const name = column.header || column.id;
+                        return (
+                            <div key={column.id} className="dgp-menu-row">
+                                <label className="dgp-menu-item">
+                                    <input
+                                        type="checkbox"
+                                        className="dgp-checkbox"
+                                        disabled={!column.hidable}
+                                        checked={!props.hidden.includes(column.id)}
+                                        onChange={() => props.onToggle(column.id)}
+                                    />
+                                    {name}
+                                </label>
+                                {onMove && (
+                                    <span className="dgp-menu-move">
+                                        <button
+                                            type="button"
+                                            className="dgp-icon-button"
+                                            aria-label={`Move ${name} left`}
+                                            disabled={index === 0}
+                                            onClick={() => onMove(column.id, -1)}
+                                        >
+                                            <ArrowIcon direction="up" />
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="dgp-icon-button"
+                                            aria-label={`Move ${name} right`}
+                                            disabled={index === props.columns.length - 1}
+                                            onClick={() => onMove(column.id, 1)}
+                                        >
+                                            <ArrowIcon direction="down" />
+                                        </button>
+                                    </span>
+                                )}
+                            </div>
+                        );
+                    })}
+                    <div className="dgp-menu-footer">
+                        <button type="button" className="dgp-link-button" onClick={props.onReset}>
+                            Reset columns
+                        </button>
+                    </div>
                 </div>
             )}
         </div>

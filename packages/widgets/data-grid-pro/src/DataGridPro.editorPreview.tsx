@@ -37,6 +37,13 @@ export function preview(props: DataGridProPreviewProps): ReactElement {
                 <props.toolbarContent.renderer caption="Toolbar: place filters and buttons here">
                     <div className="dgp-toolbar-content" />
                 </props.toolbarContent.renderer>
+                {props.showSearch && (
+                    <div className="dgp-tools">
+                        <div className="dgp-search">
+                            <span className="dgp-search-input">{props.searchPlaceholder || "Search"}</span>
+                        </div>
+                    </div>
+                )}
             </div>
             <div className="dgp-scroll">
                 <div className="dgp-head" style={{ position: "static" }}>

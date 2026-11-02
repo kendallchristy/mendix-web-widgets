@@ -21,7 +21,7 @@
     },
     "dependencies": {
         "@kenjiuno/msgreader": "1.29.0",
-        "big.js": "6.2.2",
+        "big.js": "catalog:",
         "chart.js": "4.5.1",
         "classnames": "catalog:",
         "docx-preview": "0.4.1",

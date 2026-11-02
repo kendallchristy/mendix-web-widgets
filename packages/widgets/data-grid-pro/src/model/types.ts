@@ -33,6 +33,8 @@ export interface SortState {
 
 /** What gets saved per user: see useGridSettings. */
 export interface GridSettings {
+    /** Column ids in the user's order. Empty keeps the Studio Pro order. */
+    order?: string[];
     hidden: string[];
     widths: Record<string, number>;
     sort?: SortState;
