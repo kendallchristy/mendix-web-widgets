@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<widget id="com.kendallchristy.widget.web.kanbanboardpro.KanbanBoardPro" pluginWidget="true" offlineCapable="true" supportedPlatform="Web" xmlns="http://www.mendix.com/widget/1.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mendix.com/widget/1.0/ ../node_modules/mendix/custom_widget.xsd">
+    <name>Kanban Board Pro</name>
+    <description>A Kanban board: drag cards between columns, reorder cards and columns.</description>
+    <studioProCategory>Data containers</studioProCategory>
+    <studioCategory>Data Containers</studioCategory>
+    <helpUrl>https://github.com/kendallchristy/mendix-web-widgets/blob/main/packages/widgets/kanban-board-pro/README.md</helpUrl>
+    <properties>
+        <propertyGroup caption="Columns">
+            <propertyGroup caption="Columns">
+                <property key="columnSource" type="enumeration" defaultValue="datasource">
+                    <caption>Columns from</caption>
+                    <description>Enumeration: one column per value of the cards' enumeration attribute, in the enumeration's order.</description>
+                    <enumerationValues>
+                        <enumerationValue key="datasource">A data source</enumerationValue>
+                        <enumerationValue key="enumeration">An enumeration</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="columns" type="datasource" isList="true" required="false">
+                    <caption>Column data source</caption>
+                    <description />
+                </property>
+                <property key="columnTitle" type="textTemplate" dataSource="columns" required="false">
+                    <caption>Title</caption>
+                    <description />
+                </property>
+                <property key="columnKey" type="expression" dataSource="columns" required="false">
+                    <caption>Column key</caption>
+                    <description>A unique value per column, such as its name or code. On card move gets it as From column and To column, so the microflow can find the column. Leave empty to use the title.</description>
+                    <returnType type="String" />
+                </property>
+                <property key="columnHeader" type="widgets" dataSource="columns" required="false">
+                    <caption>Header content</caption>
+                    <description>Extra widgets in each column's header, such as a menu button.</description>
+                </property>
+                <property key="columnFooter" type="widgets" dataSource="columns" required="false">
+                    <caption>Footer content</caption>
+                    <description>Widgets under each column's cards, such as an Add card button.</description>
+                </property>
+                <property key="columnSortAttribute" type="attribute" dataSource="columns" required="false">
+                    <caption>Column sort attribute</caption>
+                    <description>Lets users drag columns into a new order, saved here.</description>
+                    <attributeTypes>
+                        <attributeType name="Decimal" />
+                        <attributeType name="Integer" />
+                        <attributeType name="Long" />
+                    </attributeTypes>
+                </property>
+                <property key="columnLimit" type="expression" dataSource="columns" required="false">
+                    <caption>Card limit</caption>
+                    <description>The most cards a column takes, for example a work-in-progress limit. A full column refuses drops. Empty or 0 means no limit.</description>
+                    <returnType type="Integer" />
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Column options">
+                <property key="collapsible" type="boolean" defaultValue="true">
+                    <caption>Collapsible</caption>
+                    <description>A button in each header folds the column to a narrow strip. Cards can still be dropped on it.</description>
+                </property>
+                <property key="showCount" type="boolean" defaultValue="true">
+                    <caption>Show card count</caption>
+                    <description />
+                </property>
+                <property key="emptyColumnText" type="textTemplate" required="false">
+                    <caption>Empty column text</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">No cards</translation>
+                    </translations>
+                </property>
+            </propertyGroup>
+        </propertyGroup>
+        <propertyGroup caption="Cards">
+            <propertyGroup caption="Cards">
+                <property key="cards" type="datasource" isList="true">
+                    <caption>Card data source</caption>
+                    <description>All cards of the board, loaded in one request and grouped into columns in the browser.</description>
+                </property>
+                <property key="cardContent" type="widgets" dataSource="cards">
+                    <caption>Card content</caption>
+                    <description />
+                </property>
+                <property key="cardColumn" type="association" dataSource="cards" selectableObjects="columns" required="false">
+                    <caption>Column association</caption>
+                    <description>The card's association to its column. Mendix doesn't let widgets change associations, so set it in On card move, using the To column key.</description>
+                    <associationTypes>
+                        <associationType name="Reference" />
+                    </associationTypes>
+                </property>
+                <property key="cardStatus" type="attribute" dataSource="cards" required="false">
+                    <caption>Column attribute</caption>
+                    <description>The enumeration that puts a card in a column. The widget changes it when a card moves.</description>
+                    <attributeTypes>
+                        <attributeType name="Enum" />
+                    </attributeTypes>
+                </property>
+                <property key="cardSortAttribute" type="attribute" dataSource="cards">
+                    <caption>Card sort attribute</caption>
+                    <description>The order of cards within a column. With Decimal, a move usually changes only the moved card.</description>
+                    <attributeTypes>
+                        <attributeType name="Decimal" />
+                        <attributeType name="Integer" />
+                        <attributeType name="Long" />
+                    </attributeTypes>
+                </property>
+                <property key="canDragCard" type="expression" dataSource="cards" defaultValue="true">
+                    <caption>Can drag</caption>
+                    <description />
+                    <returnType type="Boolean" />
+                </property>
+                <property key="maxCards" type="integer" defaultValue="2000">
+                    <caption>Maximum cards</caption>
+                    <description>Cards loaded for the board. Long columns draw only the cards on screen.</description>
+                </property>
+            </propertyGroup>
+        </propertyGroup>
+        <propertyGroup caption="Events">
+            <propertyGroup caption="Events">
+                <property key="onCardMove" type="action" dataSource="cards" required="false">
+                    <caption>On card move</caption>
+                    <description>Runs for every card whose column or sort value changed, usually a nanoflow that commits it. The dragged card gets Moved = true; cards renumbered to make room get Moved = false. Positions start at 1.</description>
+                    <actionVariables>
+                        <actionVariable key="moved" type="Boolean" caption="Moved" />
+                        <actionVariable key="fromColumn" type="String" caption="From column" />
+                        <actionVariable key="toColumn" type="String" caption="To column" />
+                        <actionVariable key="newPosition" type="Integer" caption="New position" />
+                    </actionVariables>
+                </property>
+                <property key="onColumnMove" type="action" dataSource="columns" required="false">
+                    <caption>On column move</caption>
+                    <description>Runs for every column whose sort value changed, usually a nanoflow that commits it.</description>
+                    <actionVariables>
+                        <actionVariable key="moved" type="Boolean" caption="Moved" />
+                        <actionVariable key="newPosition" type="Integer" caption="New position" />
+                    </actionVariables>
+                </property>
+                <property key="onCardClick" type="action" dataSource="cards" required="false">
+                    <caption>On card click</caption>
+                    <description>Runs when a card is clicked outside its buttons, links and inputs, or when Enter is pressed on it with no move going on.</description>
+                </property>
+            </propertyGroup>
+        </propertyGroup>
+        <propertyGroup caption="Look">
+            <propertyGroup caption="Board">
+                <property key="columnWidth" type="integer" defaultValue="280">
+                    <caption>Column width (px)</caption>
+                    <description />
+                </property>
+                <property key="heightMode" type="enumeration" defaultValue="auto">
+                    <caption>Height</caption>
+                    <description>Fixed and Fill scroll each column on its own and draw only the cards on screen.</description>
+                    <enumerationValues>
+                        <enumerationValue key="auto">Grow with content</enumerationValue>
+                        <enumerationValue key="fixed">Fixed</enumerationValue>
+                        <enumerationValue key="fill">Fill the parent container</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="height" type="integer" defaultValue="640">
+                    <caption>Height (px)</caption>
+                    <description />
+                </property>
+                <property key="cardStyle" type="enumeration" defaultValue="card">
+                    <caption>Card style</caption>
+                    <description>Plain leaves the look of each card to its content.</description>
+                    <enumerationValues>
+                        <enumerationValue key="card">Card</enumerationValue>
+                        <enumerationValue key="plain">Plain</enumerationValue>
+                    </enumerationValues>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="While dragging">
+                <property key="indicator" type="enumeration" defaultValue="makeRoom">
+                    <caption>Show the drop position as</caption>
+                    <description />
+                    <enumerationValues>
+                        <enumerationValue key="makeRoom">Cards making room</enumerationValue>
+                        <enumerationValue key="line">A line</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="animation" type="enumeration" defaultValue="normal">
+                    <caption>Animation</caption>
+                    <description>Users who ask their system for reduced motion get no animation.</description>
+                    <enumerationValues>
+                        <enumerationValue key="normal">Normal (200 ms)</enumerationValue>
+                        <enumerationValue key="fast">Fast (120 ms)</enumerationValue>
+                        <enumerationValue key="off">Off</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="preview" type="enumeration" defaultValue="snapshot">
+                    <caption>Drag preview</caption>
+                    <description>Compact card keeps wide cards clear on Windows, which fades drag images wider than 280 px.</description>
+                    <enumerationValues>
+                        <enumerationValue key="snapshot">The card as it looks</enumerationValue>
+                        <enumerationValue key="compact">Compact card</enumerationValue>
+                    </enumerationValues>
+                </property>
+            </propertyGroup>
+        </propertyGroup>
+        <propertyGroup caption="Accessibility">
+            <propertyGroup caption="Screen readers">
+                <property key="cardLabel" type="textTemplate" dataSource="cards" required="false">
+                    <caption>Card name</caption>
+                    <description>How screen readers name each card, for example the title attribute.</description>
+                </property>
+                <property key="instructions" type="textTemplate" required="false">
+                    <caption>Instructions</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Press Space to pick up. Use the arrow keys to move between places and columns, Space to drop and Escape to cancel.</translation>
+                    </translations>
+                </property>
+                <property key="liftedText" type="textTemplate" required="false">
+                    <caption>Picked up</caption>
+                    <description>Placeholders: [item], [column], [position], [count].</description>
+                    <translations>
+                        <translation lang="en_US">Picked up [item] in [column]. Position [position] of [count].</translation>
+                    </translations>
+                </property>
+                <property key="movedText" type="textTemplate" required="false">
+                    <caption>Moved</caption>
+                    <description>Placeholders: [item], [column], [position], [count].</description>
+                    <translations>
+                        <translation lang="en_US">[column], position [position] of [count].</translation>
+                    </translations>
+                </property>
+                <property key="droppedText" type="textTemplate" required="false">
+                    <caption>Dropped</caption>
+                    <description>Placeholders: [item], [column], [position], [count].</description>
+                    <translations>
+                        <translation lang="en_US">Dropped [item] in [column] at position [position] of [count].</translation>
+                    </translations>
+                </property>
+                <property key="cancelledText" type="textTemplate" required="false">
+                    <caption>Cancelled</caption>
+                    <description>Placeholders: [item], [column], [position], [count].</description>
+                    <translations>
+                        <translation lang="en_US">Move cancelled. [item] is back in [column].</translation>
+                    </translations>
+                </property>
+            </propertyGroup>
+        </propertyGroup>
+    </properties>
+</widget>

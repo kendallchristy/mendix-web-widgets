@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<widget id="com.kendallchristy.widget.web.sortablelistpro.SortableListPro" pluginWidget="true" offlineCapable="true" supportedPlatform="Web" xmlns="http://www.mendix.com/widget/1.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mendix.com/widget/1.0/ ../node_modules/mendix/custom_widget.xsd">
+    <name>Sortable List Pro</name>
+    <description>Reorder a list, row or grid of objects by dragging, and move them between lists.</description>
+    <studioProCategory>Data containers</studioProCategory>
+    <studioCategory>Data Containers</studioCategory>
+    <helpUrl>https://github.com/kendallchristy/mendix-web-widgets/blob/main/packages/widgets/sortable-list-pro/README.md</helpUrl>
+    <properties>
+        <propertyGroup caption="General">
+            <propertyGroup caption="Data">
+                <property key="datasource" type="datasource" isList="true">
+                    <caption>Data source</caption>
+                    <description>The widget shows the objects sorted by the sort attribute, smallest first.</description>
+                </property>
+                <property key="content" type="widgets" dataSource="datasource">
+                    <caption>Content</caption>
+                    <description>The widgets shown for each object.</description>
+                </property>
+                <property key="sortAttribute" type="attribute" dataSource="datasource">
+                    <caption>Sort attribute</caption>
+                    <description>Where the order is saved. With Decimal, a move usually changes only the moved object. With Integer or Long, objects between the old and new place may be renumbered.</description>
+                    <attributeTypes>
+                        <attributeType name="Decimal" />
+                        <attributeType name="Integer" />
+                        <attributeType name="Long" />
+                    </attributeTypes>
+                </property>
+                <property key="pageSize" type="integer" defaultValue="100">
+                    <caption>Objects per load</caption>
+                    <description>How many objects load at first. More load as the user scrolls to the end.</description>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Layout">
+                <property key="layout" type="enumeration" defaultValue="vertical">
+                    <caption>Layout</caption>
+                    <description />
+                    <enumerationValues>
+                        <enumerationValue key="vertical">Vertical list</enumerationValue>
+                        <enumerationValue key="horizontal">Horizontal row</enumerationValue>
+                        <enumerationValue key="grid">Grid of tiles</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="gap" type="integer" defaultValue="8">
+                    <caption>Gap (px)</caption>
+                    <description>Space between items.</description>
+                </property>
+                <property key="tileWidth" type="integer" defaultValue="220">
+                    <caption>Minimum tile width (px)</caption>
+                    <description>Tiles share each row equally and are never narrower than this.</description>
+                </property>
+                <property key="heightMode" type="enumeration" defaultValue="auto">
+                    <caption>Height</caption>
+                    <description>Fixed and Fill scroll inside the widget and draw only the items on screen, which keeps lists of thousands of items smooth.</description>
+                    <enumerationValues>
+                        <enumerationValue key="auto">Grow with content</enumerationValue>
+                        <enumerationValue key="fixed">Fixed</enumerationValue>
+                        <enumerationValue key="fill">Fill the parent container</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="height" type="integer" defaultValue="480">
+                    <caption>Height (px)</caption>
+                    <description />
+                </property>
+                <property key="dragHandle" type="enumeration" defaultValue="item">
+                    <caption>Drag with</caption>
+                    <description>Custom handle: drag from any element in the content that has the class dnd-handle.</description>
+                    <enumerationValues>
+                        <enumerationValue key="item">The whole item</enumerationValue>
+                        <enumerationValue key="grip">A grip icon</enumerationValue>
+                        <enumerationValue key="custom">A custom handle</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="emptyContent" type="widgets" required="false">
+                    <caption>Empty content</caption>
+                    <description>Widgets shown when the list is empty. Items can be dropped on it.</description>
+                </property>
+            </propertyGroup>
+        </propertyGroup>
+        <propertyGroup caption="Rules">
+            <propertyGroup caption="Dragging">
+                <property key="canDrag" type="expression" dataSource="datasource" defaultValue="true">
+                    <caption>Can drag</caption>
+                    <description>Per object, for example to lock finished items.</description>
+                    <returnType type="Boolean" />
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Between lists">
+                <property key="group" type="string" required="false">
+                    <caption>Group</caption>
+                    <description>Lists on the page with the same group exchange items. Leave empty to only reorder within this list. Lists in one group must show the same entity.</description>
+                </property>
+                <property key="listName" type="expression" required="false">
+                    <caption>List name</caption>
+                    <description>Identifies this list to the On receive and On remove actions of other lists, for example 'Backlog'.</description>
+                    <returnType type="String" />
+                </property>
+                <property key="canReceive" type="expression" defaultValue="true">
+                    <caption>Can drop here</caption>
+                    <description>Whether items from other lists can be dropped here, for example a maximum count.</description>
+                    <returnType type="Boolean" />
+                </property>
+                <property key="receiveAttribute" type="attribute" dataSource="datasource" required="false">
+                    <caption>Value on receive: attribute</caption>
+                    <description>Optional. When an item arrives from another list, the widget writes the value below to this attribute, for example Status. Items whose value differs are hidden from this list until the data refreshes.</description>
+                    <attributeTypes>
+                        <attributeType name="Enum" />
+                        <attributeType name="String" />
+                        <attributeType name="Boolean" />
+                    </attributeTypes>
+                </property>
+                <property key="receiveValue" type="expression" required="false">
+                    <caption>Value on receive: value</caption>
+                    <description>The value for this list, as text: an enumeration key such as 'Done', text, or true or false.</description>
+                    <returnType type="String" />
+                </property>
+            </propertyGroup>
+        </propertyGroup>
+        <propertyGroup caption="Events">
+            <propertyGroup caption="Events">
+                <property key="onMove" type="action" dataSource="datasource" required="false">
+                    <caption>On move</caption>
+                    <description>Runs for every object whose sort value changed, usually a nanoflow that commits it. The dragged object gets Moved = true; objects renumbered to make room get Moved = false. Positions start at 1.</description>
+                    <actionVariables>
+                        <actionVariable key="moved" type="Boolean" caption="Moved" />
+                        <actionVariable key="oldPosition" type="Integer" caption="Old position" />
+                        <actionVariable key="newPosition" type="Integer" caption="New position" />
+                    </actionVariables>
+                </property>
+                <property key="onReceive" type="action" dataSource="datasource" required="false">
+                    <caption>On receive</caption>
+                    <description>Runs for an object dropped here from another list, after its sort value is set. Use it to set an association to this list's object and commit.</description>
+                    <actionVariables>
+                        <actionVariable key="fromList" type="String" caption="From list" />
+                        <actionVariable key="newPosition" type="Integer" caption="New position" />
+                    </actionVariables>
+                </property>
+                <property key="onRemove" type="action" dataSource="datasource" required="false">
+                    <caption>On remove</caption>
+                    <description>Runs for an object dragged from this list into another one.</description>
+                    <actionVariables>
+                        <actionVariable key="toList" type="String" caption="To list" />
+                        <actionVariable key="oldPosition" type="Integer" caption="Old position" />
+                    </actionVariables>
+                </property>
+                <property key="onDragStart" type="action" dataSource="datasource" required="false">
+                    <caption>On drag start</caption>
+                    <description />
+                </property>
+            </propertyGroup>
+        </propertyGroup>
+        <propertyGroup caption="Look">
+            <propertyGroup caption="While dragging">
+                <property key="indicator" type="enumeration" defaultValue="makeRoom">
+                    <caption>Show the drop position as</caption>
+                    <description />
+                    <enumerationValues>
+                        <enumerationValue key="makeRoom">Items making room</enumerationValue>
+                        <enumerationValue key="line">A line</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="animation" type="enumeration" defaultValue="normal">
+                    <caption>Animation</caption>
+                    <description>Users who ask their system for reduced motion get no animation.</description>
+                    <enumerationValues>
+                        <enumerationValue key="normal">Normal (200 ms)</enumerationValue>
+                        <enumerationValue key="fast">Fast (120 ms)</enumerationValue>
+                        <enumerationValue key="off">Off</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="preview" type="enumeration" defaultValue="snapshot">
+                    <caption>Drag preview</caption>
+                    <description>Compact card keeps wide items clear on Windows, which fades drag images wider than 280 px.</description>
+                    <enumerationValues>
+                        <enumerationValue key="snapshot">The item as it looks</enumerationValue>
+                        <enumerationValue key="compact">Compact card</enumerationValue>
+                    </enumerationValues>
+                </property>
+            </propertyGroup>
+        </propertyGroup>
+        <propertyGroup caption="Accessibility">
+            <propertyGroup caption="Screen readers">
+                <property key="itemLabel" type="textTemplate" dataSource="datasource" required="false">
+                    <caption>Item name</caption>
+                    <description>How screen readers name each item, for example the title attribute.</description>
+                </property>
+                <property key="instructions" type="textTemplate" required="false">
+                    <caption>Instructions</caption>
+                    <description />
+                    <translations>
+                        <translation lang="en_US">Press Space to pick up. Use the arrow keys to move, Space to drop and Escape to cancel.</translation>
+                    </translations>
+                </property>
+                <property key="liftedText" type="textTemplate" required="false">
+                    <caption>Picked up</caption>
+                    <description>Placeholders: [item], [position], [count].</description>
+                    <translations>
+                        <translation lang="en_US">Picked up [item]. Position [position] of [count].</translation>
+                    </translations>
+                </property>
+                <property key="movedText" type="textTemplate" required="false">
+                    <caption>Moved</caption>
+                    <description>Placeholders: [item], [position], [count].</description>
+                    <translations>
+                        <translation lang="en_US">[item], position [position] of [count].</translation>
+                    </translations>
+                </property>
+                <property key="droppedText" type="textTemplate" required="false">
+                    <caption>Dropped</caption>
+                    <description>Placeholders: [item], [position], [count].</description>
+                    <translations>
+                        <translation lang="en_US">Dropped [item] at position [position] of [count].</translation>
+                    </translations>
+                </property>
+                <property key="cancelledText" type="textTemplate" required="false">
+                    <caption>Cancelled</caption>
+                    <description>Placeholders: [item], [position], [count].</description>
+                    <translations>
+                        <translation lang="en_US">Move cancelled. [item] is back at position [position].</translation>
+                    </translations>
+                </property>
+            </propertyGroup>
+        </propertyGroup>
+    </properties>
+</widget>

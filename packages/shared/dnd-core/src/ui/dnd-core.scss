@@ -1,0 +1,184 @@
+// Shared styles for the drag and drop widgets. Widgets import this file and set the --kdnd-* tokens on their root.
+// Only transform and opacity animate, so the browser never lays the page out again mid-drag.
+
+// The class Kendall's apps put on <html> or <body> for dark mode; any ancestor of the widget works too.
+$kdnd-dark-ancestors: ".dark-mode";
+
+@mixin kdnd-light-tokens {
+    --kdnd-accent: var(--brand-primary, #2563eb);
+    --kdnd-accent-soft: rgba(37, 99, 235, 0.08);
+    --kdnd-accent-border: rgba(37, 99, 235, 0.45);
+    --kdnd-surface: #ffffff;
+    --kdnd-text: #111827;
+    --kdnd-text-muted: #6b7280;
+    --kdnd-border: #e5e7eb;
+    --kdnd-lift-shadow: 0 12px 28px rgba(17, 24, 39, 0.16), 0 2px 6px rgba(17, 24, 39, 0.08);
+    --kdnd-focus: var(--brand-primary, #2563eb);
+}
+
+@mixin kdnd-dark-tokens {
+    --kdnd-accent: #60a5fa;
+    --kdnd-accent-soft: rgba(96, 165, 250, 0.12);
+    --kdnd-accent-border: rgba(96, 165, 250, 0.55);
+    --kdnd-surface: #1f2937;
+    --kdnd-text: #f3f4f6;
+    --kdnd-text-muted: #9ca3af;
+    --kdnd-border: #374151;
+    --kdnd-lift-shadow: 0 12px 28px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.35);
+    --kdnd-focus: #60a5fa;
+}
+
+.kdnd-root {
+    @include kdnd-light-tokens;
+    --kdnd-duration: 200ms;
+    --kdnd-ease: cubic-bezier(0.2, 0, 0, 1);
+
+    #{$kdnd-dark-ancestors} & {
+        @include kdnd-dark-tokens;
+    }
+}
+
+.kdnd-list {
+    position: relative;
+}
+
+.kdnd-item {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+    min-width: 0;
+    outline: none;
+    cursor: grab;
+    // Stops the browser selecting text when a drag starts on it.
+    user-select: none;
+    -webkit-user-select: none;
+
+    &:focus-visible {
+        box-shadow:
+            0 0 0 2px var(--kdnd-surface),
+            0 0 0 4px var(--kdnd-focus);
+        border-radius: 6px;
+    }
+}
+
+.kdnd-item--handle {
+    cursor: auto;
+    user-select: auto;
+    -webkit-user-select: auto;
+}
+
+.kdnd-item--locked {
+    cursor: default;
+}
+
+.kdnd-item-content {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.kdnd-grip {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    color: var(--kdnd-text-muted);
+    fill: currentColor;
+    cursor: grab;
+    opacity: 0.7;
+    transition: opacity 120ms ease;
+
+    .kdnd-item:hover > &,
+    .kdnd-item:focus-visible > & {
+        opacity: 1;
+    }
+
+    .kdnd-item--locked > & {
+        visibility: hidden;
+    }
+}
+
+.dnd-handle {
+    cursor: grab;
+}
+
+// While a drag is on: items slide with transforms, and only the fixed slots take pointer hits, so the target
+// under the pointer never changes because an item moved.
+.kdnd-active {
+    .kdnd-item {
+        pointer-events: none;
+        transition: transform var(--kdnd-duration) var(--kdnd-ease);
+    }
+}
+
+.kdnd-source {
+    opacity: 0;
+
+    .kdnd-indicator-line & {
+        opacity: 0.4;
+    }
+}
+
+.kdnd-lifted {
+    z-index: 2;
+    border-radius: 6px;
+    box-shadow: var(--kdnd-lift-shadow);
+}
+
+.kdnd-placeholder {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 0;
+    box-sizing: border-box;
+    border: 2px dashed var(--kdnd-accent-border);
+    border-radius: 8px;
+    background: var(--kdnd-accent-soft);
+    pointer-events: none;
+    transition: transform var(--kdnd-duration) var(--kdnd-ease);
+    will-change: transform;
+}
+
+.kdnd-placeholder--line {
+    z-index: 3;
+    border: none;
+    border-radius: 2px;
+    background: var(--kdnd-accent);
+}
+
+// The compact drag preview, drawn by the browser from this element.
+.kdnd-preview-host {
+    @include kdnd-light-tokens;
+    padding: 8px;
+
+    &.dark-mode {
+        @include kdnd-dark-tokens;
+    }
+}
+
+.kdnd-preview {
+    overflow: hidden;
+    border-radius: 8px;
+    background: var(--kdnd-surface);
+    color: var(--kdnd-text);
+    box-shadow: var(--kdnd-lift-shadow);
+}
+
+.kdnd-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .kdnd-active .kdnd-item,
+    .kdnd-placeholder {
+        transition: none;
+    }
+}
